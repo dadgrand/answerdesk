@@ -234,7 +234,3 @@ EXTRA_CODE_SWITCH: tuple[tuple[str, str], ...] = (
     ("документ", "ҳужҷат"),
     ("төлөм", "to'lov"),
 )
-
-
-# Wave 3 (t22): loan/credit, deposits and remittance tracking archetypes.
-from answerdesk.ingest.synthetic_data import wave3_ky as WAVE3

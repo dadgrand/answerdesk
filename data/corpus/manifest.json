@@ -17,8 +17,8 @@
     "transfer_limits"
   ],
   "artifacts": {
-    "chunks.jsonl": "7ef3fc20400131dc966904bc68d517a805faf48e98b62584f44e086270e246d6",
-    "queries/queries.jsonl": "ece58055a070309f5538dfb0e1fdda8d293fd9096f362d2a4615e8d0e8f7e1ae"
+    "chunks.jsonl": "ae30066e61e1dc1402b4a51a12f4c4f66335d72c207073b496ef5cd9e5378a36",
+    "queries/queries.jsonl": "8a9b2a7398e4f2789bbe088e652597ad9cedbb80705bb4503adb42b617f31723"
   },
   "chunk_dedup": {
     "by_hash": true,
@@ -40,7 +40,7 @@
     "native_speaker_validated": false,
     "task_contract": "t18 (docs/ingestion.md §12)"
   },
-  "corpus_version": "corpus-96f93db4f7f648b5",
+  "corpus_version": "corpus-77d7d081813738a6",
   "dedup": {
     "bands": 8,
     "candidates": 823,
@@ -150,9 +150,9 @@
     "perturbation_counts": {
       "code_switch": 204,
       "direct": 1512,
-      "identifier": 144,
+      "identifier": 174,
       "injection": 174,
-      "noisy_freeform": 504,
+      "noisy_freeform": 474,
       "numeric_date": 234,
       "pii": 264,
       "typo": 204
@@ -160,9 +160,9 @@
     "perturbation_shares": {
       "code_switch": 0.063,
       "direct": 0.4667,
-      "identifier": 0.0444,
+      "identifier": 0.0537,
       "injection": 0.0537,
-      "noisy_freeform": 0.1556,
+      "noisy_freeform": 0.1463,
       "numeric_date": 0.0722,
       "pii": 0.0815,
       "typo": 0.063
@@ -202,19 +202,19 @@
       "queries": 540,
       "queries_by_category": {
         "code_switch": 34,
-        "direct": 124,
-        "identifier": 24,
+        "direct": 119,
+        "identifier": 29,
         "injection": 29,
         "multi_hop": 44,
-        "noisy_freeform": 84,
+        "noisy_freeform": 79,
         "numeric_date": 39,
         "pii": 44,
         "typo": 34,
-        "unanswerable": 84
+        "unanswerable": 89
       },
       "query_documents_known": 540,
       "tokens": 89771,
-      "unanswerable_share": 0.1556
+      "unanswerable_share": 0.1648
     },
     "ru": {
       "archetypes": 15,
@@ -241,19 +241,19 @@
       "queries": 540,
       "queries_by_category": {
         "code_switch": 34,
-        "direct": 124,
-        "identifier": 24,
+        "direct": 119,
+        "identifier": 29,
         "injection": 29,
         "multi_hop": 44,
-        "noisy_freeform": 84,
+        "noisy_freeform": 79,
         "numeric_date": 39,
         "pii": 44,
         "typo": 34,
-        "unanswerable": 84
+        "unanswerable": 89
       },
       "query_documents_known": 540,
-      "tokens": 95359,
-      "unanswerable_share": 0.1556
+      "tokens": 95313,
+      "unanswerable_share": 0.1648
     },
     "tg": {
       "archetypes": 15,
@@ -280,19 +280,19 @@
       "queries": 540,
       "queries_by_category": {
         "code_switch": 34,
-        "direct": 124,
-        "identifier": 24,
+        "direct": 119,
+        "identifier": 29,
         "injection": 29,
         "multi_hop": 44,
-        "noisy_freeform": 84,
+        "noisy_freeform": 79,
         "numeric_date": 39,
         "pii": 44,
         "typo": 34,
-        "unanswerable": 84
+        "unanswerable": 89
       },
       "query_documents_known": 540,
       "tokens": 96300,
-      "unanswerable_share": 0.1556
+      "unanswerable_share": 0.1648
     },
     "tr": {
       "archetypes": 15,
@@ -319,19 +319,19 @@
       "queries": 540,
       "queries_by_category": {
         "code_switch": 34,
-        "direct": 124,
-        "identifier": 24,
+        "direct": 119,
+        "identifier": 29,
         "injection": 29,
         "multi_hop": 44,
-        "noisy_freeform": 84,
+        "noisy_freeform": 79,
         "numeric_date": 39,
         "pii": 44,
         "typo": 34,
-        "unanswerable": 84
+        "unanswerable": 89
       },
       "query_documents_known": 540,
       "tokens": 89782,
-      "unanswerable_share": 0.1556
+      "unanswerable_share": 0.1648
     },
     "uz": {
       "archetypes": 15,
@@ -358,19 +358,19 @@
       "queries": 540,
       "queries_by_category": {
         "code_switch": 34,
-        "direct": 124,
-        "identifier": 24,
+        "direct": 119,
+        "identifier": 29,
         "injection": 29,
         "multi_hop": 44,
-        "noisy_freeform": 84,
+        "noisy_freeform": 79,
         "numeric_date": 39,
         "pii": 44,
         "typo": 34,
-        "unanswerable": 84
+        "unanswerable": 89
       },
       "query_documents_known": 540,
       "tokens": 97713,
-      "unanswerable_share": 0.1556
+      "unanswerable_share": 0.1648
     },
     "zh": {
       "archetypes": 15,
@@ -397,33 +397,33 @@
       "queries": 540,
       "queries_by_category": {
         "code_switch": 34,
-        "direct": 124,
-        "identifier": 24,
+        "direct": 119,
+        "identifier": 29,
         "injection": 29,
         "multi_hop": 44,
-        "noisy_freeform": 84,
+        "noisy_freeform": 79,
         "numeric_date": 39,
         "pii": 44,
         "typo": 34,
-        "unanswerable": 84
+        "unanswerable": 89
       },
       "query_documents_known": 540,
       "tokens": 68380,
-      "unanswerable_share": 0.1556
+      "unanswerable_share": 0.1648
     }
   },
   "queries": {
     "categories": {
       "code_switch": 204,
-      "direct": 744,
-      "identifier": 144,
+      "direct": 714,
+      "identifier": 174,
       "injection": 174,
       "multi_hop": 264,
-      "noisy_freeform": 504,
+      "noisy_freeform": 474,
       "numeric_date": 234,
       "pii": 264,
       "typo": 204,
-      "unanswerable": 504
+      "unanswerable": 534
     },
     "count": 3240,
     "file": "queries/queries.jsonl",
@@ -436,14 +436,14 @@
       "zh"
     ],
     "noisy_styles": {
-      "dropped_preposition": 90,
-      "run_on": 113,
-      "telegraphic": 114,
-      "translit": 82,
-      "typo_mix": 105
+      "dropped_preposition": 27,
+      "run_on": 133,
+      "telegraphic": 80,
+      "translit": 127,
+      "typo_mix": 107
     },
     "reference_grounding": "verified",
-    "unanswerable_share": 0.1556
+    "unanswerable_share": 0.1648
   },
   "reference_grounding": {
     "checked": 3240,
@@ -2659,7 +2659,7 @@
     {
       "archetype": "loan_credit",
       "block_count": 26,
-      "byte_size": 4949,
+      "byte_size": 4906,
       "chunks": 9,
       "doc_id": "syn-ru-0012",
       "heading_count": 9,
@@ -2667,7 +2667,7 @@
       "language": "ru",
       "license": "CC0-1.0",
       "path": "docs/ru/syn-ru-0012.md",
-      "sha256": "1345c8a5603c9ac19325275a88043b236e813faaa468279562ee8b1f9b7c1752",
+      "sha256": "e4250917d3f12be842012de6af51e0b6f86c8d8a9b57e92bed6511c3dd0f78e0",
       "source_format": "md",
       "title": "Кредит наличными: заявка, ставка и досрочное погашение — Стартовый"
     },
@@ -2884,7 +2884,7 @@
     {
       "archetype": "loan_credit",
       "block_count": 29,
-      "byte_size": 5549,
+      "byte_size": 5506,
       "chunks": 9,
       "doc_id": "syn-ru-0027",
       "heading_count": 10,
@@ -2892,7 +2892,7 @@
       "language": "ru",
       "license": "CC0-1.0",
       "path": "docs/ru/syn-ru-0027.md",
-      "sha256": "9a9fe1f75a9117c3eb1ee40b0d589415d7f96b672e106f5da0a35ebd747a26f8",
+      "sha256": "5a2d2c1713e9b9fbd9a4acca2b9d053fe70b2654b4cb94ec1c8cff0a489c274c",
       "source_format": "md",
       "title": "Кредит наличными: заявка, ставка и досрочное погашение — Премиум"
     },
@@ -3109,7 +3109,7 @@
     {
       "archetype": "loan_credit",
       "block_count": 26,
-      "byte_size": 4843,
+      "byte_size": 4814,
       "chunks": 9,
       "doc_id": "syn-ru-0042",
       "heading_count": 9,
@@ -3117,7 +3117,7 @@
       "language": "ru",
       "license": "CC0-1.0",
       "path": "docs/ru/syn-ru-0042.md",
-      "sha256": "92537fce46bac33608cf21a8bc20acc58a99cc40ec4973752662d7e00a185811",
+      "sha256": "1cf4eb0b1b4aea7665c75bdc042a9275c586bb64142a238d66b9747057926629",
       "source_format": "md",
       "title": "Кредит наличными: заявка, ставка и досрочное погашение — Комфорт"
     },
@@ -3334,7 +3334,7 @@
     {
       "archetype": "loan_credit",
       "block_count": 29,
-      "byte_size": 5453,
+      "byte_size": 5410,
       "chunks": 10,
       "doc_id": "syn-ru-0057",
       "heading_count": 10,
@@ -3342,7 +3342,7 @@
       "language": "ru",
       "license": "CC0-1.0",
       "path": "docs/ru/syn-ru-0057.md",
-      "sha256": "2a5b6dff2cc2fd279fccca1510d7c9c755f88f784397a6f597de0f9c57db399b",
+      "sha256": "2a8ab6c0c6d33b2d7c270f70935079582bdaf3921ec3485e349babdb1d18f1b6",
       "source_format": "md",
       "title": "Кредит наличными: заявка, ставка и досрочное погашение"
     },
@@ -3559,7 +3559,7 @@
     {
       "archetype": "loan_credit",
       "block_count": 26,
-      "byte_size": 4908,
+      "byte_size": 4865,
       "chunks": 9,
       "doc_id": "syn-ru-0072",
       "heading_count": 9,
@@ -3567,7 +3567,7 @@
       "language": "ru",
       "license": "CC0-1.0",
       "path": "docs/ru/syn-ru-0072.md",
-      "sha256": "043881c3fee81ffbc793fc5f2823f9eff735d7bc73c4ce8e958f4e56fca8e3b2",
+      "sha256": "accf913b10b47189488bf0b04fe7648503b85706427cbce4f35428248359dbce",
       "source_format": "md",
       "title": "Кредит наличными: заявка, ставка и досрочное погашение — Стартовый"
     },
@@ -3784,7 +3784,7 @@
     {
       "archetype": "loan_credit",
       "block_count": 29,
-      "byte_size": 5450,
+      "byte_size": 5407,
       "chunks": 10,
       "doc_id": "syn-ru-0087",
       "heading_count": 10,
@@ -3792,7 +3792,7 @@
       "language": "ru",
       "license": "CC0-1.0",
       "path": "docs/ru/syn-ru-0087.md",
-      "sha256": "211f3b549cf8b9e4948d67c1400b8264801d0673ac2b1a93b091d1bb2c96e4e7",
+      "sha256": "55164e26477b4048964cc786267dfacae7e3299bdc056cc5e9e41c290efdebd8",
       "source_format": "md",
       "title": "Кредит наличными: заявка, ставка и досрочное погашение"
     },
@@ -4009,7 +4009,7 @@
     {
       "archetype": "loan_credit",
       "block_count": 26,
-      "byte_size": 4813,
+      "byte_size": 4770,
       "chunks": 8,
       "doc_id": "syn-ru-0102",
       "heading_count": 9,
@@ -4017,7 +4017,7 @@
       "language": "ru",
       "license": "CC0-1.0",
       "path": "docs/ru/syn-ru-0102.md",
-      "sha256": "4abcd0a2ec077ff325813468ea38fd8be199ac4105a727a5b9fd0e7b0fc22d8e",
+      "sha256": "381086caf2183a9fdfe6c0c31007da9a983d147c4979fea86219f8858b594152",
       "source_format": "md",
       "title": "Кредит наличными: заявка, ставка и досрочное погашение — Комфорт"
     },
@@ -4234,7 +4234,7 @@
     {
       "archetype": "loan_credit",
       "block_count": 29,
-      "byte_size": 5458,
+      "byte_size": 5415,
       "chunks": 10,
       "doc_id": "syn-ru-0117",
       "heading_count": 10,
@@ -4242,7 +4242,7 @@
       "language": "ru",
       "license": "CC0-1.0",
       "path": "docs/ru/syn-ru-0117.md",
-      "sha256": "06ab426d9768f1e54edc19c0f9ed379764ca89dbf868cc603f1a0229bb02ef1a",
+      "sha256": "b907c4cab3318e9321015be60db70cfb8c9cf719add3ccace21bd0723d0cda57",
       "source_format": "md",
       "title": "Кредит наличными: заявка, ставка и досрочное погашение — Базовый"
     },
@@ -4459,7 +4459,7 @@
     {
       "archetype": "loan_credit",
       "block_count": 26,
-      "byte_size": 4908,
+      "byte_size": 4865,
       "chunks": 8,
       "doc_id": "syn-ru-0132",
       "heading_count": 9,
@@ -4467,7 +4467,7 @@
       "language": "ru",
       "license": "CC0-1.0",
       "path": "docs/ru/syn-ru-0132.md",
-      "sha256": "d892010cbd4b687f0142bef4ec298a333220508845661fff728ba95bf5747459",
+      "sha256": "680ba42b1ce7f9dd9a05bea8bc1e14628c0ce51db08dab0c5df8d4f252fa9962",
       "source_format": "md",
       "title": "Кредит наличными: заявка, ставка и досрочное погашение — Стартовый"
     },
@@ -12636,9 +12636,9 @@
     "duplicate_documents_removed": 13,
     "faq_pairs": 1620,
     "tables": 810,
-    "tokens": 537305,
+    "tokens": 537259,
     "tokens_max": 131,
-    "tokens_mean": 74.326
+    "tokens_mean": 74.32
   },
   "tokenizer": "answerdesk-est-v1"
 }

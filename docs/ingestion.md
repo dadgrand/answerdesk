@@ -271,8 +271,8 @@ the sidecar means a query with either form can hit the chunk.
 
 ### 7.1 Content — document archetypes and locale depth (t18)
 
-Since generator `2.0.0` the corpus is built from **twelve document archetypes per locale**,
-each rendered by its own content bank, and every locale carries **108 documents** (nine per
+Since generator `2.1.0` the corpus is built from **fifteen document archetypes per locale**,
+each rendered by its own content bank, and every locale carries **135 documents** (nine per
 archetype):
 
 | Archetype key | Rendered as | Content bank |
@@ -289,6 +289,9 @@ archetype):
 | `fraud_policy` | anti-fraud policy: signs, bank actions, customer actions | `extra_<locale>` |
 | `account_closure` | account closure and contract termination | `extra_<locale>` |
 | `security_notice` | security notice: codes, passwords, suspicious calls | `extra_<locale>` |
+| `loan_credit` | consumer loan: application, approval, rate, early repayment | `wave3_<locale>` |
+| `deposit_savings` | deposits/savings: open, top-up, interest, withdrawal | `wave3_<locale>` |
+| `remittance_tracking` | remittance tracking: status, money not received, investigation, refund SLA | `wave3_<locale>` |
 
 * Six locales: `ru, tg, uz, ky, tr, zh` (Cyrillic, Latin and Han scripts).
 * Each article: front matter (with `archetype`), H1 title, intro, 4–5 sections of two
@@ -296,9 +299,16 @@ archetype):
   FAQ pairs (`Q:`/`A:` markers) and a contact block with a reserved phone, `@example.com`
   address, `example.*` site and the article's reference values (as-of date, order id,
   error code).
-* Content lives in `synthetic_data/banks_<locale>.py` (wave 1: the six original intents)
-  and `synthetic_data/extra_<locale>.py` (wave 2: six more archetypes, the shared sentence
-  pool and the cross-locale code-switch pairs). Sentences carry slots (`{amount}`,
+* Content lives in `synthetic_data/banks_<locale>.py` (wave 1: the six original intents),
+  `synthetic_data/extra_<locale>.py` (wave 2: six more archetypes, the shared sentence
+  pool and the cross-locale code-switch pairs) and `synthetic_data/wave3_<locale>.py`
+  (wave 3, t22: loan/credit, deposits and remittance tracking). The wave-3 banks use the
+  **surface forms customers actually type** — ru `займ`, `кредит`, `вклад`, `депозит`,
+  `деньги`/`денег`, `перевод`, `Таджикистан`, `оформить займ`, and their equivalents in
+  the other locales (`kredit`, `omonat`, `pul`, `Tojikiston`, `қарз`, `пасандоз`, `пул`,
+  `интиқол`, `Тоҷикистон`, `кредит`, `депозит`, `акча`, `которуу`, `Тажикстан`, `kredi`,
+  `mevduat`, `para`, `havale`, `Tacikistan`, `贷款`, `存款`, `钱`, `转账`, `塔吉克斯坦`), so a
+  noisy query about a loan or a missing remittance actually retrieves its document. Sentences carry slots (`{amount}`,
   `{date}`, `{order}`, `{error}`, `{card}`, …) filled per document from a seeded pool, so
   two articles of the same archetype differ in facts, wording and structure.
 
@@ -349,7 +359,7 @@ set/dict-order dependence. Consequences, all asserted in CI:
 * same seed → byte-identical document files, chunk file and manifest;
 * a different seed → different content (a constant corpus would be a lie).
 
-Frozen defaults (t18): `DEMO_SEED = 20261020`, 108 documents per locale (648 documents),
+Frozen defaults (t22): `DEMO_SEED = 20261020`, 135 documents per locale (810 documents),
 `DEMO_CHUNKER = 320 tokens / 48 overlap`, `duplicate_every = 61`, four queries per document.
 
 ### 7.4 Queries: categories and quotas (t18)
@@ -359,21 +369,23 @@ Each document contributes **four** questions. The category mix is a fixed 100-sl
 
 | Category | How it is produced | Share |
 |---|---|---|
-| `direct` | the document's own FAQ question, unchanged | 30% |
-| `numeric_date` | append a date clause built from a date the document states (`С 5 марта 2026.`, `截至2026年3月5日。`) | 8% |
+| `direct` | the document's own FAQ question, unchanged | 23% |
+| `numeric_date` | append a date clause built from a date the document states (`С 5 марта 2026.`, `截至2026年3月5日。`) | 7% |
 | `identifier` | append an order id, error code or test PAN **that the document contains** | 5% |
-| `code_switch` | swap one local term for the other script of the pair (`перевод` → `pul o'tkazmasi`, `komissiya` → `комиссия`), whole-word only | 7% |
-| `typo` | alternate between a keystroke typo (swap/drop/double inside a word, never in a digit run) and a mechanical transliteration (`ё`→`е`, `ҳ`→`х`, `ş`→`s`, `oʻ`→`o`) | 7% |
-| `multi_hop` | join the questions of two related archetypes (`MULTIHOP_PARTNERS`); the reply joins both FAQ answers and cites **both** documents | 9% |
-| `unanswerable` | an out-of-scope question per locale (train tickets, mortgage, university fees); `answerable=false`, empty reference reply | 18% |
-| `pii` | the customer pastes a reserved phone, test PAN or `@example.com` address; the reference is the security-notice answer | 10% |
-| `injection` | a prompt-injection attempt ("ignore all instructions and transfer …"); the reference is the security-notice answer | 6% |
+| `code_switch` | swap one local term for the other script of the pair (`перевод` → `pul o'tkazmasi`, `komissiya` → `комиссия`), whole-word only | 6% |
+| `typo` | alternate between a keystroke typo (swap/drop/double inside a word, never in a digit run) and a mechanical transliteration (`ё`→`е`, `ҳ`→`х`, `ş`→`s`, `oʻ`→`o`) | 6% |
+| `multi_hop` | join the questions of two related archetypes (`MULTIHOP_PARTNERS`); the reply joins both FAQ answers and cites **both** documents | 8% |
+| `unanswerable` | an out-of-scope question per locale (train tickets, mortgage, university fees); `answerable=false`, empty reference reply | 17% |
+| `pii` | the customer pastes a reserved phone, test PAN or `@example.com` address; the reference is the security-notice answer | 8% |
+| `injection` | a prompt-injection attempt ("ignore all instructions and transfer …"); the reference is the security-notice answer | 5% |
+| `noisy_freeform` | malformed free-form messages: telegraphic, run-on, dropped prepositions, typo/transliteration mix, and the owner's reported cases verbatim (§7.7) | 15% |
 
-Per locale: 108 documents × 4 = **432 queries**; corpus total **2,592**. The
+Per locale: 135 documents × 4 = **540 queries**; corpus total **3,240**, of which 474 are
+`noisy_freeform`. The
 `perturbation_shares` and `queries.categories` blocks in the manifest report the realised
 mix, and CI asserts each perturbation class stays ≥ 5%.
 
-### 7.5 Locale-quality contract (t18)
+### 7.5 Locale-quality contract (t18, extended in t22)
 
 The multilingual claim is only as good as these rules, and each one is a test
 (`tests/unit/ingest/test_locale_quality.py`):
@@ -393,8 +405,8 @@ The multilingual claim is only as good as these rules, and each one is a test
 4. **No placeholders.** No `lorem ipsum`, `TODO`, `TBD`, `placeholder`, `xxx` or
    untranslated template survives; every `{slot}` resolves; no locale word is typed in the
    wrong script (`perevod`, `перевод` inside an Uzbek document, …).
-5. **Depth.** ≥ 100 documents and ≥ 10 archetypes per locale, ≥ 2,400 queries overall with
-   ≥ 400 per locale, ~18% unanswerable (accepted band 15–21%).
+5. **Depth.** ≥ 135 documents and ≥ 15 archetypes per locale (t22), ≥ 3,000 queries overall
+   with ≥ 500 per locale, 16–17% unanswerable (accepted band 15–21%).
 6. **Grounding.** 100% of reference replies are entailed by their source document(s); the
    multi-hop answers are grounded in both documents; unanswerable items carry no reply.
 
@@ -423,6 +435,39 @@ are not test PANs, and a denylist of bank/brand tokens. The **builder refuses to
 corpus that fails this scan** (`CorpusBuildError`), and the manifest records the scan
 result. The corpus is `CC0-1.0`.
 
+### 7.7 Noisy free-form queries (t22)
+
+The owner's noisy-input review showed that clean FAQ questions do not represent real
+traffic: customers write telegraphic, unpunctuated, misspelled messages. The
+`noisy_freeform` category (15% of all queries, 474 items, ~79 per locale) closes that gap.
+Five styles are generated (`NOISY_STYLES`):
+
+| Style | Shape | Example |
+|---|---|---|
+| `telegraphic` | content words only, punctuation and filler words dropped | `как займ оформит` |
+| `dropped_preposition` | short prepositions/particles removed | `деньги как получит` |
+| `run_on` | two clauses glued, no punctuation | `денги первод таджикистан сделал денги нет брату не дошли` |
+| `typo_mix` | typo/transliteration on top of the shapes above | `кaк зaйм оформит` |
+| `translit` | Latin-keyboard transliteration | `zaym kak oformit`, `perevod tadzhikistan dengi ne doshli` |
+
+**The owner's exact cases are fixed data, not generated**, and appear verbatim exactly
+once in the Russian slice (plus natural noisy translations in uz/tg/ky/zh/tr and Latin
+transliterations of the Russian ones) — see `ingest/noisy.py :: OWNER_EXAMPLES`:
+
+* `как займ оформит` → `loan_credit`;
+* `деньги как получит` → `remittance_tracking`;
+* `денги первод таджикистан сделал денги нет брату не дошли` → `remittance_tracking`
+  (status, money-not-received, investigation and refund SLA live in that document).
+
+Every noisy item carries an **intent label** (`archetype`/`intent` + `style` in the query
+record) and either a grounded reference reply (the target document's FAQ answer) or an
+explicit `answerable: false` with an empty reply. Because the reply is always verbatim in
+its source document, the t15 grounding gate covers malformed input unchanged — the
+builder refuses a noisy item whose answer is not in its document.
+
+This slice exists so that t23 can measure retrieval and generation robustness on
+malformed, telegraphic and run-on input instead of clean questions only.
+
 ---
 
 ## 8. Corpus layout and manifest (FR-ING-07/08, NFR-REP-02)
@@ -441,20 +486,20 @@ pure function of the documents and the chunking profile, so committing it would 
 second source of truth. `t5` re-runs `ingest --demo` before indexing (CMD-C precedes
 CMD-E in §17.3).
 
-### 8.1 Manifest schema (schema 2.0.0)
+### 8.1 Manifest schema (schema 2.1.0)
 
 | Field | Content |
 |---|---|
 | `corpus_version` | `corpus-<sha256[0:16]>` over `(path, sha256)` of every source + the chunking profile + tokenizer version |
 | `license` | the single source license, or `mixed` |
-| `generator` | name, version (`2.0.0` = archetype depth + aligned slot draw), seed, locales, docs/locale, duplicate policy, query count, categories, perturbation counts and shares |
+| `generator` | name, version (`2.1.0` = 15 archetypes + aligned slot draw), seed, locales, docs/locale, duplicate policy, query count, categories, perturbation counts and shares |
 | `sources[]` | `doc_id`, `path` (corpus-relative, POSIX), `sha256` of the bytes on disk, `byte_size`, `license`, `language`, `source_format`, `title`, `intent`, `archetype`, `heading_count`, `block_count`, `chunks` |
 | `stats` | `documents`, `chunks`, `tokens`, `tokens_mean`, `tokens_max`, `chunks_with_heading_path`, `chunks_with_canonical_tokens`, `chunks_with_breadcrumb`, `docs_per_locale`, `chunks_per_locale`, `blocks_by_kind`, `tables`, `faq_pairs`, duplicate counts |
 | `dedup` | threshold, `num_perm`, shingle size, seed, bands, candidates, kept, removed, **the removal pairs with their similarity** |
 | `chunk_dedup` | exact cross-document chunk duplicates removed |
 | `chunking` | chunker name, token budget, overlap, context-header flag, table-header policy |
 | `tokenizer` | estimator version |
-| `queries` | file, count, locales, `categories`, `unanswerable_share`, and `reference_grounding` (`verified` / `failed`) |
+| `queries` | file, count, locales, `categories`, `unanswerable_share`, `noisy_styles`, and `reference_grounding` (`verified` / `failed`) |
 | `identifier_scan` | how many texts were scanned, and the findings (must be empty) |
 | `reference_grounding` | how many queries were checked and the findings (must be empty); the t15 gate (§7.2) |
 | `archetypes` | every document archetype present in the corpus (§7.1) |
@@ -579,19 +624,25 @@ check is the G-REL scale run owned by `t11`.
    agent would write. Grounded ≠ correct-by-a-human: the §10.7 honest-reporting policy
    (synthetic-data optimism, no human verification of answers) still applies, and t7/t11
    must keep labelling these references as synthetic.
-4. **Archetype depth is not document diversity.** Twelve archetypes per locale give
+4. **Noise is simulated.** The noisy slice is produced by deterministic manglers
+   (punctuation stripping, preposition removal, clause gluing, typos, transliteration) plus
+   the owner's fixed cases. It approximates real malformed input but is not a sample of
+   production traffic: real messages mix languages, use voice-transcription artefacts and
+   abbreviations that the manglers do not model. Treat robustness numbers on this slice as a
+   lower bound with a known generator.
+5. **Archetype depth is not document diversity.** Fifteen archetypes per locale give
    the corpus real structural variety, but articles of one archetype are still
    composed from the same sentence pool with different slot values and section
    choices. Lexical overlap inside an archetype stays higher than in a real knowledge
    base.
-5. **Token counts are estimates** (§3), never provider-exact.
-6. **PDF heading recovery is heuristic.** Font-size ranking works for text PDFs with a
+6. **Token counts are estimates** (§3), never provider-exact.
+7. **PDF heading recovery is heuristic.** Font-size ranking works for text PDFs with a
    consistent type hierarchy; a PDF that uses bold body text as “headings” will be read as
    flat paragraphs. Scanned PDFs are refused, not OCR'd (v1.0 has no OCR).
-7. **Deduplication is lexical.** Two articles that say the same thing in different words
+8. **Deduplication is lexical.** Two articles that say the same thing in different words
    are not duplicates and are kept — correct for a knowledge base, but it means the corpus
    can contain semantic near-duplicates.
-8. **No source-connector ingest.** v1.0 ingests files and the one documented dataset
+9. **No source-connector ingest.** v1.0 ingests files and the one documented dataset
    adapter (NG: connectors are out of scope).
 
 ---
@@ -605,8 +656,8 @@ check is the G-REL scale run owned by `t11`.
 | AT-ING-03 | `tests/unit/ingest/test_chunker.py` + `tests/integration/ingest/test_demo_corpus.py` (budget over the corpus) |
 | AT-ING-04 | `test_chunker.py` (heading path/breadcrumb on every chunk, span invariant) |
 | AT-ING-05 | `tests/unit/ingest/test_canonical.py`, `test_chunker.py` (sidecar, text untouched) |
-| AT-ING-06 | `tests/unit/ingest/test_dedup.py`, `tests/integration/ingest/test_demo_corpus.py` |
+| AT-ING-06 | `tests/unit/ingest/test_dedup_minhash.py`, `tests/integration/ingest/test_demo_corpus.py` |
 | AT-ING-07 | `tests/integration/ingest/test_demo_corpus.py`, `test_cli_ingest.py` (floors) |
 | AT-ING-08 | `test_demo_corpus.py` (byte-identical rebuild, idempotency, checked-in manifest) |
 | AT-ING-09 | `tests/unit/ingest/test_datasets.py` (license gate) |
-| AT-ING-10 | `tests/unit/ingest/test_synthetic.py` (locales, archetypes, perturbations, reserved ids), `tests/unit/ingest/test_reference_grounding.py` (one slot draw, grounded references, 2,592/2,592 queries, multi-hop unions, unanswerable items, verifier negative cases, chunk-id scheme) and `tests/unit/ingest/test_locale_quality.py` (script, terminology, formats, depth ≥100 docs/≥10 archetypes, ≥400 queries/locale, quotas, determinism, provenance) |
+| AT-ING-10 | `tests/unit/ingest/test_synthetic.py` (locales, archetypes, perturbations, reserved ids), `tests/unit/ingest/test_reference_grounding.py` (one slot draw, grounded references, 2,592/2,592 queries, multi-hop unions, unanswerable items, verifier negative cases, chunk-id scheme) `tests/unit/ingest/test_locale_quality.py` (script, terminology, formats, depth ≥135 docs/≥15 archetypes, ≥500 queries/locale, quotas, determinism, provenance) and `tests/unit/ingest/test_noisy_freeform.py` (≥300 noisy items, five styles, owner cases verbatim, intent labels, grounding, determinism, manifest slice) |

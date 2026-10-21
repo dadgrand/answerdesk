@@ -23,7 +23,8 @@ EXTRA_INTENTS: dict[str, IntentBank] = {
         faqs=(
             (
                 "Kredi başvurusu nasıl yapılır?",
-                "Başvuru uygulamadan veya şubeden yapılır ve {days} iş günü içinde değerlendirilir.",
+                "Başvuru uygulamadan veya şubeden yapılır ve {days} iş günü içinde "
+                "değerlendirilir.",
             ),
             (
                 "Kredi erken ödenebilir mi?",

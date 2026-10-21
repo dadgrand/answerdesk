@@ -19,8 +19,8 @@ noisy queries exactly as it covers clean ones.
 
 from __future__ import annotations
 
-import re
 import random
+import re
 from dataclasses import dataclass
 
 #: Noisy style labels reported in the manifest and the query records.
@@ -231,7 +231,9 @@ def make_telegraphic(text: str, locale: str, rng: random.Random) -> str:
     if len(kept) < 2:
         kept = words
     # a telegraphic message also loses the last word's ending punctuation and may end mid-word
-    result = " ".join(kept).casefold() if locale in ("ru", "tg", "ky", "uz", "tr") else "".join(kept)
+    result = (
+        " ".join(kept).casefold() if locale in ("ru", "tg", "ky", "uz", "tr") else "".join(kept)
+    )
     if rng.random() < 0.5 and len(result) > 3:
         result = result[:-1] if result[-1].isalpha() else result
     return result
