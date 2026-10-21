@@ -19,6 +19,14 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+
+pytest.importorskip(
+    "fastapi",
+    reason=(
+        "the service tests need the `api` extra: uv sync --extra api --extra dev "
+        "(CI installs it and fails without it)"
+    ),
+)
 from service_support import ADMIN_TOKEN, lifespan_client, run
 
 from answerdesk.config import Settings, load_settings
@@ -34,14 +42,8 @@ pytestmark = pytest.mark.integration
 #: Modules the ``api`` extra installs. The service suite is their only consumer.
 _SERVICE_ONLY_MODULES = ("fastapi", "starlette", "sse_starlette")
 
-#: The CI gate installs the ``dev`` extra only, so the API stack may legitimately be absent.
-pytest.importorskip(
-    "fastapi",
-    reason=(
-        "the service tests need the `api` extra: uv sync --extra api --extra dev "
-        "(CI installs dev only and skips this directory)"
-    ),
-)
+#: The api extra is optional locally; CI installs it, and tests/conftest.py aborts the
+#: session when ANSWERDESK_REQUIRE_API=1 and the extra is missing (t34).
 
 
 @pytest.fixture(autouse=True)

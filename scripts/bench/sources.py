@@ -142,7 +142,8 @@ def fetch(
             digest = sha256_file(destination)
             if destination.stat().st_size != entry.bytes or digest != entry.sha256:
                 raise RuntimeError(
-                    f"{entry.cache_path}: downloaded {destination.stat().st_size} bytes / {digest}, "
+                    f"{entry.cache_path}: downloaded "
+                    f"{destination.stat().st_size} bytes / {digest}, "
                     f"pinned {entry.bytes} / {entry.sha256}. The upstream file changed; "
                     "review it and re-pin deliberately."
                 )

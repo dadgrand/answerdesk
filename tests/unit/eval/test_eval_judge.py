@@ -141,29 +141,46 @@ def test_rubric_judge_fails_loudly_on_garbage() -> None:
         judge.grade(question="grade", reference_answer=None, candidate_answer="x", context=[])
 
 
-def test_judge_metadata_is_not_reportable_without_kappa() -> None:
+def test_judge_metadata_is_not_reportable_without_a_generator_model() -> None:
     metadata = judge_metadata(
         judge_model="fake-judge", prompt_version="none", rubric_version="fake-rubric-1"
     )
     assert metadata.reportable is False
-    assert "not reportable" in metadata.note
+    assert "generator model not recorded" in metadata.note
     assert metadata.position_swap is True
 
 
-def test_judge_metadata_reportability_follows_kappa() -> None:
-    good = judge_metadata(
-        judge_model="m",
+def test_judge_metadata_reportability_follows_the_family_rule() -> None:
+    """§10.5: reportable means cross-family; κ is reported separately (F-10)."""
+    cross = judge_metadata(
+        judge_model="deepseek-flash",
         prompt_version="p1",
         rubric_version="r1",
+        generator_model="qwen3.6-35b-a3b-noreason",
         agreement={"ru": (0.72, 150), "tr": (0.65, 120)},
     )
-    assert good.reportable is True
-    assert good.agreement_n == {"ru": 150, "tr": 120}
-    bad = judge_metadata(
-        judge_model="m", prompt_version="p1", rubric_version="r1", agreement={"ru": (0.4, 150)}
+    assert cross.reportable is True
+    assert cross.human_calibrated is True
+    assert cross.agreement_n == {"ru": 150, "tr": 120}
+    same_family = judge_metadata(
+        judge_model="qwen3.6-35b-a3b-noreason",
+        prompt_version="p1",
+        rubric_version="r1",
+        generator_model="qwen3.6-35b-a3b-noreason",
+        agreement={"ru": (0.72, 150)},
     )
-    assert bad.reportable is False
-    assert "κ" in bad.note
+    assert same_family.reportable is False
+    assert "same-family" in same_family.note
+    uncalibrated = judge_metadata(
+        judge_model="deepseek-flash",
+        prompt_version="p1",
+        rubric_version="r1",
+        generator_model="qwen3.6-35b-a3b-noreason",
+        agreement={"ru": (0.4, 150)},
+    )
+    assert uncalibrated.reportable is True  # cross-family, but κ is below the reporting floor
+    assert uncalibrated.human_calibrated is False
+    assert "κ" in uncalibrated.note
 
 
 def test_human_agreement_is_per_locale_kappa() -> None:

@@ -1,0 +1,122 @@
+# Live benchmark configuration (t11) — the record of what the evidence run used.
+#
+# This file is documentation *and* a machine-readable record: `scripts/build-results.py`
+# prints the fields below in docs/results.md, and a reviewer can reproduce the run from it.
+# It is not loaded by `answerdesk` at runtime (the live environment is set by
+# `scripts/live-env.ps1`), so it cannot silently drift from the code path by accident —
+# changing it is a deliberate, reviewable act.
+
+run:
+  id: bench
+  artifacts: reports/bench/
+  results_document: docs/results.md
+  builder: scripts/build-results.py
+
+corpus:
+  version: corpus-v2.1              # manifest.json -> corpus_version is authoritative
+  notes: >-
+    810 documents / 12 archetypes / 6 locales, including loan/credit, deposits and
+    remittance-tracking and a noisy_freeform query category (telegraphic, run-on,
+    dropped-preposition). Every seed query's reference reply is grounded in its own
+    document (t15/t18/t22).
+
+generation:
+  primary:
+    model_id: qwen3.6-35b-a3b-noreason
+    family: qwen
+    served_by: NeuralDeep (OpenAI-compatible)
+    base_url: https://api.neuraldeep.ru/v1
+    max_tokens: 1024
+    note: >-
+      The reasoning variant (qwen3.6-35b-a3b) spends its whole JSON budget on the reasoning
+      trace (measured: 4096-token traces, PROVIDER_ERROR after the strict re-ask), so the
+      no-reason variant of the same release generates the answers. Both ids are recorded in
+      every table.
+  secondary:
+    model_id: deepseek-flash
+    family: deepseek
+    base_url: https://api.deepseek.com/v1
+
+judge:
+  primary_arm_judge:
+    model_id: deepseek-flash
+    family: deepseek
+    rubric: rubric-v1
+    prompt_version: judge-rubric-1
+  secondary_arm_judge:
+    model_id: qwen3.6-35b-a3b-noreason
+    family: qwen
+  rule: >-
+    §10.5: the judge must come from a different family than the generator. The harness
+    records both families and marks same-family runs diagnostic (reportable=no).
+
+retrieval:
+  embedder:
+    backend: api
+    model: bge-m3
+    dimension: 1024
+    served_by: NeuralDeep
+  reranker:
+    backend: api
+    model: bge-reranker
+    served_by: NeuralDeep
+  arms:
+    - bm25
+    - dense
+    - rrf@10
+    - rrf@60
+    - rrf@100
+    - cc@0.5
+    - cc@0.6
+    - cc@0.7
+    - cc@0.75
+    - cc@0.8
+    - cc@0.9
+    - cc@0.75+rerank
+  top_k: 50
+  gate_k: 20
+  context_k: 12
+  k_reporting: [10, 20]
+  fit: >-
+    convex-combination alpha and the RRF constant are chosen on the dev split only;
+    the test split is never used for fitting (INV-09).
+
+policy:
+  engine: answerdesk.policy.DecisionEngine   # conformal threshold ∩ cost bands ∩ guards
+  calibration: split-conformal q-hat fitted on the dev split by the benchmark
+  alphas: {informational: 0.05, transactional: 0.02, account_legal: 0.01}
+  costs: {c_wrong: 1.0, c_abstain: 0.10, c_delay: 0.05}
+  operating_point_rule: >-
+    the answering threshold is selected on the dev/calibration turns (max coverage subject
+    to realised risk <= 2% there, the same split the conformal q-hat is fitted on) and then
+    applied unchanged to the held-out test split. The test risk-coverage curve is reported
+    in full; the test-optimal point is labelled "oracle upper bound (diagnostic)" and is
+    excluded from the headline table.
+  cost_sensitivity_ratios: ["2:1", "5:1", "10:1"]
+
+statistics:
+  bootstrap_samples: 1000
+  interval: 0.95
+  method: >-
+    Wilson for proportions, paired bootstrap over queries for means and arm deltas,
+    McNemar (exact-binomial below 25 discordant pairs) for binary any-hit outcomes,
+    two-level bootstrap for macro rows.
+
+sample_sizes:
+  retrieval: full frozen test split (~540 cases; every labelled query)
+  generation: 400 cases stratified over locales and categories (t17 playbook: n≈400 for
+    5-point differences at 80% power, n≥150 for a single claim)
+  calibration: dev split (never test)
+
+replay_fallback:
+  trigger: no API key, or --provider fake, or --replay
+  behaviour: >-
+    deterministic doubles (FakeProvider / FakeJudge / hashing embedder) run the same code
+    path; every affected block is labelled REPLAY-MODE and no USD/latency claim is made.
+
+pricing:
+  table: configs/pricing.yaml
+  note: >-
+    The benchmark keys exposed no per-token billing statement, so the recorded rate is 0.0
+    for both served models; token counts are measured and reported alongside so a priced
+    comparison is possible once list prices are recorded in the table.

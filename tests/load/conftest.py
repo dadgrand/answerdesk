@@ -16,11 +16,13 @@ from types import ModuleType
 
 import pytest
 
+#: The api extra is optional locally; CI installs it, and tests/conftest.py aborts the
+#: session when ANSWERDESK_REQUIRE_API=1 and the extra is missing (t34).
 pytest.importorskip(
     "fastapi",
     reason=(
         "the load harness drives the HTTP app: uv sync --extra api --extra dev "
-        "(CI installs dev only and skips this directory)"
+        "(CI installs it and fails without it)"
     ),
 )
 

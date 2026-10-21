@@ -22,7 +22,8 @@ env:
   PYTHONUNBUFFERED: "1"
 
 jobs:
-  # Fast gate (target ≤ 3 min): structure, contracts and lint on every push.
+  # Fast gate (target <= 3 min): lint, structure and unit tests on every push.
+  # Dev extra only: these tests never import the API stack, so the gate stays lean.
   fast:
     name: fast gate
     runs-on: ubuntu-latest
@@ -32,13 +33,14 @@ jobs:
       - uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
+          cache-dependency-glob: "uv.lock"
           python-version: "3.12"
       - name: Install (dev extra only, no API key)
         run: uv sync --extra dev --frozen
-      - name: Lint
-        run: uv run ruff check src tests
-      - name: Format check
-        run: uv run ruff format --check src tests
+      - name: Lint (whole repository, including scripts/)
+        run: uv run ruff check .
+      - name: Format check (whole repository)
+        run: uv run ruff format --check .
       - name: Smoke and contract tests
         run: uv run pytest -q -m smoke
       - name: Unit tests
@@ -46,7 +48,10 @@ jobs:
       - name: Contracts import smoke
         run: uv run python -c "import answerdesk; from answerdesk.contracts import Answer; print('ok')"
 
-  # Full gate (target ≤ 10 min): the whole offline suite on Linux and Windows.
+  # Full gate (target <= 20 min): the whole offline suite on Linux and Windows, with the
+  # API extra installed. The service, property and load suites `pytest.importorskip` when
+  # the extra is absent locally; ANSWERDESK_REQUIRE_API=1 turns that skip into a failure,
+  # so CI can never go green while the service itself was not tested.
   test:
     name: offline gate (${{ matrix.os }}, py${{ matrix.python-version }})
     runs-on: ${{ matrix.os }}
@@ -57,19 +62,33 @@ jobs:
         os: [ubuntu-latest, windows-latest]
         python-version: ["3.12"]
         include:
+          # uv.lock declares requires-python = ">=3.11, <3.14"; the 3.11 leg proves the
+          # floor is real rather than declared.
           - os: ubuntu-latest
             python-version: "3.11"
+    env:
+      ANSWERDESK_REQUIRE_API: "1"
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
+          cache-dependency-glob: "uv.lock"
           python-version: ${{ matrix.python-version }}
-      - name: Install (dev extra only, no API key)
-        run: uv sync --extra dev --frozen
+      - name: Install (dev + api extras, no key)
+        run: uv sync --extra dev --extra api --frozen
       - name: Type check
         run: uv run mypy src/answerdesk
-      - name: Tests (no network, no key)
+      - name: Tests (no network, no key; service suites must run, not skip)
+        # Two skips are expected and documented in their own modules:
+        #  * tests/integration/generation/test_local_http_server.py is loopback-only and
+        #    needs ANSWERDESK_ALLOW_NETWORK=1 (deliberately not set here);
+        #  * tests/unit/bench/test_bench_determinism.py skips without the 1.6 GB download
+        #    cache and builds its fixture instead.
+        # Every other skip would mean an extra is missing — ANSWERDESK_REQUIRE_API=1 above
+        # makes the api-dependent suites fail instead of skipping.
         run: uv run pytest -q
+      - name: Load smoke (real ASGI app, offline)
+        run: uv run python scripts/load.py --smoke
       - name: Contracts import smoke
         run: uv run python -c "import answerdesk; from answerdesk.contracts import Answer; print('ok')"

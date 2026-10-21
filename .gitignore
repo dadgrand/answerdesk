@@ -33,6 +33,12 @@ pytest-of-*/
 logs/
 reports/_tmp/
 reports/*/tmp/
+# Scratch runs and intermediate bench phases are not evidence; the final run
+# lives in reports/bench/ and is committed.
+reports/_*
+reports/bench-*/
+reports/calibration-*/
+docs/_*
 data/index/
 data/service/
 data/external/

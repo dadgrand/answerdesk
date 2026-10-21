@@ -135,6 +135,7 @@ def test_stubs_name_their_owning_task_and_exit_two(argv: list[str], owner: str) 
 
 def test_serve_delegates_to_the_service_runner(monkeypatch: pytest.MonkeyPatch) -> None:
     """FR-SVC-01/07: `serve` is implemented and delegates to answerdesk.service."""
+    pytest.importorskip("fastapi", reason="serve needs the api extra")
     import answerdesk.service.server as server_module
 
     captured: dict[str, object] = {}
@@ -154,6 +155,7 @@ def test_serve_delegates_to_the_service_runner(monkeypatch: pytest.MonkeyPatch) 
 
 def test_serve_exports_the_openapi_schema_without_a_server(tmp_path: Path) -> None:
     """The OpenAPI document is reproducible from one command (docs/api.md §7)."""
+    pytest.importorskip("fastapi", reason="the OpenAPI export needs the api extra")
     target = tmp_path / "openapi.json"
     result = runner.invoke(app, ["serve", "--export-openapi", str(target)])
     assert result.exit_code == 0, _combined(result)

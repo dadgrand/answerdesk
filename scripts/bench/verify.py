@@ -245,7 +245,8 @@ def verify(
     verdicts.append(
         _pass(
             "passages",
-            f"{report['passages']['passages']} passages, {report['passages']['references_checked']} references resolve",
+            f"{report['passages']['passages']} passages, "
+            f"{report['passages']['references_checked']} references resolve",
         )
         if report["passages"]["ok"]
         else _fail("passages", "; ".join(report["passages"]["problems"][:6]))
@@ -263,7 +264,8 @@ def verify(
         if report["dedup"]["ok"]
         else _fail(
             "minhash_dedup",
-            f"{report['dedup']['duplicate_count']} near-duplicate pairs: {report['dedup']['duplicates'][:3]}",
+            f"{report['dedup']['duplicate_count']} near-duplicate pairs: "
+            f"{report['dedup']['duplicates'][:3]}",
         )
     )
     verdicts.append(
@@ -274,7 +276,8 @@ def verify(
     verdicts.append(
         _pass(
             "split_disjointness",
-            f"{report['splits']['ids_by_split']} ids; documents {report['splits']['documents_by_split']}",
+            f"{report['splits']['ids_by_split']} ids; documents "
+            f"{report['splits']['documents_by_split']}",
         )
         if report["splits"]["ok"]
         else _fail("split_disjointness", "; ".join(report["splits"]["problems"][:6]))
@@ -326,11 +329,13 @@ def _golden_checks(
         return [
             _warn(
                 "golden_disjointness",
-                f"{golden_dir} is not present; the t11 exclusion cannot be re-checked on this checkout",
+                f"{golden_dir} is not present; the t11 exclusion cannot be "
+                "re-checked on this checkout",
             ),
             _warn(
                 "exclusions_recorded",
-                f"{len(exclusions.get('excluded_document_ids', []))} exclusions recorded; live golden split absent",
+                f"{len(exclusions.get('excluded_document_ids', []))} exclusions "
+                "recorded; live golden split absent",
             ),
         ]
 
@@ -346,8 +351,8 @@ def _golden_checks(
         verdicts.append(
             _warn(
                 "golden_disjointness",
-                "t11's golden items changed since the release was built; no document overlaps today, "
-                "but rebuild the benchmark to re-freeze the exclusion set",
+                "t11's golden items changed since the release was built; no document "
+                "overlaps today, but rebuild the benchmark to re-freeze the exclusion set",
             )
         )
     else:
@@ -364,15 +369,16 @@ def _golden_checks(
         verdicts.append(
             _warn(
                 "exclusions_recorded",
-                f"golden snapshot advanced ({len(unrecorded)} live documents are not recorded as excluded); "
-                "rebuild to refresh",
+                f"golden snapshot advanced ({len(unrecorded)} live documents are not "
+                "recorded as excluded); rebuild to refresh",
             )
         )
     elif unrecorded:
         verdicts.append(
             _fail(
                 "exclusions_recorded",
-                f"{len(unrecorded)} t11 documents are not recorded as excluded, e.g. {unrecorded[:4]}",
+                f"{len(unrecorded)} t11 documents are not recorded as excluded, "
+                f"e.g. {unrecorded[:4]}",
             )
         )
     else:
@@ -437,8 +443,9 @@ def _domain_evidence_checks(items: Sequence[Mapping[str, Any]], corpus_dir: Path
     return [
         _warn(
             "domain_evidence",
-            f"{len(problems)} quote(s) no longer match the live corpus ({detail}); the release pins corpus "
-            f"manifest {pinned_hash[:12]}… while the checkout has {live_hash[:12]}… — rebuild to refresh",
+            f"{len(problems)} quote(s) no longer match the live corpus ({detail}); the "
+            f"release pins corpus manifest {pinned_hash[:12]}… while the checkout has "
+            f"{live_hash[:12]}… — rebuild to refresh",
         )
     ]
 

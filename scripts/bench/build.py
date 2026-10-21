@@ -277,7 +277,8 @@ def build_belebele(
                             "derivation": "derived_qrels_from_belebele_gold_passage",
                             "modifications": [
                                 *provenance["modifications"],
-                                "relevance label derived: the question's gold passage is the only qrel",
+                                "relevance label derived: the question's gold passage is "
+                                "the only qrel",
                             ],
                         },
                         "query": str(row["question"]),
@@ -814,7 +815,8 @@ def _domain_items(
             break
     if len(picked_unanswerable) < quota:
         raise RuntimeError(
-            f"domain {language}/unanswerable: only {len(picked_unanswerable)} distinct questions, need {quota}"
+            f"domain {language}/unanswerable: only {len(picked_unanswerable)} "
+            f"distinct questions, need {quota}"
         )
     for position, query in enumerate(picked_unanswerable):
         add(
@@ -956,9 +958,8 @@ def assemble(
     items, passages, passage_files = read_bench(files)
     report = all_checks(items, passages, passage_files)
     if enforce_checks and not report["ok"]:
-        raise RuntimeError(
-            f"build produced a release that fails its own checks: {json.dumps(report, ensure_ascii=False)[:2000]}"
-        )
+        detail = json.dumps(report, ensure_ascii=False)[:2000]
+        raise RuntimeError(f"build produced a release that fails its own checks: {detail}")
 
     file_rows = [
         {
@@ -1003,7 +1004,10 @@ def assemble(
                 "queries_per_language": limits.belebele_test + limits.belebele_dev,
                 "test_per_language": limits.belebele_test,
                 "dev_per_language": limits.belebele_dev,
-                "passage_split": f"one passage in {BELEBELE_SPLIT_MODULUS} is dev, by sha256(seed, language, passage_id)",
+                "passage_split": (
+                    f"one passage in {BELEBELE_SPLIT_MODULUS} is dev, "
+                    "by sha256(seed, language, passage_id)"
+                ),
                 "question_split": "a question inherits the split of its gold passage",
                 "pool": "every unique FLORES passage of the language variant",
             },
@@ -1013,7 +1017,9 @@ def assemble(
             },
             "domain": {
                 "quotas": dict(limits.domain_quotas),
-                "dev_fraction": f"one item in {DOMAIN_DEV_MODULUS}, by seeded rank within each category",
+                "dev_fraction": (
+                    f"one item in {DOMAIN_DEV_MODULUS}, by seeded rank within each category"
+                ),
                 "unused_documents_only": True,
             },
             "minhash": {
@@ -1028,9 +1034,10 @@ def assemble(
             "ids": report["splits"]["ids_by_split"],
             "domain_documents": report["splits"]["documents_by_split"],
             "t11_disjointness": (
-                "domain documents exclude every document that appears as evidence of a t11 golden item "
-                "(evals/golden/v1 test, dev and adversarial); the split assigns all corpus documents by "
-                "construction, so split membership is recorded but not used for exclusion"
+                "domain documents exclude every document that appears as evidence of "
+                "a t11 golden item (evals/golden/v1 test, dev and adversarial); the "
+                "split assigns all corpus documents by construction, so split "
+                "membership is recorded but not used for exclusion"
             ),
         },
         "license_map": {
@@ -1058,8 +1065,9 @@ def assemble(
             "language_field": "language",
             "license_field": "license",
             "domain_note": (
-                "domain items cite data/corpus document ids (gold_evidence_ids, evidence[].doc_id) "
-                "and carry verbatim evidence quotes; they are not part of the retrieval passage pools"
+                "domain items cite data/corpus document ids (gold_evidence_ids, "
+                "evidence[].doc_id) and carry verbatim evidence quotes; they are not "
+                "part of the retrieval passage pools"
             ),
         },
     }

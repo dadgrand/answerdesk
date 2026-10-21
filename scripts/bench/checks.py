@@ -170,7 +170,8 @@ def answer_checks(
             )
             if abs(recomputed - float(item["answer_anchor"])) > 1e-6:
                 problems.append(
-                    f"{item['item_id']}: answer_anchor {item['answer_anchor']} != recomputed {recomputed}"
+                    f"{item['item_id']}: answer_anchor {item['answer_anchor']} != "
+                    f"recomputed {recomputed}"
                 )
         elif suite == "domain":
             checked += 1
@@ -325,7 +326,10 @@ def split_checks(
 
     return {
         "ok": not problems,
-        "policy": "seeded hash split; a passage (Belebele) or document (domain) is gold evidence in exactly one split",
+        "policy": (
+            "seeded hash split; a passage (Belebele) or document (domain) is gold "
+            "evidence in exactly one split"
+        ),
         "ids_by_split": {split: len(values) for split, values in sorted(ids_by_split.items())},
         "documents_by_split": {
             split: len(values) for split, values in sorted(docs_by_split.items())

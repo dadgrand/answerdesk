@@ -36,6 +36,28 @@ from answerdesk.contracts import (
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
+def pytest_configure(config: pytest.Config) -> None:
+    """Fail fast when CI is missing the api extra instead of silently skipping suites.
+
+    ``tests/integration/service``, ``tests/property`` and ``tests/load`` call
+    ``pytest.importorskip("fastapi")`` so a developer without the extra can still run the
+    base suite. In CI the extra is mandatory (``ANSWERDESK_REQUIRE_API=1``, set by
+    ``.github/workflows/ci.yml``): without this guard those suites would disappear and the
+    pipeline would look green while the service was never tested (t34).
+    """
+    if os.environ.get("ANSWERDESK_REQUIRE_API") != "1":
+        return
+    try:
+        import fastapi  # noqa: F401
+        import sse_starlette  # noqa: F401
+        import starlette  # noqa: F401
+    except ModuleNotFoundError as exc:  # pragma: no cover - CI misconfiguration
+        raise pytest.UsageError(
+            "ANSWERDESK_REQUIRE_API=1 but the api extra is missing: "
+            "uv sync --extra dev --extra api --frozen"
+        ) from exc
+
+
 @pytest.fixture(autouse=True)
 def _hermetic_env(monkeypatch: pytest.MonkeyPatch) -> None:
     """Drop ambient ``ANSWERDESK_*`` variables so tests do not depend on the shell.

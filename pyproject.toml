@@ -137,6 +137,10 @@ target-version = "py311"
 src = ["src", "tests"]
 force-exclude = true
 exclude = [".venv", "build", "dist", "reports"]
+# ruff format (>=0.14) also rewrites Python fences inside Markdown, and data/ holds
+# dataset content rather than repository code; both are owned elsewhere, so neither is
+# gated here. Every Python source file stays in scope for check and format.
+extend-exclude = ["data", "**/*.md"]
 
 [tool.ruff.lint]
 select = [

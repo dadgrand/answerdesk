@@ -4,7 +4,8 @@
 Usage (from the ``answerdesk`` repository root)::
 
     uv run python scripts/build_bench.py --fetch     # network: fill .cache/answerdesk-bench/
-    uv run python scripts/build_bench.py --build     # offline: write data/bench/answerdesk-bench/v0.1/
+    uv run python scripts/build_bench.py --build     # offline: write
+                                                     # data/bench/answerdesk-bench/v0.1/
     uv run python scripts/build_bench.py --verify    # offline: check the committed release
 
 ``--fetch`` is the only command that opens a socket. It downloads the pinned sources,
@@ -32,7 +33,9 @@ from bench.verify import summarise, verify
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="build_bench.py",
-        description="answerdesk-bench v0.1: fetch, build or verify the curated multilingual benchmark.",
+        description=(
+            "answerdesk-bench v0.1: fetch, build or verify the curated multilingual benchmark."
+        ),
     )
     action = parser.add_mutually_exclusive_group(required=True)
     action.add_argument(

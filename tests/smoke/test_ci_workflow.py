@@ -53,8 +53,13 @@ def test_matrix_covers_windows_and_linux(workflow: dict[str, Any]) -> None:
 
 def test_gate_runs_tests_lint_and_types_offline(workflow_text: str) -> None:
     assert "uv sync --extra dev" in workflow_text
+    # the service, property and load suites need the api extra; without it they would
+    # importorskip and the gate would test nothing (t34)
+    assert "--extra api" in workflow_text
+    assert "ANSWERDESK_REQUIRE_API" in workflow_text
     assert "uv run pytest -q" in workflow_text
-    assert "ruff check src tests" in workflow_text
+    assert "ruff check ." in workflow_text
+    assert "ruff format --check ." in workflow_text
     assert "mypy" in workflow_text
     assert "from answerdesk.contracts import Answer" in workflow_text
 
