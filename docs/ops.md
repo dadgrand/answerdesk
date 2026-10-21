@@ -488,3 +488,12 @@ curl -s localhost:8765/metrics | grep answerdesk_http_request_duration_seconds
 | PII boundaries | `uv run pytest -q tests/integration/service/test_tracing.py` |
 | OpenAPI document | `answerdesk serve --export-openapi reports/openapi.json` |
 | full offline gate | `uv run pytest -q` |
+
+## 11. Cache-miss similarity semantics
+
+CacheInfo.similarity is display-only and must stay in 0..1 (frozen contract). On a
+semantic-cache **miss** the raw cosine can be negative (the hashing embedder is not a
+metric embedding); service/turn.py therefore clamps it to 0..1 and may emit None
+when the cache reports no similarity. Regression test:
+	ests/integration/service/test_multiturn_cache.py (two distinct turns, second one
+after the cache is non-empty). Do not feed a raw miss similarity into CacheInfo.

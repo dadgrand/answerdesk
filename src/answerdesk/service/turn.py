@@ -203,7 +203,11 @@ class TurnRunner:
                     timings["cache"] = _ms(anchor)
                     cache_status = lookup.status
                     cache_entry_id = lookup.entry_id
-                    cache_similarity = lookup.similarity
+                    cache_similarity = (
+                        None
+                        if lookup.similarity is None
+                        else min(1.0, max(0.0, lookup.similarity))
+                    )
                     cache_reason = lookup.reason
                     runtime.metrics.observe_cache_status(
                         lookup.status.value, kind=_cache_kind(lookup)
@@ -220,7 +224,7 @@ class TurnRunner:
                                 lookup.answer,
                                 identifiers,
                                 entry_id=lookup.entry_id,
-                                similarity=lookup.similarity,
+                                similarity=cache_similarity,
                             )
                             decision = lookup.answer.decision
                             p_hat = decision.score
