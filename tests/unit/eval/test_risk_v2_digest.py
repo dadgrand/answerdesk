@@ -51,7 +51,13 @@ def test_check_passes_on_an_lf_normalised_copy(tmp_path: Path) -> None:
     """
     copy = tmp_path / "risk-v2"
     shutil.copytree(RISK_DIR, copy)
-    for name in ("features.csv", "bench-features.csv", "split.json", "summary.json", "certificate.json"):
+    for name in (
+        "features.csv",
+        "bench-features.csv",
+        "split.json",
+        "summary.json",
+        "certificate.json",
+    ):
         path = copy / name
         if path.is_file():
             path.write_bytes(canonical_bytes(path.read_bytes()))
