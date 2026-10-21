@@ -208,8 +208,10 @@ def _provenance_block(summary: Mapping[str, Any]) -> list[str]:
         f"summary_json        {sha(REPO_ROOT / 'reports' / 'bench' / 'summary.json')}",
         "```",
         "",
-        "Every hash above is of a committed file; changing any input without re-running "
-        "invalidates the chain and `scripts/build-results.py --check` fails on a stale document.",
+        "Every hash above is of a committed file and is computed over **canonical LF bytes**, "
+        "so a CRLF working tree and a clean LF checkout publish identical digests. Changing any "
+        "input without re-running invalidates the chain, and `scripts/build-results.py --check` "
+        "fails on a stale document.",
         "",
     ]
     return lines

@@ -39,7 +39,7 @@ run_id              bench
 summary_json        fe547d78a894d90ea5ccd6f37f7941ad29a65cb989df6ce6987fa1ab3cbf466f
 ```
 
-Every hash above is of a committed file; changing any input without re-running invalidates the chain and `scripts/build-results.py --check` fails on a stale document.
+Every hash above is of a committed file and is computed over **canonical LF bytes**, so a CRLF working tree and a clean LF checkout publish identical digests. Changing any input without re-running invalidates the chain, and `scripts/build-results.py --check` fails on a stale document.
 
 ## Datasets
 
