@@ -1,0 +1,14 @@
+# Node toolchain output — never committed.
+node_modules/
+dist/
+.vite/
+
+# Screenshot run state (SQLite + traces) and Playwright output.
+.screenshots/
+playwright-report/
+test-results/
+
+# Local environment
+.env
+.env.local
+*.tsbuildinfo

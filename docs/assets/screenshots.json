@@ -1,0 +1,49 @@
+{
+  "generatedAt": "2026-10-21T04:28:11.705Z",
+  "mode": "live",
+  "service": "http://127.0.0.1:8765",
+  "app": "http://127.0.0.1:4173",
+  "viewport": {
+    "width": 1560,
+    "height": 980
+  },
+  "deviceScaleFactor": 1.5,
+  "screens": [
+    {
+      "file": "docs/assets/console-answer.png",
+      "description": "Queue + conversation with a verified answer and inline citation chips"
+    },
+    {
+      "file": "docs/assets/console-citation.png",
+      "description": "Citation clicked: the source passage with document, heading and span"
+    },
+    {
+      "file": "docs/assets/console-diagnostics.png",
+      "description": "Diagnostics drawer: decision, retrieval candidates with scores, cache, latency, cost"
+    },
+    {
+      "file": "docs/assets/console-escalation.png",
+      "description": "Escalated turn: reason code, p-hat against the band, ticket and manual reply"
+    },
+    {
+      "file": "docs/assets/console-light.png",
+      "description": "Light theme; a returning session gets the same question from the exact cache hit"
+    },
+    {
+      "file": "docs/assets/analytics.png",
+      "description": "Analytics: latency distribution, p50/p95, USD per answer, escalation rate, cache hit rate"
+    }
+  ],
+  "metrics": {
+    "cacheHits": [
+      "answerdesk_cache_hits_total{kind=\"exact\"} 1"
+    ],
+    "cacheMisses": [
+      "answerdesk_cache_misses_total 2"
+    ],
+    "decisions": [
+      "answerdesk_decisions_total{action=\"answer\",reason=\"ANSWERED\"} 2",
+      "answerdesk_decisions_total{action=\"escalate\",reason=\"LOW_CONFIDENCE\"} 1"
+    ]
+  }
+}
