@@ -18,6 +18,7 @@ from answerdesk.ingest.builder import (
     build_demo,
     build_from_directory,
     load_manifest,
+    normalise_line_endings,
 )
 from answerdesk.ingest.synthetic import ARCHETYPES, LOCALES, QUERY_CATEGORIES
 
@@ -139,14 +140,30 @@ def test_rebuild_in_place_is_idempotent(demo_build, tmp_path: Path) -> None:
 
 
 def test_checked_in_corpus_matches_a_fresh_build(demo_build) -> None:
-    """AT-ING-08: the committed manifest is the artifact of the generator, not hand-edited."""
+    """AT-ING-08: the committed manifest is the artifact of the generator, not hand-edited.
+
+    The comparison is line-ending normalised (t38): a Windows checkout with
+    ``core.autocrlf=true`` must not fail the build for CRLF alone, while a genuine content
+    difference still fails because every other byte must match.
+    """
     committed = REPO_CORPUS / MANIFEST_FILE
     if not committed.is_file():  # pragma: no cover - the release tree always has it
         pytest.skip("checked-in corpus not built in this tree")
-    assert committed.read_bytes() == Path(demo_build.manifest_path).read_bytes()
+    fresh = Path(demo_build.manifest_path).read_bytes()
+    assert normalise_line_endings(committed.read_bytes()) == normalise_line_endings(fresh)
+    assert b"\r\n" not in fresh, "the generator must write LF-only bytes"
     committed_chunks = REPO_CORPUS / CHUNKS_FILE
     if committed_chunks.is_file():
-        assert committed_chunks.read_bytes() == Path(demo_build.chunks_path).read_bytes()
+        fresh_chunks = Path(demo_build.chunks_path).read_bytes()
+        assert normalise_line_endings(committed_chunks.read_bytes()) == normalise_line_endings(
+            fresh_chunks
+        )
+    committed_queries = REPO_CORPUS / QUERIES_FILE
+    if committed_queries.is_file():
+        fresh_queries = Path(demo_build.queries_path).read_bytes()
+        assert normalise_line_endings(committed_queries.read_bytes()) == normalise_line_endings(
+            fresh_queries
+        )
 
 
 def test_build_from_directory_records_provenance(tmp_path: Path) -> None:

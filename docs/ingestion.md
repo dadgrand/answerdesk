@@ -520,6 +520,14 @@ CMD-E in §17.3).
    leaves the tree byte-identical (AT-ING-08).
 4. **Auditability.** A removal, a table split and a license decision are all recorded as
    data, not as log lines.
+5. **LF line endings only (t38).** Every corpus artifact — `docs/**/*.md`, `chunks.jsonl`,
+   `queries/queries.jsonl`, `manifest.json` — is written through the canonical writers
+   `write_canonical_text` / `write_canonical_bytes`, which fold CRLF and lone CR to `\n`
+   before writing (`normalise_line_endings`). A Windows checkout (`core.autocrlf=true`)
+   therefore produces the same bytes as a Linux one, and the checked-in-vs-fresh-build
+   assertion in the integration suite compares that same canonical form. Text writers never
+   rely on the platform default newline; `tests/unit/ingest/test_line_endings.py` asserts it
+   for a fresh build and for the committed corpus.
 
 ---
 
@@ -658,6 +666,6 @@ check is the G-REL scale run owned by `t11`.
 | AT-ING-05 | `tests/unit/ingest/test_canonical.py`, `test_chunker.py` (sidecar, text untouched) |
 | AT-ING-06 | `tests/unit/ingest/test_dedup_minhash.py`, `tests/integration/ingest/test_demo_corpus.py` |
 | AT-ING-07 | `tests/integration/ingest/test_demo_corpus.py`, `test_cli_ingest.py` (floors) |
-| AT-ING-08 | `test_demo_corpus.py` (byte-identical rebuild, idempotency, checked-in manifest) |
+| AT-ING-08 | `test_demo_corpus.py` (byte-identical rebuild, idempotency, checked-in manifest, LF-normalised artifact comparison) and `tests/unit/ingest/test_line_endings.py` (CRLF/CR folding, canonical writers, fresh and committed corpora are LF-only) |
 | AT-ING-09 | `tests/unit/ingest/test_datasets.py` (license gate) |
 | AT-ING-10 | `tests/unit/ingest/test_synthetic.py` (locales, archetypes, perturbations, reserved ids), `tests/unit/ingest/test_reference_grounding.py` (one slot draw, grounded references, 2,592/2,592 queries, multi-hop unions, unanswerable items, verifier negative cases, chunk-id scheme) `tests/unit/ingest/test_locale_quality.py` (script, terminology, formats, depth ≥135 docs/≥15 archetypes, ≥500 queries/locale, quotas, determinism, provenance) and `tests/unit/ingest/test_noisy_freeform.py` (≥300 noisy items, five styles, owner cases verbatim, intent labels, grounding, determinism, manifest slice) |

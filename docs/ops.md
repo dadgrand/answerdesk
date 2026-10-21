@@ -255,10 +255,13 @@ Two guarantees are enforced in code, not by convention:
    status. Validation errors expose `loc` + `type` only — never the offending value or the
    pydantic message.
 
-**Logs.** The service does not log `exc_info` for an arbitrary exception: the JSON formatter
-masks secret-named keys but not free text, so a traceback could copy an upstream message (and
-any PII it quotes) into the log stream. Unhandled failures log the redacted diagnostic and the
-exception type instead (limitation L-10 in `docs/robustness.md`).
+**Logs.** The JSON formatter redacts *values*, not only secret-named keys: the message, the
+exception traceback and every extra string pass through the same detector the traces use
+(`telemetry.redaction.redact_str`), so an upstream error that quotes an e-mail, a card or a
+key cannot reach the log stream. Structural fields (`ts`/`level`/`logger`) are never
+redacted, and a PEM block is removed as a whole. L-10 in `docs/robustness.md` is closed by
+`tests/property/test_log_redaction.py`. The service still logs the redacted diagnostic
+rather than `exc_info` for unhandled failures: defence in depth, and a smaller line.
 
 The trace still records `"{ExcType}: {message} ({detail})"` (redacted by the trace writer), so
 debugging an upstream failure is unchanged; `tests/property/test_error_redaction.py` covers the

@@ -38,8 +38,8 @@ secret in a log line, the number of provider calls, or the content of the prompt
 | 12 | **malformed config / CLI** | invalid YAML, list at the top level, wrong types, unknown keys, bad profile, missing file, directory, 200 KB value, garbage env var | exit 2 with `config error: …`, never a traceback; an empty config is valid | `test_config_and_cli.py` (13) |
 | 13 | **log and trace sinks** | all of the above, while the root logger is captured and the JSONL files are read back — including a failed turn (provider error) whose trace is flushed at shutdown | every log message is UTF-8 and free of PII/secrets; every trace line is valid UTF-8 JSON with a `trace_id`; the failure is observable in the log stream without its payload | `test_logs_and_traces.py` (5), `test_error_redaction.py` |
 
-Counts in parentheses are tests per module; `uv run pytest -q tests/property` reports 117
-(102 from t24 + 8 added by t33 after the independent audit + 7 added by t35 when the envelope leak was closed; no test in the tree is xfail).
+Counts in parentheses are tests per module; `uv run pytest -q tests/property` reports 132
+(102 from t24 + 8 added by t33 after the independent audit + 7 added by t35 when the envelope leak was closed + 13 added by t36 for log value redaction; no test in the tree is xfail).
 
 ---
 
@@ -171,60 +171,17 @@ Closed by t35 (kept here so the audit trail stays readable):
 
 Deliberately **not** claimed:
 
-* **L-10 — the JSON log formatter redacts by key, not by value.** `answerdesk.logging`
-  masks secret-named mapping keys, so a traceback (`exc_info`) or a free-text message that
-  quotes PII reaches the log stream unredacted. The service therefore never passes
-  `exc_info` for an arbitrary exception: the generic 500 handler logs
-  `ServiceError.diagnostic` (already through `redact_str`) instead, and
-  `test_error_redaction.py` pins both the rule and the formatter gap. The complete fix —
-  value-level redaction inside `JsonFormatter` — belongs to `answerdesk/logging.py`
-  (outside t35's scope) and is the natural follow-up; when it lands, the characterisation
-  test turns red and the rule can be relaxed.
-* **Trace-payload redaction is defence in depth with no observable delta today.** Mutating
-  `telemetry.tracing.redact_payload` to an identity (mutant M6) leaves the suite green, because
-  every field that reaches the tracer is already redacted upstream. Recorded as **L-9**; it is not
-  a tested guarantee.
-
-## 3. Honest limitations
-
-* **L-1 — a denylist is not a proof.** The injection guard recognises directive-shaped text
-  (`docs/security.md` / `generate/guards.py`). A paraphrase it does not match still reaches
-  the prompt — but only inside the spotlighted `<passage>` block, and the grounded pipeline
-  refuses to display any claim that is not verified against the evidence. The suite asserts
-  the *outcome* for every payload (no answer, no citations), not the detection.
-* **L-2 — RTL scripts outside the six locales fall back to `en`.** Hebrew/Arabic messages are
-  answered or escalated normally; the language field is a fallback, not a proof of language
-  detection. Extending the banks is a corpus task, not a service task.
-* **L-3 — a truncated provider SSE frame ends the stream silently.** The LLM layer treats an
-  unterminated `data:` line as "stream over" and yields an empty completion; the generation
-  pipeline then escalates `PROVIDER_ERROR` and displays nothing. That is safe but not
-  diagnostic: the trace shows an empty completion rather than a `ProviderResponseError`.
-  Changing it belongs to `llm/` (not in this task's scope).
-* **L-4 — the concurrency guarantee is per process.** The idempotency mutex is an
-  `asyncio.Lock` in the serving process. With several uvicorn workers (not the default; the
-  documented deployment is one process) a retry could still race into the UNIQUE index, which
-  now maps to `409 conflict` instead of a 500 — correct, but the client sees a retry hint
-  rather than a replay.
-* **L-5 — the fuzz corpus is curated, not coverage-guided.** There is no AFL/libFuzzer loop
-  and no `hypothesis` dependency; the cases are literal and deterministic, chosen from the
-  failure modes of the actual stack (JSON decoding, SQLite encoding, SSE framing, httpx).
-  A coverage-guided pass is a reasonable follow-up, not a claim made here.
-* **L-6 — resource exhaustion beyond the body limit is delegated.** The 256 KiB body limit,
-  the per-client token bucket and uvicorn's own header/time limits are the defence; this pass
-  verifies the limits fire, not that a 10 Gbit flood is survivable (that is a deployment
-  concern: `docs/ops.md` §6).
-
-* **L-7 — the risk tier is client-declared.** `intent_bucket` and `intent_label` come from the
-  request (`service/schemas.py`) and the hard-policy guard trusts them: declaring
-  `informational` for a money/account message replaces `HIGH_RISK_INTENT` with
-  `LOW_CONFIDENCE`/`CITATION_FAILED`. No answer was produced in any probe (the answerability
-  scorer escalated all four configurations), so no bypass is demonstrated, but the margin then
-  rests on the scorer rather than on the tier. **Mitigation, scheduled:** derive the bucket
-  server-side or use `max(declared, detected)` for the hard-policy decision, plus a regression
-  test that a declared `informational` bucket cannot answer a message the classifier tiers as
-  account/legal. Until then, put the service behind a gateway that sets the tier itself.
-The former **L-8** (provider error text echoed in the envelope) is closed: provider-family errors are reduced to a generic message plus an HTTP status hint, validation details carry field paths and pydantic type slugs only, and ``ServiceError.envelope`` redacts and bounds every caller-facing string as a second line of defence. The diagnostics live in ``ServiceError.diagnostic`` → the trace and the ``service error diagnostic`` log record. See ``docs/ops.md`` §4.1.
-
+* **L-10 — closed in t36.** `answerdesk.logging` used to redact only secret-named mapping
+  keys, so a traceback or a free-text message quoting PII reached the log stream unredacted.
+  `JsonFormatter`/`TextFormatter` now run the message, the traceback and every extra string
+  through `telemetry.redaction.redact_str` (the same detector as the traces), strip PEM
+  blocks whole, and leave the log schema and the structural fields untouched. Pinned by
+  `tests/property/test_log_redaction.py` (13 tests: message, extras, nested extras,
+  traceback, PEM, credential shapes, schema, idempotency, captured-log pipeline, lazy
+  import) and by the flipped characterisation test in `test_error_redaction.py`. Honest
+  caveat: the shared digit-run detector can over-redact a date/time inside a free-text
+  *message* (never the `ts` field); over-redaction is the accepted failure mode for a log
+  stream.
 * **L-9 — trace-payload redaction is untested redundancy.** Every traced field is already redacted
   upstream, so removing `telemetry.tracing.redact_payload` changes nothing observable (mutant M6).
   Keep it as defence in depth; do not describe it as a tested guarantee.

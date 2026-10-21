@@ -473,11 +473,12 @@ def _write_queries(root: Path, queries: Sequence[GeneratedQuery]) -> Path | None
         }
         for query in queries
     ]
-    path.write_bytes(
+    write_canonical_bytes(
+        path,
         "\n".join(json.dumps(item, ensure_ascii=False, sort_keys=True) for item in payloads).encode(
             "utf-8"
         )
-        + b"\n"
+        + b"\n",
     )
     return path
 
@@ -758,4 +759,7 @@ __all__ = [
     "build_demo",
     "build_from_directory",
     "load_manifest",
+    "normalise_line_endings",
+    "write_canonical_bytes",
+    "write_canonical_text",
 ]
