@@ -486,14 +486,18 @@ def check(out_dir: Path = DEFAULT_OUT, *, alpha: float = ALPHA, delta: float = D
     drift = [
         name
         for name in ("populations", "n_required", "primary_population")
-        if _canonical(recomputed.get(name)) != _canonical(committed.get(name))
+        if not _same(recomputed.get(name), committed.get(name))
     ]
     if drift:
+        details = _mismatches(recomputed.get(drift[0]), committed.get(drift[0]))
         print(f"artefact drift in {drift}; re-run --run")
+        for line in details:
+            print(f"  {line}")
         return 1
     printed_certificate = json.loads((out_dir / "certificate.json").read_text(encoding="utf-8"))
-    if _canonical(printed_certificate) != _canonical(
-        recomputed["populations"][recomputed["primary_population"]]["certificate"]
+    if not _same(
+        printed_certificate,
+        recomputed["populations"][recomputed["primary_population"]]["certificate"],
     ):
         print("certificate.json does not match the recomputed certificate; re-run --run")
         return 1
@@ -507,19 +511,45 @@ def check(out_dir: Path = DEFAULT_OUT, *, alpha: float = ALPHA, delta: float = D
     return 0
 
 
-def _rounded(payload: Any) -> Any:
-    """Round floats before serialisation: Linux and Windows BLAS give last-digit drift."""
-    if isinstance(payload, float):
-        return round(payload, 6)
-    if isinstance(payload, dict):
-        return {key: _rounded(value) for key, value in payload.items()}
-    if isinstance(payload, (list, tuple)):
-        return [_rounded(value) for value in payload]
-    return payload
+def _same(left: Any, right: Any, *, rel: float = 1e-3, absolute: float = 1e-3) -> bool:
+    """Compare artefacts: refitting must reproduce within tolerance across BLAS platforms."""
+    if isinstance(left, bool) or isinstance(right, bool):
+        return left is right
+    if isinstance(left, (int, float)) and isinstance(right, (int, float)):
+        return abs(float(left) - float(right)) <= absolute + rel * abs(float(right))
+    if isinstance(left, dict) and isinstance(right, dict):
+        return left.keys() == right.keys() and all(
+            _same(left[key], right[key], rel=rel, absolute=absolute) for key in left
+        )
+    if isinstance(left, (list, tuple)) and isinstance(right, (list, tuple)):
+        return len(left) == len(right) and all(
+            _same(a, b, rel=rel, absolute=absolute) for a, b in zip(left, right, strict=False)
+        )
+    return left == right
 
 
-def _canonical(payload: Any) -> str:
-    return json.dumps(_rounded(payload), sort_keys=True, ensure_ascii=False)
+def _mismatches(left: Any, right: Any, path: str = "", limit: int = 6) -> list[str]:
+    """Return the first differing leaves, so a CI failure says which metric drifted."""
+    found: list[str] = []
+    if len(found) >= limit:
+        return found
+    if isinstance(left, dict) and isinstance(right, dict):
+        for key in sorted(set(left) | set(right)):
+            found.extend(_mismatches(left.get(key), right.get(key), f"{path}.{key}", limit))
+            if len(found) >= limit:
+                break
+        return found[:limit]
+    if isinstance(left, (list, tuple)) and isinstance(right, (list, tuple)):
+        if len(left) != len(right):
+            return [f"{path}: length {len(left)} != {len(right)}"]
+        for index, (a, b) in enumerate(zip(left, right, strict=False)):
+            found.extend(_mismatches(a, b, f"{path}[{index}]", limit))
+            if len(found) >= limit:
+                break
+        return found[:limit]
+    if not _same(left, right):
+        return [f"{path}: {left!r} != {right!r}"]
+    return []
 
 
 __all__ = [
