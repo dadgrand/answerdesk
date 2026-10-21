@@ -90,7 +90,14 @@ runs against `vLLM`, `llama.cpp` or `Ollama` with no code change.
   See [`docs/results.md`](docs/results.md).
 - The synthetic corpus is lexically easy — BM25 already scores ≈1.0 recall on it, and
   structure-aware chunking did not improve recall over naive windows in the ablation. It proves
-  the machinery, not the domain; external validity comes from `answerdesk-bench`.
+  the machinery, not the domain; external validity comes from `answerdesk-bench`
+  ([`docs/external-validity.md`](docs/external-validity.md)): Belebele comprehension improves
+  with retrieval in ru/uz/tg/ky and **not** in zh, and Mr. TyDi ru is the only external
+  retrieval-quality claim (no public qrels exist for uz/tg/ky).
+- **No human judge labels exist yet**, so every judged metric in this repository is
+  *diagnostic*: the calibration template ships as 150-item sheets per language, and no judged
+  number may be quoted until Cohen's κ ≥ 0.6 is established. The external numbers are
+  judge-free by construction (option letters and qrels, not LLM judgments).
 - A local query-rewriter LoRA was trained and measured, and **did not help** (clean-query
   regression) — it ships disabled, with the negative result documented in
   [`docs/query-rewriter.md`](docs/query-rewriter.md).
