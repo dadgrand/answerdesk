@@ -8,7 +8,7 @@ run is deterministic, network-free and safe for CI.
 What it measures, per concurrency level and per cache phase:
 
 * client-observed latency (p50/p95/p99/max) and throughput for a mixed workload
-  (answerable/unanswerable × streaming/JSON);
+  (answerable/unanswerable x streaming/JSON);
 * per-stage latency (retrieval, generation, verification, policy, cache, total) read from
   the **service traces**, so a bottleneck is attributed to a stage, not guessed;
 * cache separation: the cold phase replays distinct questions, the warm phase repeats them,
@@ -1102,7 +1102,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         rate = report["rate_limit"]
         print(
-            f"rate limit: {rate['http_429']}/{rate['requests']} → 429, "
+            f"rate limit: {rate['http_429']}/{rate['requests']} -> 429, "
             f"5xx {rate['server_errors']}, retry-after present {rate['retry_after_present']}, "
             f"health {rate['health_status']}, metrics {rate['metrics_status']}"
         )
