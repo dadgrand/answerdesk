@@ -1,0 +1,1840 @@
+{
+  "ambiguity": {
+    "definition": "siblings = same-locale documents whose text contains the clean question verbatim",
+    "facts": 63,
+    "max_siblings": 8,
+    "mean_siblings": 6.778,
+    "rows": [
+      {
+        "documents_with_question": [
+          "syn-ru-0001",
+          "syn-ru-0016",
+          "syn-ru-0031",
+          "syn-ru-0046",
+          "syn-ru-0061",
+          "syn-ru-0076",
+          "syn-ru-0091",
+          "syn-ru-0106",
+          "syn-ru-0121"
+        ],
+        "fact_id": "fact-card_terms-0001",
+        "gold_doc_ids": [
+          "syn-ru-0001",
+          "syn-ru-0009"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0013",
+          "syn-ru-0028",
+          "syn-ru-0043",
+          "syn-ru-0058",
+          "syn-ru-0073",
+          "syn-ru-0088",
+          "syn-ru-0103",
+          "syn-ru-0118",
+          "syn-ru-0133"
+        ],
+        "fact_id": "fact-deposit_savings-0013",
+        "gold_doc_ids": [
+          "syn-ru-0013"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0007",
+          "syn-ru-0022",
+          "syn-ru-0037",
+          "syn-ru-0052",
+          "syn-ru-0067",
+          "syn-ru-0082",
+          "syn-ru-0097",
+          "syn-ru-0112",
+          "syn-ru-0127"
+        ],
+        "fact_id": "fact-fee_table-0007",
+        "gold_doc_ids": [
+          "syn-ru-0007"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0012",
+          "syn-ru-0027",
+          "syn-ru-0042",
+          "syn-ru-0057",
+          "syn-ru-0072",
+          "syn-ru-0087",
+          "syn-ru-0102",
+          "syn-ru-0117",
+          "syn-ru-0132"
+        ],
+        "fact_id": "fact-loan_credit-0012",
+        "gold_doc_ids": [
+          "syn-ru-0012"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0014",
+          "syn-ru-0029",
+          "syn-ru-0044",
+          "syn-ru-0059",
+          "syn-ru-0074",
+          "syn-ru-0089",
+          "syn-ru-0104",
+          "syn-ru-0119",
+          "syn-ru-0134"
+        ],
+        "fact_id": "fact-remittance_tracking-0014",
+        "gold_doc_ids": [
+          "syn-ru-0014"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0000",
+          "syn-ru-0060",
+          "syn-ru-0120"
+        ],
+        "fact_id": "fact-tariff_schedule-0000",
+        "gold_doc_ids": [
+          "syn-ru-0000"
+        ],
+        "locale": "ru",
+        "siblings": 2
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0002",
+          "syn-ru-0017",
+          "syn-ru-0032",
+          "syn-ru-0047",
+          "syn-ru-0062",
+          "syn-ru-0077",
+          "syn-ru-0092",
+          "syn-ru-0107",
+          "syn-ru-0122"
+        ],
+        "fact_id": "fact-transfer_limits-0002",
+        "gold_doc_ids": [
+          "syn-ru-0002"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0001",
+          "syn-ru-0016",
+          "syn-ru-0031",
+          "syn-ru-0046",
+          "syn-ru-0061",
+          "syn-ru-0076",
+          "syn-ru-0091",
+          "syn-ru-0106",
+          "syn-ru-0121"
+        ],
+        "fact_id": "fact-card_terms-0016",
+        "gold_doc_ids": [
+          "syn-ru-0016"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0013",
+          "syn-ru-0028",
+          "syn-ru-0043",
+          "syn-ru-0058",
+          "syn-ru-0073",
+          "syn-ru-0088",
+          "syn-ru-0103",
+          "syn-ru-0118",
+          "syn-ru-0133"
+        ],
+        "fact_id": "fact-deposit_savings-0028",
+        "gold_doc_ids": [
+          "syn-ru-0028"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0007",
+          "syn-ru-0022",
+          "syn-ru-0037",
+          "syn-ru-0052",
+          "syn-ru-0067",
+          "syn-ru-0082",
+          "syn-ru-0097",
+          "syn-ru-0112",
+          "syn-ru-0127"
+        ],
+        "fact_id": "fact-fee_table-0022",
+        "gold_doc_ids": [
+          "syn-ru-0022"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0012",
+          "syn-ru-0027",
+          "syn-ru-0042",
+          "syn-ru-0057",
+          "syn-ru-0072",
+          "syn-ru-0087",
+          "syn-ru-0102",
+          "syn-ru-0117",
+          "syn-ru-0132"
+        ],
+        "fact_id": "fact-loan_credit-0027",
+        "gold_doc_ids": [
+          "syn-ru-0027"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0014",
+          "syn-ru-0029",
+          "syn-ru-0044",
+          "syn-ru-0059",
+          "syn-ru-0074",
+          "syn-ru-0089",
+          "syn-ru-0104",
+          "syn-ru-0119",
+          "syn-ru-0134"
+        ],
+        "fact_id": "fact-remittance_tracking-0029",
+        "gold_doc_ids": [
+          "syn-ru-0011",
+          "syn-ru-0029"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0015",
+          "syn-ru-0075"
+        ],
+        "fact_id": "fact-tariff_schedule-0015",
+        "gold_doc_ids": [
+          "syn-ru-0007",
+          "syn-ru-0015"
+        ],
+        "locale": "ru",
+        "siblings": 1
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0002",
+          "syn-ru-0017",
+          "syn-ru-0032",
+          "syn-ru-0047",
+          "syn-ru-0062",
+          "syn-ru-0077",
+          "syn-ru-0092",
+          "syn-ru-0107",
+          "syn-ru-0122"
+        ],
+        "fact_id": "fact-transfer_limits-0017",
+        "gold_doc_ids": [
+          "syn-ru-0017"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0001",
+          "syn-ru-0016",
+          "syn-ru-0031",
+          "syn-ru-0046",
+          "syn-ru-0061",
+          "syn-ru-0076",
+          "syn-ru-0091",
+          "syn-ru-0106",
+          "syn-ru-0121"
+        ],
+        "fact_id": "fact-card_terms-0031",
+        "gold_doc_ids": [
+          "syn-ru-0009",
+          "syn-ru-0031"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0013",
+          "syn-ru-0028",
+          "syn-ru-0043",
+          "syn-ru-0058",
+          "syn-ru-0073",
+          "syn-ru-0088",
+          "syn-ru-0103",
+          "syn-ru-0118",
+          "syn-ru-0133"
+        ],
+        "fact_id": "fact-deposit_savings-0043",
+        "gold_doc_ids": [
+          "syn-ru-0043"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0007",
+          "syn-ru-0022",
+          "syn-ru-0037",
+          "syn-ru-0052",
+          "syn-ru-0067",
+          "syn-ru-0082",
+          "syn-ru-0097",
+          "syn-ru-0112",
+          "syn-ru-0127"
+        ],
+        "fact_id": "fact-fee_table-0037",
+        "gold_doc_ids": [
+          "syn-ru-0037"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0012",
+          "syn-ru-0027",
+          "syn-ru-0042",
+          "syn-ru-0057",
+          "syn-ru-0072",
+          "syn-ru-0087",
+          "syn-ru-0102",
+          "syn-ru-0117",
+          "syn-ru-0132"
+        ],
+        "fact_id": "fact-loan_credit-0042",
+        "gold_doc_ids": [
+          "syn-ru-0042"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0014",
+          "syn-ru-0029",
+          "syn-ru-0044",
+          "syn-ru-0059",
+          "syn-ru-0074",
+          "syn-ru-0089",
+          "syn-ru-0104",
+          "syn-ru-0119",
+          "syn-ru-0134"
+        ],
+        "fact_id": "fact-remittance_tracking-0044",
+        "gold_doc_ids": [
+          "syn-ru-0044"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0030",
+          "syn-ru-0090"
+        ],
+        "fact_id": "fact-tariff_schedule-0030",
+        "gold_doc_ids": [
+          "syn-ru-0030"
+        ],
+        "locale": "ru",
+        "siblings": 1
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0002",
+          "syn-ru-0017",
+          "syn-ru-0032",
+          "syn-ru-0047",
+          "syn-ru-0062",
+          "syn-ru-0077",
+          "syn-ru-0092",
+          "syn-ru-0107",
+          "syn-ru-0122"
+        ],
+        "fact_id": "fact-transfer_limits-0032",
+        "gold_doc_ids": [
+          "syn-ru-0032"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0001",
+          "syn-ru-0016",
+          "syn-ru-0031",
+          "syn-ru-0046",
+          "syn-ru-0061",
+          "syn-ru-0076",
+          "syn-ru-0091",
+          "syn-ru-0106",
+          "syn-ru-0121"
+        ],
+        "fact_id": "fact-card_terms-0046",
+        "gold_doc_ids": [
+          "syn-ru-0046"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0013",
+          "syn-ru-0028",
+          "syn-ru-0043",
+          "syn-ru-0058",
+          "syn-ru-0073",
+          "syn-ru-0088",
+          "syn-ru-0103",
+          "syn-ru-0118",
+          "syn-ru-0133"
+        ],
+        "fact_id": "fact-deposit_savings-0058",
+        "gold_doc_ids": [
+          "syn-ru-0058"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0007",
+          "syn-ru-0022",
+          "syn-ru-0037",
+          "syn-ru-0052",
+          "syn-ru-0067",
+          "syn-ru-0082",
+          "syn-ru-0097",
+          "syn-ru-0112",
+          "syn-ru-0127"
+        ],
+        "fact_id": "fact-fee_table-0052",
+        "gold_doc_ids": [
+          "syn-ru-0052"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0012",
+          "syn-ru-0027",
+          "syn-ru-0042",
+          "syn-ru-0057",
+          "syn-ru-0072",
+          "syn-ru-0087",
+          "syn-ru-0102",
+          "syn-ru-0117",
+          "syn-ru-0132"
+        ],
+        "fact_id": "fact-loan_credit-0057",
+        "gold_doc_ids": [
+          "syn-ru-0057"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0014",
+          "syn-ru-0029",
+          "syn-ru-0044",
+          "syn-ru-0059",
+          "syn-ru-0074",
+          "syn-ru-0089",
+          "syn-ru-0104",
+          "syn-ru-0119",
+          "syn-ru-0134"
+        ],
+        "fact_id": "fact-remittance_tracking-0059",
+        "gold_doc_ids": [
+          "syn-ru-0011",
+          "syn-ru-0059"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0045",
+          "syn-ru-0105"
+        ],
+        "fact_id": "fact-tariff_schedule-0045",
+        "gold_doc_ids": [
+          "syn-ru-0045"
+        ],
+        "locale": "ru",
+        "siblings": 1
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0002",
+          "syn-ru-0017",
+          "syn-ru-0032",
+          "syn-ru-0047",
+          "syn-ru-0062",
+          "syn-ru-0077",
+          "syn-ru-0092",
+          "syn-ru-0107",
+          "syn-ru-0122"
+        ],
+        "fact_id": "fact-transfer_limits-0047",
+        "gold_doc_ids": [
+          "syn-ru-0047"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0001",
+          "syn-ru-0016",
+          "syn-ru-0031",
+          "syn-ru-0046",
+          "syn-ru-0061",
+          "syn-ru-0076",
+          "syn-ru-0091",
+          "syn-ru-0106",
+          "syn-ru-0121"
+        ],
+        "fact_id": "fact-card_terms-0061",
+        "gold_doc_ids": [
+          "syn-ru-0009",
+          "syn-ru-0061"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0013",
+          "syn-ru-0028",
+          "syn-ru-0043",
+          "syn-ru-0058",
+          "syn-ru-0073",
+          "syn-ru-0088",
+          "syn-ru-0103",
+          "syn-ru-0118",
+          "syn-ru-0133"
+        ],
+        "fact_id": "fact-deposit_savings-0073",
+        "gold_doc_ids": [
+          "syn-ru-0073"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0007",
+          "syn-ru-0022",
+          "syn-ru-0037",
+          "syn-ru-0052",
+          "syn-ru-0067",
+          "syn-ru-0082",
+          "syn-ru-0097",
+          "syn-ru-0112",
+          "syn-ru-0127"
+        ],
+        "fact_id": "fact-fee_table-0067",
+        "gold_doc_ids": [
+          "syn-ru-0067"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0012",
+          "syn-ru-0027",
+          "syn-ru-0042",
+          "syn-ru-0057",
+          "syn-ru-0072",
+          "syn-ru-0087",
+          "syn-ru-0102",
+          "syn-ru-0117",
+          "syn-ru-0132"
+        ],
+        "fact_id": "fact-loan_credit-0072",
+        "gold_doc_ids": [
+          "syn-ru-0072"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0014",
+          "syn-ru-0029",
+          "syn-ru-0044",
+          "syn-ru-0059",
+          "syn-ru-0074",
+          "syn-ru-0089",
+          "syn-ru-0104",
+          "syn-ru-0119",
+          "syn-ru-0134"
+        ],
+        "fact_id": "fact-remittance_tracking-0074",
+        "gold_doc_ids": [
+          "syn-ru-0074"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0000",
+          "syn-ru-0060",
+          "syn-ru-0120"
+        ],
+        "fact_id": "fact-tariff_schedule-0060",
+        "gold_doc_ids": [
+          "syn-ru-0060"
+        ],
+        "locale": "ru",
+        "siblings": 2
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0062"
+        ],
+        "fact_id": "fact-transfer_limits-0062",
+        "gold_doc_ids": [
+          "syn-ru-0062"
+        ],
+        "locale": "ru",
+        "siblings": 0
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0001",
+          "syn-ru-0016",
+          "syn-ru-0031",
+          "syn-ru-0046",
+          "syn-ru-0061",
+          "syn-ru-0076",
+          "syn-ru-0091",
+          "syn-ru-0106",
+          "syn-ru-0121"
+        ],
+        "fact_id": "fact-card_terms-0076",
+        "gold_doc_ids": [
+          "syn-ru-0009",
+          "syn-ru-0076"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0013",
+          "syn-ru-0028",
+          "syn-ru-0043",
+          "syn-ru-0058",
+          "syn-ru-0073",
+          "syn-ru-0088",
+          "syn-ru-0103",
+          "syn-ru-0118",
+          "syn-ru-0133"
+        ],
+        "fact_id": "fact-deposit_savings-0088",
+        "gold_doc_ids": [
+          "syn-ru-0088"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0007",
+          "syn-ru-0022",
+          "syn-ru-0037",
+          "syn-ru-0052",
+          "syn-ru-0067",
+          "syn-ru-0082",
+          "syn-ru-0097",
+          "syn-ru-0112",
+          "syn-ru-0127"
+        ],
+        "fact_id": "fact-fee_table-0082",
+        "gold_doc_ids": [
+          "syn-ru-0082"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0012",
+          "syn-ru-0027",
+          "syn-ru-0042",
+          "syn-ru-0057",
+          "syn-ru-0072",
+          "syn-ru-0087",
+          "syn-ru-0102",
+          "syn-ru-0117",
+          "syn-ru-0132"
+        ],
+        "fact_id": "fact-loan_credit-0087",
+        "gold_doc_ids": [
+          "syn-ru-0087"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0014",
+          "syn-ru-0029",
+          "syn-ru-0044",
+          "syn-ru-0059",
+          "syn-ru-0074",
+          "syn-ru-0089",
+          "syn-ru-0104",
+          "syn-ru-0119",
+          "syn-ru-0134"
+        ],
+        "fact_id": "fact-remittance_tracking-0089",
+        "gold_doc_ids": [
+          "syn-ru-0089"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0015",
+          "syn-ru-0075"
+        ],
+        "fact_id": "fact-tariff_schedule-0075",
+        "gold_doc_ids": [
+          "syn-ru-0075"
+        ],
+        "locale": "ru",
+        "siblings": 1
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0077"
+        ],
+        "fact_id": "fact-transfer_limits-0077",
+        "gold_doc_ids": [
+          "syn-ru-0077"
+        ],
+        "locale": "ru",
+        "siblings": 0
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0001",
+          "syn-ru-0016",
+          "syn-ru-0031",
+          "syn-ru-0046",
+          "syn-ru-0061",
+          "syn-ru-0076",
+          "syn-ru-0091",
+          "syn-ru-0106",
+          "syn-ru-0121"
+        ],
+        "fact_id": "fact-card_terms-0091",
+        "gold_doc_ids": [
+          "syn-ru-0091"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0013",
+          "syn-ru-0028",
+          "syn-ru-0043",
+          "syn-ru-0058",
+          "syn-ru-0073",
+          "syn-ru-0088",
+          "syn-ru-0103",
+          "syn-ru-0118",
+          "syn-ru-0133"
+        ],
+        "fact_id": "fact-deposit_savings-0103",
+        "gold_doc_ids": [
+          "syn-ru-0103"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0007",
+          "syn-ru-0022",
+          "syn-ru-0037",
+          "syn-ru-0052",
+          "syn-ru-0067",
+          "syn-ru-0082",
+          "syn-ru-0097",
+          "syn-ru-0112",
+          "syn-ru-0127"
+        ],
+        "fact_id": "fact-fee_table-0097",
+        "gold_doc_ids": [
+          "syn-ru-0097"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0012",
+          "syn-ru-0027",
+          "syn-ru-0042",
+          "syn-ru-0057",
+          "syn-ru-0072",
+          "syn-ru-0087",
+          "syn-ru-0102",
+          "syn-ru-0117",
+          "syn-ru-0132"
+        ],
+        "fact_id": "fact-loan_credit-0102",
+        "gold_doc_ids": [
+          "syn-ru-0102"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0014",
+          "syn-ru-0029",
+          "syn-ru-0044",
+          "syn-ru-0059",
+          "syn-ru-0074",
+          "syn-ru-0089",
+          "syn-ru-0104",
+          "syn-ru-0119",
+          "syn-ru-0134"
+        ],
+        "fact_id": "fact-remittance_tracking-0104",
+        "gold_doc_ids": [
+          "syn-ru-0011",
+          "syn-ru-0104"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0000",
+          "syn-ru-0015",
+          "syn-ru-0030",
+          "syn-ru-0045",
+          "syn-ru-0060",
+          "syn-ru-0075",
+          "syn-ru-0090",
+          "syn-ru-0105",
+          "syn-ru-0120"
+        ],
+        "fact_id": "fact-tariff_schedule-0090",
+        "gold_doc_ids": [
+          "syn-ru-0007",
+          "syn-ru-0090"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0092"
+        ],
+        "fact_id": "fact-transfer_limits-0092",
+        "gold_doc_ids": [
+          "syn-ru-0092"
+        ],
+        "locale": "ru",
+        "siblings": 0
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0001",
+          "syn-ru-0016",
+          "syn-ru-0031",
+          "syn-ru-0046",
+          "syn-ru-0061",
+          "syn-ru-0076",
+          "syn-ru-0091",
+          "syn-ru-0106",
+          "syn-ru-0121"
+        ],
+        "fact_id": "fact-card_terms-0106",
+        "gold_doc_ids": [
+          "syn-ru-0009",
+          "syn-ru-0106"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0013",
+          "syn-ru-0028",
+          "syn-ru-0043",
+          "syn-ru-0058",
+          "syn-ru-0073",
+          "syn-ru-0088",
+          "syn-ru-0103",
+          "syn-ru-0118",
+          "syn-ru-0133"
+        ],
+        "fact_id": "fact-deposit_savings-0118",
+        "gold_doc_ids": [
+          "syn-ru-0118"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0007",
+          "syn-ru-0022",
+          "syn-ru-0037",
+          "syn-ru-0052",
+          "syn-ru-0067",
+          "syn-ru-0082",
+          "syn-ru-0097",
+          "syn-ru-0112",
+          "syn-ru-0127"
+        ],
+        "fact_id": "fact-fee_table-0112",
+        "gold_doc_ids": [
+          "syn-ru-0112"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0012",
+          "syn-ru-0027",
+          "syn-ru-0042",
+          "syn-ru-0057",
+          "syn-ru-0072",
+          "syn-ru-0087",
+          "syn-ru-0102",
+          "syn-ru-0117",
+          "syn-ru-0132"
+        ],
+        "fact_id": "fact-loan_credit-0117",
+        "gold_doc_ids": [
+          "syn-ru-0117"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0014",
+          "syn-ru-0029",
+          "syn-ru-0044",
+          "syn-ru-0059",
+          "syn-ru-0074",
+          "syn-ru-0089",
+          "syn-ru-0104",
+          "syn-ru-0119",
+          "syn-ru-0134"
+        ],
+        "fact_id": "fact-remittance_tracking-0119",
+        "gold_doc_ids": [
+          "syn-ru-0119"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0045",
+          "syn-ru-0105"
+        ],
+        "fact_id": "fact-tariff_schedule-0105",
+        "gold_doc_ids": [
+          "syn-ru-0105"
+        ],
+        "locale": "ru",
+        "siblings": 1
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0002",
+          "syn-ru-0017",
+          "syn-ru-0032",
+          "syn-ru-0047",
+          "syn-ru-0062",
+          "syn-ru-0077",
+          "syn-ru-0092",
+          "syn-ru-0107",
+          "syn-ru-0122"
+        ],
+        "fact_id": "fact-transfer_limits-0107",
+        "gold_doc_ids": [
+          "syn-ru-0107"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0001",
+          "syn-ru-0016",
+          "syn-ru-0031",
+          "syn-ru-0046",
+          "syn-ru-0061",
+          "syn-ru-0076",
+          "syn-ru-0091",
+          "syn-ru-0106",
+          "syn-ru-0121"
+        ],
+        "fact_id": "fact-card_terms-0121",
+        "gold_doc_ids": [
+          "syn-ru-0121"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0013",
+          "syn-ru-0028",
+          "syn-ru-0043",
+          "syn-ru-0058",
+          "syn-ru-0073",
+          "syn-ru-0088",
+          "syn-ru-0103",
+          "syn-ru-0118",
+          "syn-ru-0133"
+        ],
+        "fact_id": "fact-deposit_savings-0133",
+        "gold_doc_ids": [
+          "syn-ru-0133"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0007",
+          "syn-ru-0022",
+          "syn-ru-0037",
+          "syn-ru-0052",
+          "syn-ru-0067",
+          "syn-ru-0082",
+          "syn-ru-0097",
+          "syn-ru-0112",
+          "syn-ru-0127"
+        ],
+        "fact_id": "fact-fee_table-0127",
+        "gold_doc_ids": [
+          "syn-ru-0127"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0012",
+          "syn-ru-0027",
+          "syn-ru-0042",
+          "syn-ru-0057",
+          "syn-ru-0072",
+          "syn-ru-0087",
+          "syn-ru-0102",
+          "syn-ru-0117",
+          "syn-ru-0132"
+        ],
+        "fact_id": "fact-loan_credit-0132",
+        "gold_doc_ids": [
+          "syn-ru-0132"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0014",
+          "syn-ru-0029",
+          "syn-ru-0044",
+          "syn-ru-0059",
+          "syn-ru-0074",
+          "syn-ru-0089",
+          "syn-ru-0104",
+          "syn-ru-0119",
+          "syn-ru-0134"
+        ],
+        "fact_id": "fact-remittance_tracking-0134",
+        "gold_doc_ids": [
+          "syn-ru-0011",
+          "syn-ru-0134"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0000",
+          "syn-ru-0060",
+          "syn-ru-0120"
+        ],
+        "fact_id": "fact-tariff_schedule-0120",
+        "gold_doc_ids": [
+          "syn-ru-0120"
+        ],
+        "locale": "ru",
+        "siblings": 2
+      },
+      {
+        "documents_with_question": [
+          "syn-ru-0002",
+          "syn-ru-0017",
+          "syn-ru-0032",
+          "syn-ru-0047",
+          "syn-ru-0062",
+          "syn-ru-0077",
+          "syn-ru-0092",
+          "syn-ru-0107",
+          "syn-ru-0122"
+        ],
+        "fact_id": "fact-transfer_limits-0122",
+        "gold_doc_ids": [
+          "syn-ru-0122"
+        ],
+        "locale": "ru",
+        "siblings": 8
+      }
+    ],
+    "share_with_siblings": 0.952
+  },
+  "citation_overlap": {
+    "per_language": {
+      "ky": {
+        "ci_high": 0.456328,
+        "ci_low": 0.229496,
+        "n": 63,
+        "rate": 0.333333,
+        "successes": 21
+      },
+      "ru": {
+        "ci_high": 0.488513,
+        "ci_low": 0.257154,
+        "n": 63,
+        "rate": 0.365079,
+        "successes": 23
+      },
+      "tg": {
+        "ci_high": 0.407027,
+        "ci_low": 0.189032,
+        "n": 63,
+        "rate": 0.285714,
+        "successes": 18
+      },
+      "tr": {
+        "ci_high": 0.566804,
+        "ci_low": 0.328471,
+        "n": 63,
+        "rate": 0.444444,
+        "successes": 28
+      },
+      "uz": {
+        "ci_high": 0.321698,
+        "ci_low": 0.124753,
+        "n": 63,
+        "rate": 0.206349,
+        "successes": 13
+      },
+      "zh": {
+        "ci_high": 0.520191,
+        "ci_low": 0.285319,
+        "n": 63,
+        "rate": 0.396825,
+        "successes": 25
+      }
+    },
+    "pooled": {
+      "ci_high": 0.387742,
+      "ci_low": 0.292753,
+      "n": 378,
+      "rate": 0.338624,
+      "successes": 128
+    }
+  },
+  "corpus_version": "corpus-77d7d081813738a6",
+  "fact_agreement": {
+    "cross_language": {
+      "definition": "both locales state the fact for the same fact_id",
+      "pairs": {
+        "ky-ru": {
+          "ci_high": 0.152192,
+          "ci_low": 0.024966,
+          "n": 63,
+          "rate": 0.063492,
+          "successes": 4
+        },
+        "ky-tg": {
+          "ci_high": 0.286214,
+          "ci_low": 0.100394,
+          "n": 63,
+          "rate": 0.174603,
+          "successes": 11
+        },
+        "ky-tr": {
+          "ci_high": 0.249746,
+          "ci_low": 0.077019,
+          "n": 63,
+          "rate": 0.142857,
+          "successes": 9
+        },
+        "ky-uz": {
+          "ci_high": 0.212047,
+          "ci_low": 0.054875,
+          "n": 63,
+          "rate": 0.111111,
+          "successes": 7
+        },
+        "ky-zh": {
+          "ci_high": 0.212047,
+          "ci_low": 0.054875,
+          "n": 63,
+          "rate": 0.111111,
+          "successes": 7
+        },
+        "ru-tg": {
+          "ci_high": 0.212047,
+          "ci_low": 0.054875,
+          "n": 63,
+          "rate": 0.111111,
+          "successes": 7
+        },
+        "ru-tr": {
+          "ci_high": 0.172703,
+          "ci_low": 0.034376,
+          "n": 63,
+          "rate": 0.079365,
+          "successes": 5
+        },
+        "ru-uz": {
+          "ci_high": 0.13091,
+          "ci_low": 0.016326,
+          "n": 63,
+          "rate": 0.047619,
+          "successes": 3
+        },
+        "ru-zh": {
+          "ci_high": 0.152192,
+          "ci_low": 0.024966,
+          "n": 63,
+          "rate": 0.063492,
+          "successes": 4
+        },
+        "tg-tr": {
+          "ci_high": 0.304068,
+          "ci_low": 0.112462,
+          "n": 63,
+          "rate": 0.190476,
+          "successes": 12
+        },
+        "tg-uz": {
+          "ci_high": 0.286214,
+          "ci_low": 0.100394,
+          "n": 63,
+          "rate": 0.174603,
+          "successes": 11
+        },
+        "tg-zh": {
+          "ci_high": 0.249746,
+          "ci_low": 0.077019,
+          "n": 63,
+          "rate": 0.142857,
+          "successes": 9
+        },
+        "tr-uz": {
+          "ci_high": 0.286214,
+          "ci_low": 0.100394,
+          "n": 63,
+          "rate": 0.174603,
+          "successes": 11
+        },
+        "tr-zh": {
+          "ci_high": 0.23107,
+          "ci_low": 0.065773,
+          "n": 63,
+          "rate": 0.126984,
+          "successes": 8
+        },
+        "uz-zh": {
+          "ci_high": 0.192617,
+          "ci_low": 0.044383,
+          "n": 63,
+          "rate": 0.095238,
+          "successes": 6
+        }
+      },
+      "pooled": {
+        "ci_high": 0.142952,
+        "ci_low": 0.10139,
+        "n": 945,
+        "rate": 0.120635,
+        "successes": 114
+      }
+    },
+    "per_language": {
+      "ky": {
+        "answers": 63,
+        "citation_hit": {
+          "ci_high": 0.456328,
+          "ci_low": 0.229496,
+          "n": 63,
+          "rate": 0.333333,
+          "successes": 21
+        },
+        "citation_precision_mean": 0.18082,
+        "decisions": {
+          "answer": 61,
+          "escalate": 2
+        },
+        "fidelity_exact": {
+          "ci_high": 0.456328,
+          "ci_low": 0.229496,
+          "n": 63,
+          "rate": 0.333333,
+          "successes": 21
+        },
+        "same_fact": {
+          "ci_high": 0.390299,
+          "ci_low": 0.175838,
+          "n": 63,
+          "rate": 0.269841,
+          "successes": 17
+        }
+      },
+      "ru": {
+        "answers": 63,
+        "citation_hit": {
+          "ci_high": 0.488513,
+          "ci_low": 0.257154,
+          "n": 63,
+          "rate": 0.365079,
+          "successes": 23
+        },
+        "citation_precision_mean": 0.122644,
+        "decisions": {
+          "answer": 57,
+          "escalate": 6
+        },
+        "fidelity_exact": {
+          "ci_high": 0.535847,
+          "ci_low": 0.299585,
+          "n": 63,
+          "rate": 0.412698,
+          "successes": 26
+        },
+        "same_fact": {
+          "ci_high": 0.249746,
+          "ci_low": 0.077019,
+          "n": 63,
+          "rate": 0.142857,
+          "successes": 9
+        }
+      },
+      "tg": {
+        "answers": 63,
+        "citation_hit": {
+          "ci_high": 0.407027,
+          "ci_low": 0.189032,
+          "n": 63,
+          "rate": 0.285714,
+          "successes": 18
+        },
+        "citation_precision_mean": 0.130461,
+        "decisions": {
+          "answer": 57,
+          "escalate": 6
+        },
+        "fidelity_exact": {
+          "ci_high": 0.566804,
+          "ci_low": 0.328471,
+          "n": 63,
+          "rate": 0.444444,
+          "successes": 28
+        },
+        "same_fact": {
+          "ci_high": 0.456328,
+          "ci_low": 0.229496,
+          "n": 63,
+          "rate": 0.333333,
+          "successes": 21
+        }
+      },
+      "tr": {
+        "answers": 63,
+        "citation_hit": {
+          "ci_high": 0.566804,
+          "ci_low": 0.328471,
+          "n": 63,
+          "rate": 0.444444,
+          "successes": 28
+        },
+        "citation_precision_mean": 0.121649,
+        "decisions": {
+          "answer": 60,
+          "escalate": 3
+        },
+        "fidelity_exact": {
+          "ci_high": 0.520191,
+          "ci_low": 0.285319,
+          "n": 63,
+          "rate": 0.396825,
+          "successes": 25
+        },
+        "same_fact": {
+          "ci_high": 0.390299,
+          "ci_low": 0.175838,
+          "n": 63,
+          "rate": 0.269841,
+          "successes": 17
+        }
+      },
+      "uz": {
+        "answers": 63,
+        "citation_hit": {
+          "ci_high": 0.321698,
+          "ci_low": 0.124753,
+          "n": 63,
+          "rate": 0.206349,
+          "successes": 13
+        },
+        "citation_precision_mean": 0.056973,
+        "decisions": {
+          "answer": 52,
+          "escalate": 11
+        },
+        "fidelity_exact": {
+          "ci_high": 0.551384,
+          "ci_low": 0.313969,
+          "n": 63,
+          "rate": 0.428571,
+          "successes": 27
+        },
+        "same_fact": {
+          "ci_high": 0.356357,
+          "ci_low": 0.149938,
+          "n": 63,
+          "rate": 0.238095,
+          "successes": 15
+        }
+      },
+      "zh": {
+        "answers": 63,
+        "citation_hit": {
+          "ci_high": 0.520191,
+          "ci_low": 0.285319,
+          "n": 63,
+          "rate": 0.396825,
+          "successes": 25
+        },
+        "citation_precision_mean": 0.086539,
+        "decisions": {
+          "answer": 54,
+          "escalate": 9
+        },
+        "fidelity_exact": {
+          "ci_high": 0.612371,
+          "ci_low": 0.372668,
+          "n": 63,
+          "rate": 0.492063,
+          "successes": 31
+        },
+        "same_fact": {
+          "ci_high": 0.304068,
+          "ci_low": 0.112462,
+          "n": 63,
+          "rate": 0.190476,
+          "successes": 12
+        }
+      }
+    },
+    "pooled": {
+      "ci_high": 0.28631,
+      "ci_low": 0.200388,
+      "n": 378,
+      "rate": 0.240741,
+      "successes": 91
+    }
+  },
+  "generated_at": "2026-10-21T13:22:18Z",
+  "generator_model": "qwen3.6-35b-a3b-noreason",
+  "hardware": "Windows 11 / Python 3.12.10",
+  "judge": {
+    "agreement_kappa": {},
+    "agreement_n": {},
+    "cross_family": true,
+    "generator_family": "qwen",
+    "generator_model": "qwen3.6-35b-a3b-noreason",
+    "human_calibrated": false,
+    "judge_family": "deepseek",
+    "judge_model": "deepseek-flash",
+    "note": "cross-family judge; human κ not established for this corpus, so judged numbers are reported with an explicit κ caveat, not as F-1/F-2/F-3 gates",
+    "position_swap": true,
+    "prompt_version": "judge-rubric-1",
+    "reportable": true,
+    "rubric_version": "rubric-v1"
+  },
+  "judge_failures": 1,
+  "judge_model": "deepseek-flash",
+  "language_discipline": {
+    "ky": {
+      "answers": 63,
+      "detected": {
+        "ci_high": 0.86275,
+        "ci_low": 0.660877,
+        "n": 63,
+        "rate": 0.777778,
+        "successes": 49
+      },
+      "discipline": {
+        "ci_high": 0.887538,
+        "ci_low": 0.695932,
+        "n": 63,
+        "rate": 0.809524,
+        "successes": 51
+      },
+      "leakage": {
+        "ci_high": 0.597296,
+        "ci_low": 0.357821,
+        "n": 63,
+        "rate": 0.47619,
+        "successes": 30
+      }
+    },
+    "ru": {
+      "answers": 63,
+      "detected": {
+        "ci_high": 0.922981,
+        "ci_low": 0.750254,
+        "n": 63,
+        "rate": 0.857143,
+        "successes": 54
+      },
+      "discipline": {
+        "ci_high": 0.955617,
+        "ci_low": 0.807383,
+        "n": 63,
+        "rate": 0.904762,
+        "successes": 57
+      },
+      "leakage": {
+        "ci_high": 0.671529,
+        "ci_low": 0.433196,
+        "n": 63,
+        "rate": 0.555556,
+        "successes": 35
+      }
+    },
+    "tg": {
+      "answers": 63,
+      "detected": {
+        "ci_high": 0.770504,
+        "ci_low": 0.543672,
+        "n": 63,
+        "rate": 0.666667,
+        "successes": 42
+      },
+      "discipline": {
+        "ci_high": 0.770504,
+        "ci_low": 0.543672,
+        "n": 63,
+        "rate": 0.666667,
+        "successes": 42
+      },
+      "leakage": {
+        "ci_high": 0.99125,
+        "ci_low": 0.891435,
+        "n": 63,
+        "rate": 0.968254,
+        "successes": 61
+      }
+    },
+    "tr": {
+      "answers": 63,
+      "detected": {
+        "ci_high": 0.983674,
+        "ci_low": 0.86909,
+        "n": 63,
+        "rate": 0.952381,
+        "successes": 60
+      },
+      "discipline": {
+        "ci_high": 0.983674,
+        "ci_low": 0.86909,
+        "n": 63,
+        "rate": 0.952381,
+        "successes": 60
+      },
+      "leakage": {
+        "ci_high": 0.700415,
+        "ci_low": 0.464153,
+        "n": 63,
+        "rate": 0.587302,
+        "successes": 37
+      }
+    },
+    "uz": {
+      "answers": 63,
+      "detected": {
+        "ci_high": 0.714681,
+        "ci_low": 0.479809,
+        "n": 63,
+        "rate": 0.603175,
+        "successes": 38
+      },
+      "discipline": {
+        "ci_high": 0.899606,
+        "ci_low": 0.713786,
+        "n": 63,
+        "rate": 0.825397,
+        "successes": 52
+      },
+      "leakage": {
+        "ci_high": 0.671529,
+        "ci_low": 0.433196,
+        "n": 63,
+        "rate": 0.555556,
+        "successes": 35
+      }
+    },
+    "zh": {
+      "answers": 63,
+      "detected": {
+        "ci_high": 0.922981,
+        "ci_low": 0.750254,
+        "n": 63,
+        "rate": 0.857143,
+        "successes": 54
+      },
+      "discipline": {
+        "ci_high": 0.922981,
+        "ci_low": 0.750254,
+        "n": 63,
+        "rate": 0.857143,
+        "successes": 54
+      },
+      "leakage": {
+        "ci_high": 0.99125,
+        "ci_low": 0.891435,
+        "n": 63,
+        "rate": 0.968254,
+        "successes": 61
+      }
+    }
+  },
+  "provider_error_rows": 185,
+  "replay": false,
+  "rows": {
+    "clean": 378,
+    "total": 630,
+    "variants": 252
+  },
+  "run_id": "consistency-p0",
+  "set": {
+    "archetypes": [
+      "card_terms",
+      "deposit_savings",
+      "fee_table",
+      "loan_credit",
+      "remittance_tracking",
+      "tariff_schedule",
+      "transfer_limits"
+    ],
+    "corpus_version": "corpus-77d7d081813738a6",
+    "definition": "a fact is (archetype, document index) asked as the clean direct question in every locale; each locale answers from its own document, so value equality across languages is not assumed — value fidelity is checked against each locale's gold",
+    "facts": 63,
+    "facts_sha256": "2d259e9b3f49b0a53229b1f9f3985b285a3527f4b356e507e4ee1735e4df1d42",
+    "instances": 378,
+    "locales": [
+      "ky",
+      "ru",
+      "tg",
+      "tr",
+      "uz",
+      "zh"
+    ],
+    "set_version": "v1"
+  },
+  "surface_invariance": {
+    "decision_invariance": {
+      "ci_high": 0.871243,
+      "ci_low": 0.679282,
+      "n": 67,
+      "rate": 0.791045,
+      "successes": 53
+    },
+    "evidence_invariance": {
+      "ci_high": 0.304191,
+      "ci_low": 0.117052,
+      "n": 67,
+      "rate": 0.19403,
+      "successes": 13
+    },
+    "pairs": 67,
+    "per_variant": {
+      "code_switch": {
+        "decision": {
+          "ci_high": 0.858354,
+          "ci_low": 0.444044,
+          "n": 16,
+          "rate": 0.6875,
+          "successes": 11
+        },
+        "evidence": {
+          "ci_high": 0.283287,
+          "ci_low": 0.011119,
+          "n": 16,
+          "rate": 0.0625,
+          "successes": 1
+        },
+        "facts": 16
+      },
+      "telegraphic": {
+        "decision": {
+          "ci_high": 0.98954,
+          "ci_low": 0.73018,
+          "n": 17,
+          "rate": 0.941176,
+          "successes": 16
+        },
+        "evidence": {
+          "ci_high": 0.639946,
+          "ci_low": 0.216111,
+          "n": 17,
+          "rate": 0.411765,
+          "successes": 7
+        },
+        "facts": 17
+      },
+      "translit": {
+        "decision": {
+          "ci_high": 0.783889,
+          "ci_low": 0.360054,
+          "n": 17,
+          "rate": 0.588235,
+          "successes": 10
+        },
+        "evidence": {
+          "ci_high": 0.26982,
+          "ci_low": 0.01046,
+          "n": 17,
+          "rate": 0.058824,
+          "successes": 1
+        },
+        "facts": 17
+      },
+      "typo": {
+        "decision": {
+          "ci_high": 0.98954,
+          "ci_low": 0.73018,
+          "n": 17,
+          "rate": 0.941176,
+          "successes": 16
+        },
+        "evidence": {
+          "ci_high": 0.472618,
+          "ci_low": 0.09555,
+          "n": 17,
+          "rate": 0.235294,
+          "successes": 4
+        },
+        "facts": 17
+      }
+    }
+  },
+  "value_fidelity": {
+    "per_language": {
+      "ky": {
+        "ci_high": 0.456328,
+        "ci_low": 0.229496,
+        "n": 63,
+        "rate": 0.333333,
+        "successes": 21
+      },
+      "ru": {
+        "ci_high": 0.535847,
+        "ci_low": 0.299585,
+        "n": 63,
+        "rate": 0.412698,
+        "successes": 26
+      },
+      "tg": {
+        "ci_high": 0.566804,
+        "ci_low": 0.328471,
+        "n": 63,
+        "rate": 0.444444,
+        "successes": 28
+      },
+      "tr": {
+        "ci_high": 0.520191,
+        "ci_low": 0.285319,
+        "n": 63,
+        "rate": 0.396825,
+        "successes": 25
+      },
+      "uz": {
+        "ci_high": 0.551384,
+        "ci_low": 0.313969,
+        "n": 63,
+        "rate": 0.428571,
+        "successes": 27
+      },
+      "zh": {
+        "ci_high": 0.612371,
+        "ci_low": 0.372668,
+        "n": 63,
+        "rate": 0.492063,
+        "successes": 31
+      }
+    },
+    "pooled": {
+      "ci_high": 0.468293,
+      "ci_low": 0.369336,
+      "n": 378,
+      "rate": 0.417989,
+      "successes": 158
+    }
+  },
+  "variants_per_locale": {
+    "ru": 252
+  }
+}

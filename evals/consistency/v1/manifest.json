@@ -1,0 +1,25 @@
+{
+  "archetypes": [
+    "card_terms",
+    "deposit_savings",
+    "fee_table",
+    "loan_credit",
+    "remittance_tracking",
+    "tariff_schedule",
+    "transfer_limits"
+  ],
+  "corpus_version": "corpus-77d7d081813738a6",
+  "definition": "a fact is (archetype, document index) asked as the clean direct question in every locale; each locale answers from its own document, so value equality across languages is not assumed — value fidelity is checked against each locale's gold",
+  "facts": 63,
+  "facts_sha256": "2d259e9b3f49b0a53229b1f9f3985b285a3527f4b356e507e4ee1735e4df1d42",
+  "instances": 378,
+  "locales": [
+    "ky",
+    "ru",
+    "tg",
+    "tr",
+    "uz",
+    "zh"
+  ],
+  "set_version": "v1"
+}

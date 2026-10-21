@@ -241,6 +241,24 @@ def eval(  # the command is named `eval` on purpose (requirements §17.2)
     score_calibration: Path | None = typer.Option(
         None, "--score-calibration", help="External arm: directory of filled label sheets."
     ),
+    consistency_build: bool = typer.Option(
+        False, "--build", help="Consistency audit: (re)build the transcreated fact set."
+    ),
+    consistency_audit: bool = typer.Option(
+        False, "--audit", help="Consistency audit: run the logical-consistency audit."
+    ),
+    consistency_retrieval: bool = typer.Option(
+        False, "--retrieval", help="Consistency audit: retrieval-level surface invariance."
+    ),
+    consistency_run: bool = typer.Option(
+        False, "--run", help="Consistency audit: measure agreement and invariance."
+    ),
+    variant_locales: str = typer.Option(
+        "ru", "--variant-locales", help="Consistency audit: locales with surface-form variants."
+    ),
+    consistency_retriever: str = typer.Option(
+        "cc@0.75", "--retriever", help="Consistency audit: retrieval arm used for answers."
+    ),
     all_arms: bool = typer.Option(False, "--all", help="Run every ablation arm."),
     retrieval_only: bool = typer.Option(False, "--retrieval-only", help="Retrieval arms only."),
     synthetic: bool = typer.Option(False, "--synthetic", help="Use the synthetic golden set."),
@@ -282,6 +300,31 @@ def eval(  # the command is named `eval` on purpose (requirements §17.2)
 ) -> None:
     """Run the evaluation harness and write a report (t7); `external` runs the public arm."""
     settings = _settings(config, profile)
+    if mode == "consistency":
+        from answerdesk.eval.consistency.cli import consistency_command
+
+        return_code = consistency_command(
+            build=consistency_build,
+            audit=consistency_audit,
+            retrieval=consistency_retrieval,
+            run=consistency_run,
+            replay=replay,
+            report=report,
+            locales=tuple(
+                item.strip() for item in (languages or "").split(",") if item.strip()
+            )
+            or ("ru", "uz", "tg", "ky", "zh", "tr"),
+            facts_limit=limit,
+            answer_limit=answer_limit,
+            provider=provider,
+            retriever=consistency_retriever,
+            variant_locales=tuple(
+                item.strip() for item in (variant_locales or "").split(",") if item.strip()
+            ),
+        )
+        if return_code != 0:
+            raise typer.Exit(code=return_code)
+        return
     if mode == "external" or list_suites or run_external_arm or score_calibration is not None:
         from answerdesk.eval.external.cli import external_command
         from answerdesk.eval.external.datasets import ExternalDataError
