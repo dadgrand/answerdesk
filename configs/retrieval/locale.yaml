@@ -1,0 +1,40 @@
+# Locale-aware retrieval: prefer the query's own language, never starve the context (CNS-6).
+#
+# Owner: t44. The finding (docs/consistency.md, CNS-6) was that retrieval ignored the query
+# locale, so a Russian question cited Chinese or Uzbek documents; the pooled evidence-locale
+# rate was 0.685 and it was the mechanical cause of the fact-agreement loss.
+#
+# The knob is ON by default. Switch it off with either of:
+#   ANSWERDESK_RETRIEVAL__LOCALE_FILTER=false
+#   PipelineConfig(locale_filter=False)
+# and re-measure with `uv run python -m answerdesk.retrieval.locale_report --check`.
+#
+# Policy (docs/retrieval.md §16):
+#   1. language must be detected with confidence >= locale_min_confidence, else no reordering;
+#   2. chunks in the query locale move ahead of the rest, order preserved, nothing dropped;
+#   3. if the preferred group cannot fill the window (fewer than ceil(window × min_same_ratio)
+#      chunks), cross-locale chunks are appended — an explicit fallback, reported per call;
+#   4. a query mixing scripts ("перевод (transfer) таджикистан") lowers min_same_ratio to 0,
+#      so the ordering is a preference, never a gate.
+version: "1.0.0"
+
+locale:
+  enabled: true
+  #: Share of the packed window that same-locale evidence should cover before the fallback
+  #: fires. 0.5 = "prefer it, but do not starve a window that only half-supports it".
+  min_same_ratio: 0.5
+  #: Detected-language confidence below which the policy declines to reorder at all. Guessing
+  #: a locale and filtering on the guess is how correct cross-locale evidence disappears.
+  min_confidence: 0.5
+  #: Applied at two points: the rerank input window (so the cross-encoder sees preferred
+  #: evidence) and the packed window (so the final context is preferred).
+  apply_before_rerank: true
+  apply_at_pack: true
+
+# Measurement (deterministic, no model calls): `python -m answerdesk.retrieval.locale_report`
+report:
+  consistency_run: reports/consistency-p0
+  output_dir: reports/locale-filter
+  window: 12
+  purity_target: 0.90
+  regression_tolerance: 0.02

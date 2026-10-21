@@ -42,11 +42,19 @@ from answerdesk.contracts import (
 )
 from answerdesk.index.bm25_index import BM25Index, merge_probes
 from answerdesk.index.store import IndexBundle
-from answerdesk.index.text import tokenize
+from answerdesk.index.text import is_cyrillic_char, is_han_char, tokenize
 from answerdesk.index.vector_index import ExactVectorIndex
 from answerdesk.rerank.mmr import MMRDiversifier, vector_similarity
 from answerdesk.retrieval.dedupe import DEFAULT_DEDUPE_COSINE, dedupe_passages
 from answerdesk.retrieval.fusion import FusionParams, RRFFusion, SingleChannelFusion
+from answerdesk.retrieval.locale_policy import (
+    DEFAULT_MIN_CONFIDENCE,
+    DEFAULT_MIN_SAME_RATIO,
+    LocaleOrdering,
+    LocalePolicy,
+    mark_locale_ordering,
+    order_by_locale,
+)
 from answerdesk.retrieval.query_analysis import QueryAnalysis, QueryAnalyzer
 
 
@@ -78,6 +86,10 @@ class PipelineConfig(BaseModel):
     clause_probes: bool = False
     max_clause_probes: int = Field(default=4, ge=0, le=8)
     rewrite_probe: bool = True
+    #: Locale policy (CNS-6): prefer evidence in the query's detected locale, with fallback.
+    locale_filter: bool = True
+    locale_min_same_ratio: float = Field(default=DEFAULT_MIN_SAME_RATIO, ge=0.0, le=1.0)
+    locale_min_confidence: float = Field(default=DEFAULT_MIN_CONFIDENCE, ge=0.0, le=1.0)
     #: When True, transliteration/edit-distance terms run as their own (demoted) probe.
     #: When False they are appended to the primary sparse query instead — the t5 behaviour,
     #: kept selectable so the ablation can compare the two designs on our own data.
@@ -214,19 +226,21 @@ class RetrievalPipeline:
         timings["dedupe_ms"] = _ms(started)
 
         reranked: list[RetrievedPassage] = []
+        locale_ordering = self._order_by_locale(deduped, analysis, window=config.rerank_top_in)
         if self.reranker is not None and deduped:
             started = time.perf_counter()
-            window = deduped[: config.rerank_top_in]
+            window = locale_ordering.passages[: config.rerank_top_in]
             reranked = self.reranker.rerank(query, window, config.rerank_top_out)
             timings["rerank_ms"] = _ms(started)
 
-        packed_source = reranked or deduped
+        packed_source = reranked or locale_ordering.passages
         if self.diversifier is not None and packed_source:
             started = time.perf_counter()
             packed_source = self.diversifier.diversify(packed_source, limit)
             timings["mmr_ms"] = _ms(started)
 
-        packed = _pack(packed_source, limit)
+        final_ordering = self._order_by_locale(packed_source, analysis, window=limit)
+        packed = _pack(mark_locale_ordering(final_ordering), limit)
         timings["total_ms"] = round(sum(timings.values()), 3)
 
         trace = RetrievalTrace(
@@ -242,6 +256,36 @@ class RetrievalPipeline:
             identifier_tokens=list(analysis.identifier_tokens),
         )
         return trace, timings
+
+    def _order_by_locale(
+        self,
+        passages: Sequence[RetrievedPassage],
+        analysis: QueryAnalysis,
+        *,
+        window: int,
+    ) -> LocaleOrdering:
+        """Apply the locale policy (CNS-6) with the mixed-script softening.
+
+        A query that mixes scripts ("перевод (transfer) таджикистан") keeps the same-locale
+        preference but lowers the fallback ratio to zero, so cross-locale evidence is always
+        available — a preference, never a gate.
+        """
+        config = self.config
+        ratio = config.locale_min_same_ratio
+        if _is_mixed_script(analysis.normalized, analysis.language):
+            ratio = 0.0
+        policy = LocalePolicy(
+            enabled=config.locale_filter,
+            min_same_ratio=ratio,
+            min_confidence=config.locale_min_confidence,
+        )
+        return order_by_locale(
+            passages,
+            language=analysis.language,
+            confidence=analysis.language_confidence,
+            window=window,
+            policy=policy,
+        )
 
     # -- stages -------------------------------------------------------------------
     def _sparse_candidates(self, analysis: QueryAnalysis, top_k: int) -> list[RetrievedPassage]:
@@ -355,6 +399,51 @@ class RetrievalPipeline:
                 seen.add(passage.chunk.chunk_id)
                 merged.append(passage.model_copy(update={"rank": len(merged) + 1}))
         return merged
+
+
+def _is_mixed_script(text: str, language: str) -> bool:
+    """True when a query genuinely mixes scripts, not when it merely names a foreign product.
+
+    The signal is *two or more foreign-script words* (each at least two letters) or a query
+    that is at least half foreign. A Russian question containing "Visa" is a Russian question
+    about a product; "перевод money transfer не дошли" is two languages in one message, and
+    only that second case softens the locale policy to a pure preference.
+
+    Note that starving cannot happen either way: the explicit cross-locale fallback always
+    fills the window when same-locale evidence is short. The flag only decides whether the
+    ordering is a preference (mixed) or a preference with a purity target (monolingual).
+    """
+    if language in ("", "und"):
+        return False
+    words = [word for word in text.split() if sum(char.isalpha() for char in word) >= 2]
+    if not words:
+        return False
+    foreign_words = sum(1 for word in words if _is_foreign_word(word, language))
+    letters = [char for char in text if char.isalpha()]
+    foreign_letters = sum(1 for char in letters if not _shares_script(char, language))
+    return foreign_words >= 2 or (bool(letters) and foreign_letters / len(letters) >= 0.5)
+
+
+def _is_foreign_word(word: str, language: str) -> bool:
+    """True when every letter of ``word`` belongs to a script the locale does not use."""
+    letters = [char for char in word if char.isalpha()]
+    if not letters:
+        return False
+    if language == "zh":
+        return all(char.isascii() or is_cyrillic_char(char) for char in letters)
+    if language in ("ru", "tg", "ky"):
+        return all(char.isascii() for char in letters)
+    # tr / uz: Latin-script locales, so Cyrillic or Han letters make a word foreign
+    return all(is_cyrillic_char(char) or is_han_char(char) for char in letters)
+
+
+def _shares_script(char: str, language: str) -> bool:
+    """True when ``char`` belongs to the script the detected language is written in."""
+    if language == "zh":
+        return is_han_char(char) or char.isascii()
+    if language in ("ru", "tg", "ky"):
+        return is_cyrillic_char(char) or char.isascii()
+    return char.isascii() or not (is_cyrillic_char(char) or is_han_char(char))
 
 
 def _offset_ranks(passages: list[RetrievedPassage], offset: int) -> list[RetrievedPassage]:

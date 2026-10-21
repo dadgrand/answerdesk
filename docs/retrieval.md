@@ -624,6 +624,8 @@ is why `NFR-SCALE-01`'s 4 GB peak-RSS bound is not at risk from *this* layer.
 | `retrieval/splits.py` | document-disjoint hashed split |
 | `retrieval/datasets.py` | retrieval cases from the corpus query set |
 | `retrieval/ablation.py` | the six-arm runner and its report |
+| `retrieval/locale_policy.py` | same-locale preference + cross-locale fallback (CNS-6) |
+| `retrieval/locale_report.py` | `--check` purity measurement and its artifacts |
 | `rerank/cross_encoder.py` | lazy cross-encoder + deterministic offline stand-in |
 | `rerank/api.py` | hosted Cohere-style `/rerank` adapter (bge-reranker) |
 | `rerank/mmr.py` | MMR with a cached similarity matrix |
@@ -940,7 +942,118 @@ removes it on replay), and tested with `FakeProvider` offline.
 
 ---
 
-## 16. Reproduce
+## 16. Locale-aware retrieval and cross-locale fallback (CNS-6)
+
+The consistency run found the leak this section closes (`docs/consistency.md`, CNS-6): retrieval
+had no locale policy, so a Russian question regularly packed Chinese or Uzbek chunks, and the
+pooled "every cited document carries the query's locale" rate was **0.685**. The language error
+was the mechanical cause of the fact-agreement loss — the model was reading a sibling locale's
+numbers.
+
+### 16.1 Policy
+
+Soft by construction, because a hard filter deletes correct evidence:
+
+1. **Language must be known and confident.** ``und``, or a detected-language confidence below
+   ``locale_min_confidence`` (0.5), disables the ordering entirely. Guessing a locale and then
+   filtering on the guess is how code-switched text loses its evidence.
+2. **Same-locale first, nothing dropped.** Chunks written in the query's locale move ahead of the
+   rest; the order inside each group is preserved, so the ordering is a stable partition of the
+   fused ranking, not a re-score.
+3. **Explicit fallback.** If the preferred group cannot fill the window — fewer than
+   ``ceil(window × locale_min_same_ratio)`` chunks — cross-locale chunks are appended and the
+   decision is reported (``fallback_used``). Starving the context to protect a metric would be a
+   worse answer, not a better one.
+4. **Mixed-script queries are a preference, not a gate.** A query with two or more foreign-script
+   words ("перевод money transfer не дошли") lowers the ratio to zero, so the ordering can never
+   cost it evidence. A single foreign word that is a product name ("Visa карта") does **not**
+   count as a code-switch — that Russian question still wants Russian evidence.
+
+Applied at two points, both deterministic: the **rerank input window** (so a cross-encoder scores
+preferred evidence) and the **packed window** (so the final context is preferred). The fused
+ranking itself is untouched, which is why recall@k is structurally unchanged (§16.3). Every
+decision is recorded on the passage (``contributions["locale_pref"]``,
+``contributions["cross_locale_fallback"]``) rather than in the frozen trace schema.
+
+### 16.2 Measurement
+
+```
+uv run python -m answerdesk.retrieval.locale_report --check
+```
+
+It reads the **consistency query set** — the same 378 clean instances the consistency run used
+(63 facts × 6 locales, each locale answering from its own document, digest recorded) — runs the
+pipeline with the policy off and on, and writes `reports/locale-filter/report.{json,md}`. No model
+call, no network, no randomness. ``--check`` exits non-zero if any gate fails.
+
+| metric | before (off) | after (on) | Δ |
+|---|---|---|---|
+| **chunk purity (pooled)** | **0.769** | **0.994** | **+0.226** |
+| instances fully same-locale | 0.201 | 0.979 | +0.778 |
+| instances ≥90% same-locale | 0.341 | 0.979 | +0.637 |
+| `recall_any@20` (fused, doc-level) | 0.984 | 0.984 | +0.000 |
+| `recall_any@10` (fused, doc-level) | 0.820 | 0.820 | +0.000 |
+
+Per locale (chunk purity, before → after): ru 0.717 → **1.000**, uz 0.710 → **0.974**,
+zh 0.692 → **1.000**, tg 0.833 → **1.000**, ky 0.853 → **0.992**, tr 0.807 → **1.000**.
+The three locales that leaked most before were the ones whose script is shared with a neighbour
+(ru/ky/uz in Cyrillic or Latin adjacency); zh and tg were already separated by their script, and
+the policy takes them to 1.000 as well.
+
+Gates (all passing, all in the committed artifact):
+
+| gate | result |
+|---|---|
+| purity ≥ 0.90 | 0.994 — **PASS** |
+| surface-form invariance (case, spacing, punctuation variants) | 756/756 packed contexts identical — **PASS** |
+| fusion/ablation non-regression (`recall_any@20` per arm, policy off vs on) | 0.000 on bm25 / dense / hybrid — **PASS** |
+| packed-recall non-regression (gold document inside the packed window) | 0.725 → **0.836** (+0.111) — **PASS** |
+| determinism (two runs, same digest) | identical — **PASS** |
+
+Surface-form invariance is measured against *meaning-preserving* variants. Case folding is
+language-sensitive — Turkish upper-casing turns ``kartın`` into ``KARTIN``, i.e. a different word —
+so the case variant lower-cases instead, and the punctuation variant keeps the original case.
+
+### 16.3 Configuration and the off switch
+
+`configs/retrieval/locale.yaml`:
+
+```yaml
+locale:
+  enabled: true          # on by default
+  min_same_ratio: 0.5
+  min_confidence: 0.5
+```
+
+Off switch: `ANSWERDESK_RETRIEVAL__LOCALE_FILTER=false` (or
+`PipelineConfig(locale_filter=False)`), then re-run the same measurement to see the leak return.
+The knob is documented here and in the YAML because a policy nobody can turn off is a policy
+nobody can measure.
+
+### 16.4 Limits
+
+1. **Purity is not correctness.** The policy changes *which language* the evidence is written in,
+   not whether it is the right article: packed-window recall of the gold document is 0.836, not
+   1.000 — the corpus has ~6.8 same-locale near-duplicate siblings per fact, so a same-locale chunk
+   is often a sibling rather than the gold one. Citations must still be verified (t6) and the
+   golden set (t7) still decides quality.
+2. **The ordering follows the *detected* locale.** A misdetected query now prefers the wrong
+   locale. The detector is 100% accurate on the checked-in query set (§5.2) and the policy declines
+   below 0.5 confidence, but a low-resource code-switch can still land on the wrong side.
+3. **Cross-lingual questions are served, not optimised.** A Russian question about a
+   Tajik-language-only fact gets a full window (fallback), with Russian chunks first if any exist.
+   That is the documented behaviour, not a guarantee of relevance.
+4. **The gain is partly a property of this corpus.** Nine sibling documents per locale/fact mean
+   "same locale" is easy to satisfy here; on a corpus with one document per locale, purity would
+   rise less and the fallback would fire more often. The measurement is committed so the next
+   corpus can be compared, not assumed.
+5. **No effect on fused recall — by construction.** The policy reorders downstream of fusion, so
+   the six-arm ablation table (§10) and the noisy-input section (§15) are unchanged; the guard
+   asserts exactly that rather than claiming an improvement.
+
+---
+
+## 17. Reproduce
 
 ```bash
 cd answerdesk

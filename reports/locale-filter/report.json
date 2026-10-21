@@ -1,0 +1,185 @@
+{
+  "ablation_guard": {
+    "delta": {
+      "bm25": 0.0,
+      "dense": 0.0,
+      "hybrid-rrf": 0.0
+    },
+    "n": 600,
+    "off": {
+      "bm25": 0.9683,
+      "dense": 0.475,
+      "hybrid-rrf": 0.9267
+    },
+    "on": {
+      "bm25": 0.9683,
+      "dense": 0.475,
+      "hybrid-rrf": 0.9267
+    },
+    "passed": true,
+    "tolerance": 0.02
+  },
+  "consistency_run": "reports/consistency-p0",
+  "consistency_set": {
+    "digest": "3b6d35b833ab099c3d6c3001900117df214859958a74dfbb60a255045523bb70",
+    "instances": 378,
+    "locales": [
+      "ky",
+      "ru",
+      "tg",
+      "tr",
+      "uz",
+      "zh"
+    ]
+  },
+  "corpus_chunk_hash": "852b9574323a258c16d00f2813b5fca2900b8f8f5093db197634972ec67f46f3",
+  "corpus_version": "corpus-77d7d081813738a6",
+  "determinism": {
+    "digest": "e6644a9e94ef6823623e9745dd5a91e49f4e2378972da1d8bcb55a3dcf58b535",
+    "digest_match": true
+  },
+  "gates": {
+    "ablation_guard": true,
+    "determinism": true,
+    "invariance": true,
+    "packed_recall": true,
+    "purity": true
+  },
+  "invariance": {
+    "instances": 378,
+    "matched": 756,
+    "rate": 1.0,
+    "total": 756,
+    "variants": {
+      "case": {
+        "matched": 378,
+        "mismatches": []
+      },
+      "punctuation": {
+        "matched": 378,
+        "mismatches": []
+      }
+    }
+  },
+  "packed_recall": {
+    "after": 0.836,
+    "before": 0.7249,
+    "delta": 0.1111,
+    "passed": true,
+    "tolerance": 0.02
+  },
+  "passed": true,
+  "policy": {
+    "description": "same-locale first, cross-locale fallback when the window cannot be filled from the query's locale",
+    "enabled_by_default": true,
+    "min_confidence": 0.5,
+    "min_same_ratio": 0.5
+  },
+  "purity": {
+    "after": {
+      "chunk_purity": 0.9943,
+      "chunks": 4536,
+      "instance_pure": 0.9788,
+      "instance_pure_90": 0.9788,
+      "instances": 378,
+      "packed_digest": "e6644a9e94ef6823623e9745dd5a91e49f4e2378972da1d8bcb55a3dcf58b535",
+      "per_locale": {
+        "ky": {
+          "chunk_purity": 0.9921,
+          "instance_pure": 0.9524,
+          "instance_pure_90": 0.9524,
+          "instances": 63
+        },
+        "ru": {
+          "chunk_purity": 1.0,
+          "instance_pure": 1.0,
+          "instance_pure_90": 1.0,
+          "instances": 63
+        },
+        "tg": {
+          "chunk_purity": 1.0,
+          "instance_pure": 1.0,
+          "instance_pure_90": 1.0,
+          "instances": 63
+        },
+        "tr": {
+          "chunk_purity": 1.0,
+          "instance_pure": 1.0,
+          "instance_pure_90": 1.0,
+          "instances": 63
+        },
+        "uz": {
+          "chunk_purity": 0.9735,
+          "instance_pure": 0.9206,
+          "instance_pure_90": 0.9206,
+          "instances": 63
+        },
+        "zh": {
+          "chunk_purity": 1.0,
+          "instance_pure": 1.0,
+          "instance_pure_90": 1.0,
+          "instances": 63
+        }
+      },
+      "recall_any_at_10": 0.8201,
+      "recall_any_at_20": 0.9841
+    },
+    "before": {
+      "chunk_purity": 0.7687,
+      "chunks": 4536,
+      "instance_pure": 0.2011,
+      "instance_pure_90": 0.3413,
+      "instances": 378,
+      "packed_digest": "8da08d4cd0d9cb8a795aa885814770c40c9e0c1cf19dcb77c73fa545418c63ec",
+      "per_locale": {
+        "ky": {
+          "chunk_purity": 0.8532,
+          "instance_pure": 0.254,
+          "instance_pure_90": 0.5397,
+          "instances": 63
+        },
+        "ru": {
+          "chunk_purity": 0.7169,
+          "instance_pure": 0.1111,
+          "instance_pure_90": 0.2857,
+          "instances": 63
+        },
+        "tg": {
+          "chunk_purity": 0.8333,
+          "instance_pure": 0.3492,
+          "instance_pure_90": 0.5714,
+          "instances": 63
+        },
+        "tr": {
+          "chunk_purity": 0.8069,
+          "instance_pure": 0.2857,
+          "instance_pure_90": 0.3016,
+          "instances": 63
+        },
+        "uz": {
+          "chunk_purity": 0.7103,
+          "instance_pure": 0.0952,
+          "instance_pure_90": 0.1429,
+          "instances": 63
+        },
+        "zh": {
+          "chunk_purity": 0.6918,
+          "instance_pure": 0.1111,
+          "instance_pure_90": 0.2063,
+          "instances": 63
+        }
+      },
+      "recall_any_at_10": 0.8201,
+      "recall_any_at_20": 0.9841
+    },
+    "delta": 0.2256,
+    "passed": true,
+    "target": 0.9
+  },
+  "schema_version": "1.0.0",
+  "seed": 1337,
+  "timings_ms": {
+    "total": 13041.023
+  },
+  "window": 12
+}
