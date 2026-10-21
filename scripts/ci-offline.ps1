@@ -14,8 +14,8 @@ Push-Location $repo
 try {
     $env:ANSWERDESK_PROFILE = "offline"
 
-    Write-Host "==> uv sync --extra dev" -ForegroundColor Cyan
-    uv sync --extra dev
+    Write-Host "==> uv sync --extra dev --extra api" -ForegroundColor Cyan
+    uv sync --extra dev --extra api
     if ($LASTEXITCODE -ne 0) { throw "uv sync failed" }
 
     Write-Host "==> ruff check src tests" -ForegroundColor Cyan

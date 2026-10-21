@@ -525,7 +525,8 @@ def openapi_schema(
 ) -> dict[str, Any]:
     """Build the schema without starting the service (no lifespan, no I/O)."""
     app = create_app(settings=settings, service_settings=service_settings)
-    return app.openapi()
+    schema: dict[str, Any] = app.openapi()
+    return schema
 
 
 def app_factory() -> FastAPI:
