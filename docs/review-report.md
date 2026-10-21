@@ -3,17 +3,19 @@
 **Audit type:** independent release-candidate review (honesty, tests, security, reproducibility,
 documentation accuracy).
 **Auditor:** reviewer (independent of the implementation tasks).
-**Audited tree:** `answerdesk/` at HEAD `fdb137a` (round 1), re-verified at HEAD `2dfb713`
-(round-2 core fixes), `2c0c9dc` (after t44) and `795c73f` (final pushed HEAD, with this report
-committed). The final bytes are `795c73f`.
-**Status:** **formal verdict: FAIL (needs_revision).** The working-tree offline gate is green
-(`pwsh -File scripts/ci-offline.ps1` → "offline gate: OK", 1,555 passed / 1 skipped, coverage 78.40%,
-all checkers green — reproducing the captain's claim), but the pushed HEAD is **not green on a clean
-checkout**: full suite = **1 failed, 1,547 passed, 2 skipped, 6 errors** (R-28). That is the one open
-high finding; R-01, R-02, R-03, R-04, R-05 and R-06 are verified fixed. The fix is small and
-test-only (one wrong skip guard plus one missing corpus guard), but it must land before the release
-can be reported as green — GitHub Actions checks out the repository without the git-ignored corpus,
-so its `pytest` steps fail exactly as reproduced below.
+**Audited tree:** `answerdesk/` at HEAD `fdb137a` (round 1), re-verified at `2dfb713` / `2c0c9dc` /
+`795c73f` (rounds 2–3), and finally at **`2e639ba1f401e7a401e206f6c941abc2f36d959f`** (round 4 —
+the release candidate). The final bytes are `2e639ba`.
+**Status:** **formal verdict: FAIL (needs_revision) — one high finding (R-34).** The official gate is
+green on a clean `git archive` of `2e639ba`: ruff/format/mypy clean (191 files), traceability
+121/121, numbers 1,875, licences 57, full suite **1,633 passed / 2 skipped**, coverage **77.50%**
+(gate 70%; per package 90/89/84/70), smoke 59/59, `tests/unit` 1,107 passed, load smoke PASS, web
+66/66 + build, and the documented quickstart commands (ask/demo/eval/serve/external) pass. But one
+**documented reproducibility gate is red on the archive**: `python scripts/risk-v2.py --check`
+(`docs/risk-control.md:39`) fails with "features.csv changed since summary.json was written" because
+the committed digest is a CRLF digest and a clean checkout is LF — the same class as R-03, introduced
+by the risk-v2 evidence (R-34). R-01…R-06, R-07, R-09…R-12, R-14…R-16, R-28, R-29, R-33 are verified
+fixed; the other open items are documented mediums/lows (R-08, R-13, R-19…R-27, R-30…R-32, R-35…R-37).
 
 ---
 
@@ -75,6 +77,33 @@ Round 3 (final HEAD `795c73f`): the working-tree offline gate was re-run end-to-
 1 skipped** (the loopback-only socket test). Clean checkout: **1 failed, 1,547 passed, 2 skipped,
 6 errors** (R-28). The second result is the one that matters for delivery, because
 `.github/workflows/ci.yml` runs on a fresh clone with no `data/corpus/chunks.jsonl`.
+
+Round 4 (release candidate `2e639ba`, t45/t47/t48/t49/t50/t51 landed; t52 uncommitted and **not**
+audited). A clean `git archive 2e639ba` copy was tested with the repository's own environment
+(`uv sync` itself cannot run offline here — the local project build needs `hatchling` from PyPI —
+so the pre-built dev+api venv was used with `PYTHONPATH=<archive>/src`; every package version is the
+one CI installs from `uv.lock`).
+
+| Check | Command (archive copy unless stated) | Result |
+|---|---|---|
+| Corpus before tests | `python -m answerdesk.cli ingest --demo` | 810 docs / 7,229 chunks / `corpus-77d7d081813738a6` |
+| Lint / format | `python -m ruff check .` · `ruff format --check .` | **0 findings**, 370 files formatted |
+| Types | `python -m mypy src/answerdesk` | **0 issues**, 191 files |
+| Traceability | `scripts/check-traceability.py` | exit 0: 121 rows · 121/121 AT ids · 154 paths (14 markers outside §16 → R-32) |
+| Numbers | `scripts/check-numbers.py` | exit 0: 1,875 quantities, 3 documented exceptions |
+| Licences | `scripts/check-licenses.py --quiet` | exit 0: 57 distributions, all permissive |
+| Provenance docs | `build-results.py --check` · `build-external.py --check` · `build-consistency.py --check` · `build_bench.py --verify` | all exit 0 (27/27 bench checks) |
+| Impact evidence | `latency_report --check` · `score-judge-calibration.py --check` | exit 0 (TTFT 673/965 ms baseline; judge gate 11/11 checks) |
+| **Risk-v2 evidence** | `scripts/risk-v2.py --check` | **FAIL** on the LF archive: "features.csv changed since summary.json was written"; passes on a CRLF working tree (R-34) |
+| R-28 guards | pytest without corpus | 8 skipped, 0 failed (guards fixed) |
+| Smoke (CI fast gate) | `pytest -q -m smoke` | 59 passed |
+| Unit (CI fast gate) | `pytest -q tests/unit` | 1,107 passed, 1 skipped |
+| Full suite | `pytest -q` (`ANSWERDESK_REQUIRE_API=1`) | **1,633 passed, 2 skipped, 0 failed** |
+| Coverage gate | `pytest --cov=… --cov-fail-under=70` | **77.50%** total; per package 90/89/84/70 |
+| Load smoke | `scripts/load.py --smoke` | LOAD PASS; 429/Retry-After, probes 200, no leaks |
+| Quickstart | `ask --fake` · `demo --smoke` · `eval --synthetic` · `--profile local config check` · `eval external --list-suites` · `serve --healthcheck` | all exit 0; `ask` output matches README byte-for-byte; demo writes `reports/demo/summary.json`; eval digest `dfbb4924…` |
+| Console | `npm run test` · `npm run build` | **66/66** tests (10 files), tsc+vite build OK; axe report committed with 0 violations |
+| Security (live) | archive service, PII + injection turns | `PII_DETECTED` / `INJECTION_SUSPECTED`, `input_tokens=0`, no raw PII in traces/logs |
 
 ---
 
@@ -327,6 +356,10 @@ defer with an owner), low (cleanup).
 | R-31 | low | Residual limitation: a numeric-guard rejection is reported to the operator as `CITATION_FAILED`; the numeric detail only lives in `numeric_violations_pre_repair` on the trace | `src/answerdesk/generate/pipeline.py:337-339` |
 | R-32 | low | 11 acceptance-test markers (`AT-CNS-01…04`, `AT-GEN-13…19`) exist in the tree but have no §16 row; the checker reports them as a note, not a failure | `docs/requirements.md` §16 / CC-2026-10-21-c note |
 | R-33 | low | `pytest -q -m smoke` (the CI fast-gate command) fails when the `api` extra is installed: `test_base_install_does_not_import_heavy_dependencies` asserts on process-global `sys.modules`, which an earlier-collected service conftest pollutes with `fastapi` | `tests/smoke/test_package.py:60` |
+| R-34 | high | `scripts/risk-v2.py --check` (the documented reproducibility gate in `docs/risk-control.md:39` and the "Risk control v2" section of `docs/results.md`) fails on a clean LF checkout: summary.json records `source_digest = 93cf38…` (CRLF bytes) while the committed `features.csv` hashes to `62bc8d…` (LF). Same class as R-03, introduced by the risk-v2 evidence | `src/answerdesk/eval/risk/features.py:271`, `reports/risk-v2/summary.json` |
+| R-35 | medium | `docs/results.md`'s NFR-LAT-01 verdict still says the run was "without a streaming time-to-first-token measurement" and lists streaming TTFT as future work, while `docs/latency.md` / `reports/latency-v2` measure TTFT (baseline p50/p95 673/965 ms; budget and cascade exceed). The MISS verdict is right; the rationale contradicts another committed document | `docs/results.md:471-473` |
+| R-36 | low | README says `npm run test` covers "61 component/integration tests"; the committed console has 66 (10 files). `check-numbers.py` skips fenced code blocks, so the stale count passes the number gate | `README.md:187` |
+| R-37 | low | `docs/requirements.md` still marks CMD-U / `demo --smoke` as **PENDING (R-11)** and §17.3 says "once CMD-U lands…", but the command is implemented (t50) and passes on the archive (`demo: OK`) | `docs/requirements.md:1327,1344-1345` |
 
 ### 6.2 Round-2 status (post-fix verification, HEAD `2dfb713`)
 
@@ -345,6 +378,32 @@ defer with an owner), low (cleanup).
 | R-28 clean-checkout suite | **open — high at final HEAD** | Clean `git archive` of `2dfb713`: 2 failed / 1,526 passed / 2 skipped; `2c0c9dc`: 2 failed / 1,546 passed / 2 skipped / 6 errors; **final `795c73f`: 1 failed / 1,547 passed / 2 skipped / 6 errors**. Committing this report removed the mutation-audit failure; the remaining failure is the consistency replay test (missing git-ignored `data/corpus/chunks.jsonl`) and the six `test_locale_purity` errors, whose `_require_inputs()` guards on `manifest.json` instead of `chunks.jsonl`. All pass in the working tree |
 | R-29 CI wiring | **open — medium** | `.github/workflows/ci.yml` still has no step for the checkers or coverage (verified at `795c73f`); only `scripts/ci-offline.ps1` runs them |
 | R-30/R-31 residual numeric limitations | **new — medium/low** | Confirmed by probe/code read; must stay in the report even after R-04 is closed |
+
+### 6.3 Round-4 status at the release candidate (`2e639ba`)
+
+| Finding | Final status | Evidence |
+|---|---|---|
+| R-01, R-02, R-03, R-04, R-05, R-06 | **resolved (verified on `2e639ba`)** | checkers green; LAT-01 MISS printed; provenance checks pass on clean LF; M6 caught; scale artifact; 121/121 markers |
+| R-07 coverage in CI | **resolved** | `.github/workflows/ci.yml` full job runs one coverage invocation with `--cov-fail-under=70`; measured 77.50% total, per package 90/89/84/70; asserted by `tests/smoke/test_ci_workflow.py` |
+| R-08 dependency audit | **partial (documented)** | licence half runs and passes (57 dists); `pip-audit` needs network and is documented as a release step, not claimed as CI (requirements NFR-SEC-05, docs/decisions.md CC-e) |
+| R-09 XSS test | **resolved** | `web/src/components/AnswerCard.xss.test.tsx`; 66/66 vitest tests pass |
+| R-10 a11y check | **resolved** | `web/src/a11y.test.tsx` runs axe-core (wcag2a/2aa/21a/21aa); committed `web/reports/a11y/console-axe.json` shows 0 violations, 23 passes; colour contrast explicitly out of scope for jsdom |
+| R-11 demo --smoke | **resolved functionally** | archive: `demo --smoke` exits 0, prints `demo: OK`, writes `reports/demo/summary.json`; docs still say PENDING (R-37) |
+| R-12 stale offline-smoke | **resolved** | committed `reports/offline-smoke/report.md` is corpus-77d7… / 530 cases / 9.8 s; README says the command rewrites the artifact |
+| R-13 duration/generator attribution | **open — medium** | `docs/results.md:19` still prints `duration 0.0 s`; the secondary arm at line 250 still attributes its answers to the qwen generator (generator hardcodes the sentence) |
+| R-14 stale architecture | **resolved** | `docs/architecture.md` §12 is now "Implementation status (v0.2)" |
+| R-15 global --profile | **resolved** | `answerdesk --profile local config check` exits 0 on the archive; app-level option tested |
+| R-16 proxy tests | **resolved** | 8/8 proxy tests pass under `NO_PROXY='*'` on the archive |
+| R-19…R-23, R-25…R-27 | **open — low** | §10.7 limitations not verbatim in results.md; coverage gloss; local path in external doc; Python 3.13/macOS claim; dead method; one-workflow wording; host paths in health output — all unchanged from round 1 |
+| R-28 corpus guards | **resolved** | without a corpus the archive skips 8 tests and fails none; with the corpus the full suite is 1,633 passed |
+| R-29 CI wiring | **resolved** | fast job runs the three checkers; full job runs coverage; asserted by job in `tests/smoke/test_ci_workflow.py` |
+| R-30/R-31 | **documented** | `numeric.py` docstring states the digit-only limitation (R-30); `docs/escalation.md:171` documents `CITATION_FAILED` + `numeric_violations_pre_repair` (R-31) |
+| R-32 out-of-matrix markers | **open — low** | now 14 (`AT-CNS-01…04`, `AT-GEN-13…19`, `AT-RISK-01…03`); checker reports a note |
+| R-33 smoke order dependence | **resolved** | base-install assertion now runs in a subprocess; `pytest -q -m smoke` with the api extra = 59 passed |
+| R-34 risk-v2 --check | **OPEN — HIGH** | fails on the LF archive, passes with CRLF features.csv; fixed digest needed |
+| R-35 LAT-01 narrative | **open — medium** | results.md says no streaming TTFT measurement; docs/latency.md measures it |
+| R-36 README web-test count | **open — low** | says 61, actual 66 |
+| R-37 CMD-U wording | **open — low** | requirements still says PENDING though the command works |
 
 
 ### R-01 — the traceability gate does not exist (high)
@@ -798,62 +857,128 @@ the same class of environment-dependent gate.
 instead of inspecting the pytest process's module table, or mark it to run in its own process, so the
 result does not depend on what else was collected.
 
+**Round-4 status: resolved** — the archive's `pytest -q -m smoke` with the api extra is 59 passed.
+
+### R-34 — risk-v2 evidence is not clean-checkout reproducible (high, new in round 4)
+
+**Problem.** `docs/risk-control.md:39` documents `uv run python scripts/risk-v2.py --check` as the
+gate that "re-derives every artefact from features.csv", and `docs/results.md` publishes the
+"Risk control v2" table from those artefacts. On a clean LF checkout of `2e639ba` the command exits 1:
+
+```text
+features.csv changed since summary.json was written; re-run --run
+```
+
+Cause: `feature_digest()` hashes raw bytes (`src/answerdesk/eval/risk/features.py:271`), and
+`reports/risk-v2/summary.json` records `populations.consistency.source_digest = 93cf38…` — the digest
+of the CRLF working-tree file. The committed blob is LF and hashes to `62bc8d…`, so every clean
+checkout (and Linux/CI) fails. Rewriting the archive's `features.csv` with CRLF makes the same
+command pass, which proves the cause. The committed *numbers* re-derive correctly; the gate is what
+is broken. This is the same defect class as R-03, reintroduced by the risk-v2 task after the team had
+fixed it for `build-results.py`.
+
+**Required fix.** Canonicalise the digest (`read_bytes().replace(b"\r\n", b"\n")`, or hash a
+canonical CSV projection), regenerate `summary.json` (and any other artifact recording
+`source_digest`) from the canonical file, and add a regression test that runs `--check` on an
+LF-normalised copy. Also add `risk-v2 --check` to the offline gate once it is stable, so the class
+cannot silently return.
+
+### R-35 — the LAT-01 narrative is stale about TTFT (medium, new in round 4)
+
+**Problem.** `docs/results.md` §"NFR-LAT-01 verdict" says the measurement is "without a streaming
+time-to-first-token measurement" and lists "streaming with TTFT" among the things that "would change
+the verdict". `docs/latency.md` and `reports/latency-v2` now measure TTFT on three live arms:
+baseline p50/p95 **673 / 965 ms** (which meets the 1,200 ms TTFT component), budget 707 / 2,410 ms
+and cascade 638 / 12,187 ms (which do not). The overall MISS verdict is unchanged — total p50/p95
+still exceed 1,500/4,000 ms — but the canonical results document now contradicts another committed
+document about what was measured.
+
+**Required fix.** Regenerate the LAT-01 narrative to reference the latency-v2 arm, state per-component
+results (TTFT met on the baseline; totals and budget/cascade TTFT not), and keep the MISS verdict.
+
+### R-36 — README web-test count is stale (low, new in round 4)
+
+**Problem.** `README.md:187` says `npm run test` runs "61 component/integration tests"; the committed
+console has **66** tests across 10 files (`AnswerCard.xss.test.tsx` and `a11y.test.tsx` were added in
+t50). The number gate does not catch it because the line sits inside a fenced code block and
+`check-numbers.py` skips fences.
+
+**Required fix.** Update the count to 66 (or make the sentence count-free, e.g. "the console test
+suite"), and consider checking comment text inside fenced command examples.
+
+### R-37 — CMD-U is still marked PENDING (low, new in round 4)
+
+**Problem.** `docs/requirements.md` CMD-U says `answerdesk demo --smoke` is "**PENDING** (R-11: the
+command exits 2 …)" and §17.3 says "once CMD-U lands, re-run …". The command landed in t50: on the
+clean archive it exits 0, prints `demo: OK` and writes `reports/demo/summary.json`. The contract text
+contradicts the implementation and the README (which documents the command as the shortest path).
+
+**Required fix.** Mark CMD-U as delivered with the measured runtime, remove the R-11 caveat, and
+update the §17.3 sequence accordingly.
+
 ---
 
 ## 7. What held up (worth keeping)
 
-* **The round-2 fixes are real, not papered over.** The traceability gate now runs and reports
-  121/121; the LAT-01 miss is printed as MISS next to the target it misses; provenance is canonical
-  LF and survives a clean checkout; the numeric guard is pinned by tests that fail when the branch is
-  removed (19 failures); and the scale run is a committed artifact with three repetitions and its
-  hardware/config recorded.
+* **The release candidate's official gate is green on a clean checkout.** On `2e639ba`: ruff/format
+  0 findings, mypy 191 files clean, full suite 1,633 passed / 2 skipped, coverage 77.50% (all four
+  packages ≥70%), traceability 121/121, numbers 1,875, licences 57, smoke 59, unit 1,107, load smoke
+  PASS, web 66/66 + build, and the documented quickstart commands (ask, demo --smoke, eval,
+  `--profile`, external, serve --healthcheck) all exit 0.
+* **The new evidence arms are honest about their limits.** Risk-v2 prints "Certificate … ABSENT" and
+  refuses a 5% guarantee; the judge gate stays `pending`/`diagnostic` with synthetic fixtures; the
+  latency arm reports TTFT and total separately, including the noisy cascade p95, and the LAT-01
+  verdict remains MISS.
+* **The round-2/3 fixes are real, not papered over.** The traceability gate runs and reports
+  121/121; the LAT-01 miss is printed as MISS; build-results/external/consistency/bench provenance
+  checks survive a clean LF checkout; the numeric guard fails when its branch is removed; the scale
+  run is a committed artifact with three repetitions; the console now has an XSS test and an axe
+  report with 0 violations; the R-28 corpus guards skip instead of failing on a fresh clone.
 * **Numbers are honest.** Every recomputable headline value matches its artifact; CIs are real
   Wilson/bootstrap intervals (recomputed independently); the negative calibration result is stated
   in the headline and in `summary.json`; zh is a no-claim; the secondary arm is labelled not
   comparable; the free tariff and 0.0 USD are explained rather than hidden.
 * **Determinism.** Two offline eval runs give the same digest; the corpus rebuild is byte-stable;
   the hashing embedder is process-independent; `build-results.py --check` works on the canonical
-  checkout.
-* **Security boundaries are real, not asserted.** Live PII and injection probes both stop before a
-  provider call and leave no raw value in traces; the mutation sweep proves the PII detector, the
-  entity guard, the conformal quantile, the fusion degeneracy rule and heading structure are
-  load-bearing tests.
+  checkout. (The risk-v2 digest is the one exception — R-34.)
+* **Security boundaries are real, not asserted.** Live PII and injection probes on the release
+  archive both stop before a provider call and leave no raw value in traces; the mutation sweep
+  proves the PII detector, the entity guard, the conformal quantile, the fusion degeneracy rule and
+  heading structure are load-bearing tests.
 * **The service and console are genuine.** SSE event order and trace ids verified live; cache hit
-  verified; 61 web tests and a production build pass; screenshots show real service data with a
-  trace id and model/version headers.
-* **Lint/types are clean on the committed bytes** (ruff check, ruff format, mypy over 169 files).
+  verified; 66 web tests (including XSS and axe) and a production build pass; screenshots show real
+  service data with a trace id and model/version headers.
+* **Lint/types are clean on the committed bytes** (ruff check, ruff format, mypy over 191 files).
 * **Documentation is unusually honest about limitations** (risk control, judge κ, synthetic corpus,
-  citation recall, disabled rewriter) even where this audit found inaccuracies.
+  citation recall, disabled rewriter, digit-only numeric guard) even where this audit found
+  inaccuracies.
 
 ---
 
 ## 8. Required actions before the verdict can be `pass`
 
-**Closed and verified (R-01, R-02, R-03, R-04, R-05, R-06).** The review report itself was committed
-in `795c73f`, which removed one of the three R-28 failures.
+**Closed and verified on `2e639ba`:** R-01…R-07, R-09…R-12, R-14…R-16, R-28, R-29, R-33; R-30/R-31
+are documented; R-08 is partial by explicit, documented design.
 
 **Still required:**
 
-1. **R-28 (high):** make the full suite green on a clean checkout — fix the locale-purity
-   `_require_inputs()` guard to test `chunks.jsonl`, and make the consistency replay test skip or
-   build the missing corpus. This is the only open high finding and the only thing between this
-   revision and a `pass`.
-2. **R-29 (medium):** put `check-traceability.py`, `check-numbers.py`, `check-licenses.py` and the
-   coverage step into `.github/workflows/ci.yml`; a local PowerShell script is not a CI gate.
-3. **R-30 / R-31 (residual limitations):** document spelled-out numbers as outside the digit guard
-   and state that numeric rejections surface as `CITATION_FAILED` with the count on the trace (or add
-   a dedicated reason code). They are recorded in this report, not yet in `docs/`.
-4. **R-33 (low):** make the base-install check run in a subprocess so `pytest -m smoke` is
-   order-independent with the `api` extra installed.
-5. R-09/R-10: add the XSS DOM test and an automated a11y check (still open).
-6. R-11: wire `demo --smoke` (t14) or mark CMD-U pending in §17.3.
-7. R-12/R-13/R-14/R-15/R-17: regenerate/repair the documentation and the committed replay artifact.
-8. R-16: make the proxy tests environment-independent.
-9. R-18: commit the clean-checkout transcript.
-10. R-32: register (or explicitly exclude) the 11 out-of-matrix markers.
-
-Low findings R-19…R-27 may be fixed in the same pass or explicitly deferred with an owner; they do
-not on their own block a verdict.
+1. **R-34 (high):** canonicalise the risk-v2 feature digest (hash LF bytes or a canonical CSV
+   projection), regenerate `reports/risk-v2/summary.json`, and prove `scripts/risk-v2.py --check`
+   exits 0 on a clean `git archive` copy. Add that check to the offline gate so the class cannot
+   return. This is the only open high finding and the only thing between this revision and a `pass`.
+2. **R-35 (medium):** refresh the NFR-LAT-01 narrative in `docs/results.md` to cite the measured
+   TTFT arm (`docs/latency.md`) and state per-component results; keep the MISS verdict.
+3. **R-36 / R-37 (low):** update the README web-test count (61 → 66) and mark CMD-U delivered in
+   `docs/requirements.md` (remove the R-11 PENDING caveat from §17.3).
+4. **R-13 (medium, carried from round 1):** fix the generated results doc's `duration 0.0 s` and the
+   hard-coded "Generator family qwen" sentence that misattributes the secondary (deepseek-flash)
+   arm; regenerate and re-run `--check`.
+5. **R-08 (partial):** run the networked `pip-audit` at release time and record the result (the spec
+   already documents this as a release step rather than a CI claim).
+6. R-19…R-23, R-25…R-27, R-32 (low): documentation cleanups (limitations verbatim, coverage gloss,
+   local path in the external doc, Python 3.13/macOS claim, dead method, workflow wording, health
+   paths, 14 out-of-matrix markers). They do not on their own block a verdict; an owner or a formal
+   deferral is enough.
 
 ---
 
@@ -928,11 +1053,48 @@ numeric-guard/word-numeral probes. Clean LF copies of HEAD were created with
 `git archive HEAD | tar -x` for platform-independence checks; mutations were applied only inside
 those copies.
 
+Round-4 verification of the release candidate `2e639ba` (LF `git archive` copy, no proxy env,
+`PYTHONPATH=<copy>/src`, the lock-file dev+api environment). `uv sync` itself cannot run offline in
+this sandbox (the local project build needs `hatchling` from PyPI), so the pre-built venv was used;
+the package set is the one CI installs from `uv.lock`.
+
+```powershell
+python -m answerdesk.cli ingest --demo              # 810 docs / 7,229 chunks
+python -m ruff check .                              # All checks passed
+python -m ruff format --check .                     # 370 files already formatted
+python -m mypy src/answerdesk                       # Success, 191 files
+python scripts/check-traceability.py                # exit 0 (121/121 markers, 154 paths, 14 notes)
+python scripts/check-numbers.py                     # exit 0 (1,875 quantities)
+python scripts/check-licenses.py --quiet            # exit 0 (57 distributions)
+python scripts/build-results.py --run reports/bench --out docs/results.md --check   # exit 0
+python scripts/build-external.py --run reports/external-p0 --check                  # exit 0
+python scripts/build-consistency.py --check         # exit 0
+python scripts/build_bench.py --verify              # 27 passed, 0 failed
+python -m answerdesk.llm.latency_report --check     # check: ok (TTFT p50/p95 baseline 673/965 ms)
+python scripts/score-judge-calibration.py --check   # 11/11 checks passed
+python scripts/risk-v2.py --check                   # FAIL on LF archive (R-34); passes with CRLF
+python -m pytest -q -m smoke                        # 59 passed (api extra installed)
+python -m pytest -q tests/unit                      # 1,107 passed, 1 skipped
+python -m pytest -q                                 # 1,633 passed, 2 skipped
+python -m pytest -q --cov=... --cov-fail-under=70   # 77.50%, threshold reached
+python scripts/load.py --smoke                      # LOAD PASS (smoke)
+python -m answerdesk.cli demo --smoke               # demo: OK, reports/demo/summary.json
+cd web && npm run test && npm run build             # 66/66 tests, build ok
+```
+
+The R-34 diagnosis was confirmed by rewriting the archive's `reports/risk-v2/features.csv` with CRLF
+and re-running `--check` (exit 0), then restoring it.
+
 ### Audit limitations
 
-* No live provider run (no keys, no network): live-arm honesty was judged from committed artifacts.
-* No dependency-vulnerability scan (network blocked). The licence half now runs
+* No live provider run (no keys, no network): live-arm honesty was judged from committed artifacts,
+  and the security probes used the archive's `--fake` service (PII/injection guards are
+  deterministic and do not need a model).
+* No dependency-vulnerability scan (network blocked). The licence half runs
   (`scripts/check-licenses.py`, 57 distributions, all permissive); the vulnerability half is
   documented as a networked release step (see R-08 and docs/decisions.md CC-2026-10-21-e).
-* The working-tree gate was run on the final HEAD `795c73f`; the clean-checkout suite was run on a
-  `git archive` copy of the same commit. No further commit landed between the two runs.
+* `uv sync` cannot run offline here (the project build backend is fetched from PyPI), so the clean
+  archive was exercised with the pinned dev+api environment rather than a freshly created venv. The
+  CI job performs the real `uv sync --frozen` with network; nothing in the archive gate depends on
+  the venv creation itself.
+* t52 (risk-v3) was uncommitted during this audit and was **not** inspected or tested.

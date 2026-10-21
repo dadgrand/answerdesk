@@ -127,7 +127,12 @@ def _header_block(summary: Mapping[str, Any], run: Path) -> list[str]:
             "yes — numbers are diagnostics" if summary.get("replay") else "no (live providers)",
         ],
         ["hardware", summary.get("hardware")],
-        ["duration", f"{summary.get('duration_s')} s"],
+        [
+            "duration",
+            f"{float(summary['duration_s']):.1f} s"
+            if summary.get("duration_s")
+            else "not measured (the run did not record it)",
+        ],
         [
             "calibration",
             (summary.get("calibration") or {}).get("note", summary.get("calibration"))
@@ -316,7 +321,7 @@ def _retrieval_block(summary: Mapping[str, Any], run: Path) -> list[str]:
     return lines
 
 
-def _model_alias_note() -> str:
+def _model_ids() -> tuple[str, str]:
     """Both model ids of the primary family, as recorded in evals/configs/bench-live.yaml."""
     path = REPO_ROOT / "evals" / "configs" / "bench-live.yaml"
     primary, reasoning = "qwen3.6-35b-a3b-noreason", "qwen3.6-35b-a3b"
@@ -328,10 +333,27 @@ def _model_alias_note() -> str:
                 primary = stripped.split(":", 1)[1].strip().strip('"')
             elif stripped.startswith("model_id:") and "qwen3.6-35b-a3b" in stripped:
                 reasoning = stripped.split(":", 1)[1].strip().strip('"')
-    return (
-        f"Generator family **qwen**: `{primary}` produces these answers; "
-        f"`{reasoning}` is the reasoning variant measured in the side study."
-    )
+    return (primary, reasoning)
+
+
+def _model_alias_note(arm: str, values: Mapping[str, Any]) -> str:
+    """Name *this arm's* generator from the summary, never a hard-coded one (R-13).
+
+    The previous version asserted "Generator family **qwen**" under every arm, so the
+    deepseek-flash secondary arm was attributed to the qwen generator. The family and the
+    model now come from ``summary.models[arm]``; the reasoning-variant sentence is only
+    emitted for the family it is true of.
+    """
+    generator = values.get("generator") or "unknown"
+    family = values.get("generator_family") or "unknown"
+    sentence = f"Generator family **{family}**: `{generator}` produced these answers."
+    if family == "qwen":
+        _primary, reasoning = _model_ids()
+        sentence += (
+            f" `{reasoning}` is the reasoning variant; the planned side study at 8192/16384 "
+            "tokens was not run in this window, so no reasoning-variant number is claimed."
+        )
+    return sentence
 
 
 def _answer_block(summary: Mapping[str, Any], run: Path) -> list[str]:
@@ -347,7 +369,7 @@ def _answer_block(summary: Mapping[str, Any], run: Path) -> list[str]:
             f"judge `{payload.get('judge_model')}`"
         )
         lines.append("")
-        lines.append(_model_alias_note())
+        lines.append(_model_alias_note(arm, summary.get("models", {}).get(arm, {})))
         lines.append("")
         note = summary.get("models", {}).get(arm, {}).get("note")
         if note:
@@ -828,8 +850,12 @@ def _lat_requirement_block(summary: Mapping[str, Any]) -> list[str]:
                 "(change control CC-2026-10-21-b, `docs/requirements.md` §18.5).",
                 "",
                 "What the number measures: a hosted ~35B generator in strict-JSON mode producing "
-                "~500 output tokens per answered turn, without a streaming "
-                "time-to-first-token measurement." + retrieval_note,
+                "~500 output tokens per answered turn, arrival to final byte; the budget is "
+                "not a token-stream budget. Streaming **was** measured in the separate "
+                "`latency-v2` arm (docs/latency.md): baseline time-to-first-token "
+                "673 ms p50 / 965 ms p95, and the output-budget/cascade variants still "
+                "missed the total, so TTFT alone does not rescue this target — the verdict "
+                "stays MISS on the measured totals." + retrieval_note,
                 "",
                 "What would change the verdict: a smaller or local model, streaming with TTFT as "
                 "the served-latency metric, and a shorter answer budget — each measurable with the "

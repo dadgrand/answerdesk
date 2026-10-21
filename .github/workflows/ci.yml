@@ -55,6 +55,11 @@ jobs:
         run: uv run python scripts/check-numbers.py
       - name: Licence audit (offline allow-list)
         run: uv run python scripts/check-licenses.py --quiet
+      # risk-v2 artefacts are re-derived from the cached feature tables: this is the
+      # reproducibility gate for the conformal-risk study (R-34). Digests are over
+      # canonical LF bytes, so it passes on a CRLF checkout and on an LF archive.
+      - name: risk-v2 reproducibility (--check)
+        run: uv run python scripts/risk-v2.py --check
       - name: Contracts import smoke
         run: uv run python -c "import answerdesk; from answerdesk.contracts import Answer; print('ok')"
 

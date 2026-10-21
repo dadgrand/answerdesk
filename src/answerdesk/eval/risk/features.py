@@ -268,10 +268,22 @@ def read_rows(path: Path) -> list[FeatureRow]:
     return rows
 
 
+def canonical_bytes(raw: bytes) -> bytes:
+    """Normalise line endings to LF; every other byte is untouched (R-34/R-03).
+
+    A digest over raw bytes is not reproducible: Git checks files out with CRLF on Windows
+    and LF everywhere else, so the same committed table hashed two different ways and
+    ``--check`` failed on a clean `git archive`. Hashing the canonical projection makes the
+    digest a property of the *content*, which is what the provenance claim means.
+    """
+    return raw.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+
+
 def feature_digest(path: Path) -> str:
+    """SHA-256 of a feature table over canonical LF bytes (line-ending independent)."""
     import hashlib
 
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    return hashlib.sha256(canonical_bytes(path.read_bytes())).hexdigest()
 
 
 __all__ = [

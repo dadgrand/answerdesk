@@ -184,7 +184,7 @@ per-stage latency and cost.
 cd web
 npm ci
 npm run dev          # http://localhost:5173 — proxies /v1, /metrics, /healthz to the service
-npm run test         # 61 component/integration tests, no network
+npm run test         # 66 component/integration tests, no network (incl. XSS + axe-core a11y)
 npm run build        # tsc --noEmit && vite build
 ```
 

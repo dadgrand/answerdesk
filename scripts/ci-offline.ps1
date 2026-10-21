@@ -46,6 +46,10 @@ try {
     uv run python scripts/check-licenses.py --quiet
     if ($LASTEXITCODE -ne 0) { throw "licence audit failed" }
 
+    Write-Host "==> risk-v2 reproducibility (--check re-derives every artefact)" -ForegroundColor Cyan
+    uv run python scripts/risk-v2.py --check
+    if ($LASTEXITCODE -ne 0) { throw "risk-v2 check failed" }
+
     Write-Host "==> pytest -q" -ForegroundColor Cyan
     uv run pytest -q
     if ($LASTEXITCODE -ne 0) { throw "pytest failed" }

@@ -16,7 +16,7 @@ This document is generated from the artefacts of one benchmark run. It states wh
 | dev cases | 216 |
 | replay mode | no (live providers) |
 | hardware | Windows 11 / Python 3.12.10 |
-| duration | 0.0 s |
+| duration | not measured (the run did not record it) |
 | calibration | split-conformal thresholds fitted on the dev split; the test split is never used for fitting (INV-09) |
 | arm `primary` | generator `qwen3.6-35b-a3b-noreason` (qwen) · judge `deepseek-flash` (deepseek) · cross-family yes · reportable yes |
 | arm `secondary` | generator `deepseek-flash` (deepseek) · judge `qwen3.6-35b-a3b-noreason` (qwen) · cross-family yes · reportable yes |
@@ -209,7 +209,7 @@ Paired comparisons (recall_any@10, paired bootstrap over queries + McNemar):
 
 ### Arm `primary` — generator `qwen3.6-35b-a3b-noreason`, judge `deepseek-flash`
 
-Generator family **qwen**: `qwen3.6-35b-a3b-noreason` produces these answers; `qwen3.6-35b-a3b` is the reasoning variant measured in the side study.
+Generator family **qwen**: `qwen3.6-35b-a3b-noreason` produced these answers. `qwen3.6-35b-a3b` is the reasoning variant; the planned side study at 8192/16384 tokens was not run in this window, so no reasoning-variant number is claimed.
 
 Cross-family judging: **yes** (`qwen` vs `deepseek`); reportable: **yes**. cross-family judge; human κ not established for this corpus, so judged numbers are reported with an explicit κ caveat, not as F-1/F-2/F-3 gates
 
@@ -247,7 +247,7 @@ Per language:
 
 ### Arm `secondary` — generator `deepseek-flash`, judge `qwen3.6-35b-a3b-noreason`
 
-Generator family **qwen**: `qwen3.6-35b-a3b-noreason` produces these answers; `qwen3.6-35b-a3b` is the reasoning variant measured in the side study.
+Generator family **deepseek**: `deepseek-flash` produced these answers.
 
 _schema-fallback arm, NOT directly comparable: deepseek-flash rejects response_format=json_schema, so the generator ran through the schema-fallback path and 61/148 answered turns produced no parsed claims at all (primary: 7/148). Its judged metrics measure the parse path as much as the model; it is reported separately and excluded from headline comparisons._
 
@@ -468,7 +468,7 @@ Recorded token pricing (see `configs/pricing.yaml` for provenance):
 
 The target is **not** amended: the requirement stays at p50 ≤ 1,500 ms / p95 ≤ 4,000 ms and the release records the miss instead of hiding it (change control CC-2026-10-21-b, `docs/requirements.md` §18.5).
 
-What the number measures: a hosted ~35B generator in strict-JSON mode producing ~500 output tokens per answered turn, without a streaming time-to-first-token measurement. The retrieval path in the same run is 1.44/2.54 ms p50/p95, so the budget is consumed by generation, not by retrieval.
+What the number measures: a hosted ~35B generator in strict-JSON mode producing ~500 output tokens per answered turn, arrival to final byte; the budget is not a token-stream budget. Streaming **was** measured in the separate `latency-v2` arm (docs/latency.md): baseline time-to-first-token 673 ms p50 / 965 ms p95, and the output-budget/cascade variants still missed the total, so TTFT alone does not rescue this target — the verdict stays MISS on the measured totals. The retrieval path in the same run is 1.44/2.54 ms p50/p95, so the budget is consumed by generation, not by retrieval.
 
 What would change the verdict: a smaller or local model, streaming with TTFT as the served-latency metric, and a shorter answer budget — each measurable with the same harness (`answerdesk eval --all --provider ...`). Until one of those is measured and committed, this requirement is reported as missed.
 
