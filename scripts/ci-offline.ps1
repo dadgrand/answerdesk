@@ -18,6 +18,10 @@ try {
     uv sync --extra dev --extra api
     if ($LASTEXITCODE -ne 0) { throw "uv sync failed" }
 
+    Write-Host "==> answerdesk ingest --demo (offline corpus)" -ForegroundColor Cyan
+    uv run answerdesk ingest --demo
+    if ( -ne 0) { throw "corpus build failed" }
+
     Write-Host "==> ruff check src tests" -ForegroundColor Cyan
     uv run ruff check src tests
     if ($LASTEXITCODE -ne 0) { throw "ruff check failed" }
