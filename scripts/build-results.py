@@ -165,17 +165,23 @@ def _relative(path: Path) -> str:
         return str(path)
 
 
+def _canonical_bytes(data: bytes) -> bytes:
+    """Normalise every line ending to a single LF (content bytes are untouched)."""
+    return data.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+
+
 def _canonical_sha256(path: Path) -> str:
     """Digest of one provenance input over canonical LF bytes (line-ending independent).
 
     Raw-byte hashing made the published digests differ between this Windows working tree
-    (CRLF) and a clean LF checkout, which falsified the reproducibility claim. Every hash in
-    the provenance block goes through this function; ``answerdesk.eval.provenance`` is the
-    single implementation and a unit test pins a CRLF file to its LF twin's digest.
+    (CRLF) and a clean LF checkout, which falsified the reproducibility claim on the very
+    checkout it is meant to verify. Every hash in the provenance block and the artefact digest
+    line goes through this function; ``tests/unit/eval/test_provenance.py`` pins a CRLF file to
+    its LF twin's digest so the dependency cannot return silently.
     """
-    from answerdesk.eval.provenance import canonical_sha256
-
-    return canonical_sha256(path)
+    if not path.is_file():
+        return "missing"
+    return hashlib.sha256(_canonical_bytes(path.read_bytes())).hexdigest()
 
 
 def _provenance_block(summary: Mapping[str, Any]) -> list[str]:

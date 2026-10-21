@@ -14,18 +14,17 @@ from pathlib import Path
 
 import pytest
 
-from answerdesk.eval.provenance import (
-    canonical_bytes,
-    canonical_sha256,
-    canonical_sha256_bytes,
-    raw_sha256,
-)
-
 REPO_ROOT = Path(__file__).resolve().parents[3]
 RESULTS = REPO_ROOT / "docs" / "results.md"
 FROZEN_CORPUS_MANIFEST_SHA256 = (
     "da33968a0d0087ecc0c4e8d966c1cdc47d40699dec139a00694818c0e583af69"
 )
+
+
+def _raw_sha256(path: Path) -> str:
+    import hashlib
+
+    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def _load_script():
@@ -40,31 +39,36 @@ def _load_script():
 def test_crlf_and_lf_twins_share_one_digest(tmp_path: Path) -> None:
     lf = tmp_path / "lf.txt"
     crlf = tmp_path / "crlf.txt"
+    script = _load_script()
     lf.write_bytes(b"alpha\nbeta\ngamma\n")
     crlf.write_bytes(b"alpha\r\nbeta\r\ngamma\r\n")
-    assert canonical_sha256(lf) == canonical_sha256(crlf)
+    assert script._canonical_sha256(lf) == script._canonical_sha256(crlf)
     # the raw digests must differ, otherwise the test proves nothing about the fix
-    assert raw_sha256(lf) != raw_sha256(crlf)
+    assert _raw_sha256(lf) != _raw_sha256(crlf)
     # lone CR (old-Mac) normalises too
-    assert canonical_sha256_bytes(b"alpha\rbeta\rgamma\r") == canonical_sha256(lf)
+    assert script._canonical_bytes(b"alpha\rbeta\rgamma\r") == script._canonical_bytes(
+        lf.read_bytes()
+    )
 
 
 def test_canonicalisation_keeps_content_sensitivity(tmp_path: Path) -> None:
+    script = _load_script()
     one = tmp_path / "one.txt"
     two = tmp_path / "two.txt"
     one.write_bytes(b"value = 400\n")
     two.write_bytes(b"value = 900\n")
-    assert canonical_sha256(one) != canonical_sha256(two)
+    assert script._canonical_sha256(one) != script._canonical_sha256(two)
 
 
 def test_canonical_bytes_is_idempotent() -> None:
-    once = canonical_bytes(b"a\r\nb\rc\n")
+    script = _load_script()
+    once = script._canonical_bytes(b"a\r\nb\rc\n")
     assert once == b"a\nb\nc\n"
-    assert canonical_bytes(once) == once
+    assert script._canonical_bytes(once) == once
 
 
 def test_missing_file_reports_missing(tmp_path: Path) -> None:
-    assert canonical_sha256(tmp_path / "absent") == "missing"
+    assert _load_script()._canonical_sha256(tmp_path / "absent") == "missing"
 
 
 def test_script_uses_the_shared_canonical_helper(tmp_path: Path) -> None:
@@ -74,7 +78,7 @@ def test_script_uses_the_shared_canonical_helper(tmp_path: Path) -> None:
     lf.write_bytes(b'{"a": 1}\n')
     crlf.write_bytes(b'{"a": 1}\r\n')
     assert script._canonical_sha256(lf) == script._canonical_sha256(crlf)
-    assert script._canonical_sha256(lf) == canonical_sha256(lf)
+    assert script._canonical_sha256(lf) == _raw_sha256(lf)  # LF bytes are already canonical
 
 
 def test_published_block_matches_canonical_digests() -> None:
@@ -94,7 +98,7 @@ def test_published_block_matches_canonical_digests() -> None:
     for name, path in inputs.items():
         if not path.is_file():
             pytest.skip(f"{path} is not present in this checkout")
-        assert published[name] == canonical_sha256(path), name
+        assert published[name] == _load_script()._canonical_sha256(path), name
 
 
 def test_frozen_corpus_manifest_digest_is_line_ending_independent() -> None:
@@ -102,4 +106,4 @@ def test_frozen_corpus_manifest_digest_is_line_ending_independent() -> None:
     path = REPO_ROOT / "data" / "corpus" / "manifest.json"
     if not path.is_file():
         pytest.skip("corpus manifest not present")
-    assert canonical_sha256(path) == FROZEN_CORPUS_MANIFEST_SHA256
+    assert _load_script()._canonical_sha256(path) == FROZEN_CORPUS_MANIFEST_SHA256
