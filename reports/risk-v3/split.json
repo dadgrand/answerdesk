@@ -1,0 +1,7 @@
+{
+  "dev_rows": 485,
+  "leakage": [],
+  "no_leakage": true,
+  "rule": "test = the frozen bench test split (v1-* case ids); dev = frozen bench dev split plus the consistency run's dev facts; no case id appears in both",
+  "test_rows": 159
+}

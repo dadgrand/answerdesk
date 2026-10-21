@@ -40,26 +40,50 @@ def _provider(settings: Any) -> tuple[Any, str]:
     return build_provider(clone), clone.llm.model
 
 
+def _question_map(out_dir: Path) -> dict[str, str]:
+    """Recover the real question text for each dev sample from the persisted artefacts."""
+    mapping: dict[str, str] = {}
+    for name in ("bench-answers-dev.jsonl",):
+        path = out_dir / name
+        if not path.is_file():
+            continue
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            record = json.loads(line)
+            question = str(record.get("question") or "")
+            if question:
+                mapping[str(record.get("case_id") or "")] = question
+    return mapping
+
+
 def build_self_consistency(
-    *, out_dir: Path, limit: int = 25, drafts: int = DRAFTS, settings: Any | None = None
+    *,
+    out_dir: Path,
+    limit: int = 25,
+    drafts: int = DRAFTS,
+    settings: Any | None = None,
+    questions: dict[str, str] | None = None,
 ) -> dict[str, Any]:
     from answerdesk.config import load_settings
     from answerdesk.contracts import Message, Role
 
     settings = settings or load_settings(profile=None)
     rows = [row for row in read_rows(out_dir / "features.csv") if row.split == "dev"]
-    questions: dict[str, str] = {}
+    text_by_sample = dict(questions or _question_map(out_dir))
+    samples: dict[str, str] = {}
     for row in rows:
-        questions.setdefault(row.fact_id, row.sample_id)
-    selected = sorted(questions)[:limit]
+        samples.setdefault(row.fact_id, row.sample_id)
+    selected = sorted(samples)[:limit]
     provider, model = _provider(settings)
     results: list[dict[str, Any]] = []
     started = time.perf_counter()
     for fact_id in selected:
-        sample_id = questions[fact_id]
+        sample_id = samples[fact_id]
+        question_text = text_by_sample.get(sample_id) or text_by_sample.get(fact_id) or ""
         prompt = (
             "Ответь на вопрос поддержки кратко, одним-двумя предложениями, только по фактам. "
-            f"Вопрос: {sample_id.split('::')[0]}"
+            f"Вопрос: {question_text}"
         )
         outputs: list[str] = []
         for _ in range(drafts):

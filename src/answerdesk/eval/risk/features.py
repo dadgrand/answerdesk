@@ -84,9 +84,15 @@ def overlap_score(question: str, passage_text: str) -> float:
 
 
 def bm25_scores(question: str, passages: Sequence[str]) -> list[float]:
-    """Lexical scores for one question over a fixed passage list (deterministic, offline)."""
+    """Lexical scores for one question over a fixed passage list (deterministic, offline).
+
+    Returns an empty list when the pool has no usable tokens: bm25s raises on an empty corpus,
+    and a degenerate pool is a feature-availability problem rather than an exception.
+    """
     import bm25s
 
+    if not passages or not any(str(text).strip() for text in passages):
+        return []
     index = bm25s.BM25()
     index.index(
         bm25s.tokenize(list(passages), stopwords=None, show_progress=False), show_progress=False

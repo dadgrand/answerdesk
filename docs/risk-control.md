@@ -135,3 +135,67 @@ fall back to pooled).
 6. **No test data was used for fitting**: the split is over facts (consistency) or the frozen
    t11 dev/test split (bench), `split.json` records `no_leakage: true`, and `--check` fails if the
    split leaks or the feature table drifts from the summary digest.
+
+## Risk-control v3 (bench population with persisted answer artefacts)
+
+v2 could not compute two of the five decision-time features on the product population because
+the t11 benchmark stored only a 60-character answer head. v3 fixes that at the source:
+
+- **Persisted answers.** `scripts/risk-v3.py --persist-dev/--persist-test` re-answers the frozen
+  bench dev and test turns with the shipped pipeline and re-judges them with the reference
+  answer where the golden split provides one (cross-family judge, `deepseek-flash`). Raw rows:
+  `reports/risk-v3/bench-answers-{dev,test}.jsonl` — answer text, per-claim citations,
+  verification values, claim-support, numeric consistency, decision and latency. 200 dev and
+  200 test turns; the first pass hit 92 provider-429s on the test split and the retry pass
+  re-answered all of them (final: 0 provider errors).
+- **Calibration size.** Dev = the persisted bench dev answers ∪ every labelled consistency row
+  (the v3 test set is the bench test split, so no bench-test case reaches the fit):
+  **485 dev rows**, above the 300 requirement and close to the 500 target.
+- **Feature computation** now uses the persisted artefacts: claim support, numeric consistency,
+  citation coverage, retrieval margin and real overlap were all recomputed; the cross-encoder
+  feature stays 0.0 on this population because the hosted reranker was rate-limited at build
+  time (recorded in `summary.json`).
+
+Measured once on the frozen bench test split (159 answered turns):
+
+| metric | value | target |
+|---|---|---|
+| AUROC | **0.828645** | ≥ 0.80 (**met**, up from 0.665 in v2) |
+| ECE (equal-mass) | **0.068949** | ≤ 0.08 (**met**) |
+| coverage at realised risk ≤ 5% | **0.012579** (2 rows) | ≥ 0.20 (**documented miss**) |
+| AURC | 0.683738 | — |
+| certificate at α = 0.05 | **ABSENT** | threshold 0.978643, calibration risk 1.0, UCB 1.0, n = 485 |
+
+Arms on the same test split: legacy 6-feature AUROC 0.852302,
+risk-v3 0.828645, raw overlap 0.5
+(the saturated signal has no rank information at all — 0.5 is chance). The honest reading is
+that the **added decision-time features do not beat the legacy set on this population**: the
+persisted artefacts make them computable, and they are used, but the gain from v2 to v3 comes
+from the population and the calibration size, not from the new features.
+
+**Why the 5% certificate is still ABSENT.** The requirement is in
+`reports/risk-v3/summary.json` → `n_required`: with zero observed errors in the accepted
+region, Bentkus needs ≈ 46 rows and Hoeffding ≈ 461. The population's base error is
+0.731959 on dev and 0.855346 on test (the judge now scores
+fact-match against the reference answer, which is stricter than v2's context-support label),
+so the top of the score distribution is not error-free: the largest zero-error prefix on dev
+does not reach 46 rows, and every candidate threshold has a UCB above 5%. The artefact records
+this as `feasible: false` with the rule and the grid; the policy abstains and **no 5%
+guarantee is claimed**. Two things would make it feasible, both stated rather than assumed:
+a larger calibration draw with a plateau of error-free high-confidence rows, or a population
+whose base error is low enough for such a plateau to exist (the t11 answer subset had 22%
+realised risk; this re-answered population sits at 0.885 because answers
+aggregate several claims and the judge compares them with the reference).
+
+**Self-consistency (dev only, bounded).** 25 dev questions × k = 3 drafts at temperature 0.7,
+recorded in `reports/risk-v3/self-consistency.json`: **mean pairwise agreement 0.412** over 75
+calls (209 s, `qwen3.6-35b-a3b-noreason`). The earlier apparent 0.102 was a prompt bug — the
+draft prompt was built from the case id instead of the question text — and is kept out of the
+artefact; the measurement above is from the fixed prompt. It
+is **excluded from the deployable model**: the test-time path runs a single generation, so a
+feature that needs three would be unusable in production; the measurement quantifies what the
+sampling would cost, not a shipped feature.
+
+**Reproduction.** `uv run python scripts/risk-v3.py --check` re-derives every artefact from
+`reports/risk-v3/features.csv` and `split.json` offline (no network), fails on artefact drift
+or a leaking split, and prints the reproduced AUROC / coverage / certificate status.

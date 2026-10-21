@@ -915,7 +915,14 @@ def _error_taxonomy(run: Path) -> list[str]:
 
 
 def _risk_block() -> list[str]:
-    """Risk-control v2 summary, read from its own artefact set (never hand-written)."""
+    """Risk-control summary, read from its own artefact set (never hand-written).
+
+    v3 (bench population with persisted answer artefacts) supersedes v2 when present; both
+    artefact sets are committed, so the block always renders from whatever is on disk.
+    """
+    v3_path = REPO_ROOT / "reports" / "risk-v3" / "summary.json"
+    if v3_path.is_file():
+        return _risk_v3_block(json.loads(v3_path.read_text(encoding="utf-8")))
     path = REPO_ROOT / "reports" / "risk-v2" / "summary.json"
     if not path.is_file():
         return []
@@ -958,6 +965,50 @@ def _risk_block() -> list[str]:
         "",
     ]
     return lines
+
+
+def _risk_v3_block(payload: Mapping[str, Any]) -> list[str]:
+    """Risk-control v3: the bench population with full persisted answer artefacts."""
+    bench = payload["populations"]["bench"]
+    test = bench["test_report"]
+    certificate = bench["certificate"]
+    targets = bench["targets"]
+    required = payload.get("n_required", {})
+    operating = test["certified_operating_point"]
+    return [
+        "## Risk control v3 (bench population, persisted answer artefacts, Learn-then-Test)",
+        "",
+        f"Population: the frozen bench turns re-answered with the shipped pipeline and "
+        f"re-judged cross-family ({bench['dev_rows']} dev / {bench['test_rows']} test answered "
+        f"turns). Method and limitations: `docs/risk-control.md`.",
+        "",
+        _table(
+            ("metric", "value", "target"),
+            [
+                ["AUROC", test["auroc"], ">= 0.80"],
+                ["ECE (equal-mass)", test["ece_equal_mass"], "<= 0.08"],
+                [
+                    "coverage at realised risk <= 5%",
+                    test["coverage_at_risk"]["coverage"],
+                    ">= 0.20",
+                ],
+                ["AURC", test["aurc"], "-"],
+            ],
+        ),
+        "",
+        f"Certificate at alpha {payload.get('alpha')}, delta {payload.get('delta')}: "
+        f"**{'feasible' if certificate.get('feasible') else 'ABSENT'}** "
+        f"(threshold {certificate.get('threshold')}, calibration risk "
+        f"{certificate.get('calibration_risk')}, UCB {certificate.get('calibration_ucb')}, "
+        f"n={certificate.get('n_calibration')}). The required rows for a 5% certificate at zero "
+        f"observed risk are Bentkus ~{required.get('bentkus_rows_at_zero_risk')} / Hoeffding "
+        f"~{required.get('hoeffding_rows_at_zero_risk')}; the population's base error "
+        f"({bench['base_error_test']} on test) leaves no sufficiently large error-free plateau, "
+        "so the policy abstains and **no 5% guarantee is claimed**. Coverage target "
+        f"{targets['coverage_at_risk_min']} is a documented miss at "
+        f"{test['coverage_at_risk']['coverage']} (oracle frontier point).",
+        "",
+    ]
 
 
 def _calibration_verdict_block(summary: Mapping[str, Any]) -> list[str]:

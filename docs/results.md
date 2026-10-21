@@ -285,18 +285,18 @@ Per language:
 | uz | 33 | 0.862 [0.694,0.945] | 1.000 [0.510,1.000] | 0.120 [0.042,0.300] |
 | zh | 33 | 0.759 [0.579,0.878] | 1.000 [0.510,1.000] | 0.227 [0.101,0.434] |
 
-## Risk control v2 (calibrated answerability, Learn-then-Test certificate)
+## Risk control v3 (bench population, persisted answer artefacts, Learn-then-Test)
 
-Primary population `consistency` (133 dev / {'aurc': 0.446281, 'auroc': 0.964713, 'certified_operating_point': {'coverage': 0.004831, 'n': 207, 'n_accepted': 1, 'realised_risk': 0.0, 'risk_ci': [0.0, 0.793451], 'threshold': 0.968445, 'wrong': 0}, 'coverage_at_risk': {'alpha': 0.05, 'coverage': 0.115942, 'label': 'oracle frontier point (chosen on test for reporting only, not deployable)', 'n_accepted': 24, 'risk': 0.041667, 'risk_ci': [0.007393, 0.202418], 'threshold': 0.819824}, 'ece_equal_mass': 0.057409, 'ece_equal_width': 0.052773, 'evaluated_once': True} rows), full method in `docs/risk-control.md`.
+Population: the frozen bench turns re-answered with the shipped pipeline and re-judged cross-family (485 dev / 159 test answered turns). Method and limitations: `docs/risk-control.md`.
 
 | metric | value | target |
 |---|---|---|
-| AUROC | 0.964713 | >= 0.75 |
-| ECE (equal-mass) | 0.057409 | <= 0.08 |
-| coverage at realised risk <= 5% | 0.115942 | >= 0.40 |
-| AURC | 0.446281 | - |
+| AUROC | 0.828645 | >= 0.80 |
+| ECE (equal-mass) | 0.068949 | <= 0.08 |
+| coverage at realised risk <= 5% | 0.012579 | >= 0.20 |
+| AURC | 0.683738 | - |
 
-Certificate at alpha 0.05, delta 0.1: **ABSENT** (threshold 0.968445, calibration risk 1.0, UCB 1.0, n=133). Rows needed for a 5% certificate at zero observed risk: Bentkus ~46.1, Hoeffding ~460.5. The largest feasible level is alpha 0.25 (coverage 0.082707), reported as the operational fallback with its own alpha — no 5% guarantee is claimed.
+Certificate at alpha 0.05, delta 0.1: **ABSENT** (threshold 0.978643, calibration risk 1.0, UCB 1.0, n=485). The required rows for a 5% certificate at zero observed risk are Bentkus ~46.1 / Hoeffding ~460.5; the population's base error (0.855346 on test) leaves no sufficiently large error-free plateau, so the policy abstains and **no 5% guarantee is claimed**. Coverage target 0.2 is a documented miss at 0.012579 (oracle frontier point).
 
 ## Calibration verdict (does risk control hold?)
 
