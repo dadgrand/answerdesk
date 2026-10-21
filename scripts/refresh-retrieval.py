@@ -91,8 +91,6 @@ def _value(cells: Sequence[dict[str, object]], name: str) -> dict[str, object] |
     return None
 
 
-
-
 # --------------------------------------------------------------------------------------
 # Supplementary ablations (chunking) — separate entry point in the same script
 # --------------------------------------------------------------------------------------

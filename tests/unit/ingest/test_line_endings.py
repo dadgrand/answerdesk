@@ -65,14 +65,18 @@ def test_a_fresh_build_writes_lf_only(tmp_path: Path) -> None:
 
 def test_committed_corpus_is_lf_only() -> None:
     """AT-ING-08: the checked-in artifacts of the release tree are LF-only as well."""
-    targets = [REPO_CORPUS / MANIFEST_FILE, REPO_CORPUS / CHUNKS_FILE]
+    if not (REPO_CORPUS / MANIFEST_FILE).is_file():  # pragma: no cover - release tree has it
+        pytest.skip("checked-in corpus not built in this tree")
+    # chunks.jsonl is derived and git-ignored: a fresh checkout only has the manifest,
+    # the docs and (optionally) the queries. Test what is actually committed.
+    targets = [
+        path for path in (REPO_CORPUS / MANIFEST_FILE, REPO_CORPUS / CHUNKS_FILE) if path.is_file()
+    ]
     queries = REPO_CORPUS / QUERIES_FILE
     if queries.is_file():
         targets.append(queries)
     docs = sorted((REPO_CORPUS / "docs").rglob("*.md"))
     targets.extend(docs)
-    if not (REPO_CORPUS / MANIFEST_FILE).is_file():  # pragma: no cover - release tree has it
-        pytest.skip("checked-in corpus not built in this tree")
     for path in targets:
         payload = path.read_bytes()
         assert b"\r\n" not in payload, f"{path}: CRLF in a committed corpus artifact"
