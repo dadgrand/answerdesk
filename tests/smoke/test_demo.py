@@ -54,11 +54,22 @@ def test_demo_smoke_runs_the_offline_loop(monkeypatch: pytest.MonkeyPatch, tmp_p
 
 def test_demo_is_not_a_stub_in_the_help_surface() -> None:
     """The option exists and the command is documented — the t14 stub exited 2."""
+    import re
+
     from typer.testing import CliRunner
 
     from answerdesk.cli import app
 
-    result = CliRunner().invoke(app, ["demo", "--help"])
+    # Force a wide, colourless canvas: rich truncates long option names at narrow widths
+    # and wraps them in ANSI codes, which made this assertion CI-only flaky (t39 lesson).
+    result = CliRunner().invoke(
+        app,
+        ["demo", "--help"],
+        env={"COLUMNS": "200", "TERM": "dumb", "NO_COLOR": "1"},
+        color=False,
+    )
     assert result.exit_code == 0, result.output
-    assert "--smoke" in result.output
-    assert "--report" in result.output
+    plain = re.sub(r"\x1b\[[0-9;]*[A-Za-z]", "", result.output)
+    assert "…" not in plain, "the help page was truncated before the assertions"
+    assert "--smoke" in plain
+    assert "--report" in plain
