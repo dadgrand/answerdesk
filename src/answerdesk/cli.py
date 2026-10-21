@@ -310,9 +310,7 @@ def eval(  # the command is named `eval` on purpose (requirements §17.2)
             run=consistency_run,
             replay=replay,
             report=report,
-            locales=tuple(
-                item.strip() for item in (languages or "").split(",") if item.strip()
-            )
+            locales=tuple(item.strip() for item in (languages or "").split(",") if item.strip())
             or ("ru", "uz", "tg", "ky", "zh", "tr"),
             facts_limit=limit,
             answer_limit=answer_limit,
