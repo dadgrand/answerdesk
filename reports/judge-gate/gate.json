@@ -1,0 +1,149 @@
+{
+  "disagreements": 0,
+  "generated_at": "2026-10-21T15:33:51+00:00",
+  "inputs": [
+    {
+      "path": "reports/external-p0/calibration/calibration-ky.csv",
+      "sha256": "d05896e85fe052ef6c5e7c4802391493c54828ca2e6bfffa88e10375bce78f55"
+    },
+    {
+      "path": "reports/external-p0/calibration/calibration-ru.csv",
+      "sha256": "3ef52dc59230408b0411ded4c2529aabce5196c21c1fcbba8cfec42448eb2ed3"
+    },
+    {
+      "path": "reports/external-p0/calibration/calibration-tg.csv",
+      "sha256": "2348f95ae5134eeb18d6f052335216b330089a23cb1f19ee9e5463924ba4851d"
+    },
+    {
+      "path": "reports/external-p0/calibration/calibration-uz.csv",
+      "sha256": "0bc533852cf93779a506b26166cf08be09e007b5d27e753e748fbdf794237271"
+    },
+    {
+      "path": "reports/external-p0/calibration/calibration-zh.csv",
+      "sha256": "9985b455717758adb3dcc067bd81f152a5207de639562771d3e8993bba4ae812"
+    }
+  ],
+  "judged_metrics_label": "diagnostic",
+  "per_language": {
+    "ky": {
+      "disagreements": 0,
+      "items": 150,
+      "judge_kappa": null,
+      "judge_kappa_ci": null,
+      "labelled": 0,
+      "pairwise_agreement": null,
+      "pairwise_kappa": null,
+      "pairwise_kappa_ci": null,
+      "problems": [],
+      "status": "blank",
+      "unresolved": 0
+    },
+    "ru": {
+      "disagreements": 0,
+      "items": 150,
+      "judge_kappa": null,
+      "judge_kappa_ci": null,
+      "labelled": 0,
+      "pairwise_agreement": null,
+      "pairwise_kappa": null,
+      "pairwise_kappa_ci": null,
+      "problems": [],
+      "status": "blank",
+      "unresolved": 0
+    },
+    "tg": {
+      "disagreements": 0,
+      "items": 150,
+      "judge_kappa": null,
+      "judge_kappa_ci": null,
+      "labelled": 0,
+      "pairwise_agreement": null,
+      "pairwise_kappa": null,
+      "pairwise_kappa_ci": null,
+      "problems": [],
+      "status": "blank",
+      "unresolved": 0
+    },
+    "uz": {
+      "disagreements": 0,
+      "items": 150,
+      "judge_kappa": null,
+      "judge_kappa_ci": null,
+      "labelled": 0,
+      "pairwise_agreement": null,
+      "pairwise_kappa": null,
+      "pairwise_kappa_ci": null,
+      "problems": [],
+      "status": "blank",
+      "unresolved": 0
+    },
+    "zh": {
+      "disagreements": 0,
+      "items": 150,
+      "judge_kappa": null,
+      "judge_kappa_ci": null,
+      "labelled": 0,
+      "pairwise_agreement": null,
+      "pairwise_kappa": null,
+      "pairwise_kappa_ci": null,
+      "problems": [],
+      "status": "blank",
+      "unresolved": 0
+    }
+  },
+  "policy": {
+    "ci": {
+      "confidence": 0.95,
+      "method": "bootstrap-percentile",
+      "samples": 2000,
+      "seed": 20261021
+    },
+    "items_per_language": 150,
+    "labels": [
+      "supported",
+      "unsupported",
+      "unclear"
+    ],
+    "languages": [
+      "ru",
+      "uz",
+      "tg",
+      "ky",
+      "zh"
+    ],
+    "required_columns": [
+      "item_id",
+      "language",
+      "item_ref",
+      "question",
+      "answer_text",
+      "judge_label",
+      "human_label_a",
+      "human_label_b",
+      "adjudicated_label",
+      "notes"
+    ],
+    "synthetic_marker": "SYNTHETIC-DRY-RUN",
+    "thresholds": {
+      "judge_kappa": 0.6,
+      "pairwise_agreement": 0.7
+    }
+  },
+  "pooled": {
+    "items": 750,
+    "judge_kappa": null,
+    "judge_kappa_ci": null,
+    "labelled": 0,
+    "pairwise_agreement": null,
+    "pairwise_kappa": null,
+    "pairwise_kappa_ci": null
+  },
+  "publishable": false,
+  "reasons": [
+    "human labels absent for: ky, ru, tg, uz, zh"
+  ],
+  "schema_version": "1",
+  "source": "reports/external-p0/calibration",
+  "status": "pending",
+  "synthetic": false
+}

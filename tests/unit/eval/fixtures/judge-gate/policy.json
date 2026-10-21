@@ -1,0 +1,40 @@
+{
+  "schema_version": "1",
+  "languages": [
+    "ru",
+    "uz",
+    "tg",
+    "ky",
+    "zh"
+  ],
+  "items_per_language": 30,
+  "labels": [
+    "supported",
+    "unsupported",
+    "unclear"
+  ],
+  "required_columns": [
+    "item_id",
+    "language",
+    "item_ref",
+    "question",
+    "answer_text",
+    "judge_label",
+    "human_label_a",
+    "human_label_b",
+    "adjudicated_label",
+    "notes"
+  ],
+  "thresholds": {
+    "judge_kappa": 0.6,
+    "pairwise_agreement": 0.7
+  },
+  "ci": {
+    "method": "bootstrap-percentile",
+    "samples": 500,
+    "seed": 20261021,
+    "confidence": 0.95
+  },
+  "synthetic_marker": "SYNTHETIC-DRY-RUN",
+  "notes": "Dry-run fixture policy: 30 synthetic items per language, used only by tests/unit/eval/test_judge_gate.py and `score-judge-calibration.py --check`. These are not human labels."
+}
