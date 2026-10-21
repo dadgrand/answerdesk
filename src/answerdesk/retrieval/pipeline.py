@@ -42,6 +42,7 @@ from answerdesk.contracts import (
 )
 from answerdesk.index.bm25_index import BM25Index, merge_probes
 from answerdesk.index.store import IndexBundle
+from answerdesk.index.text import tokenize
 from answerdesk.index.vector_index import ExactVectorIndex
 from answerdesk.rerank.mmr import MMRDiversifier, vector_similarity
 from answerdesk.retrieval.dedupe import DEFAULT_DEDUPE_COSINE, dedupe_passages
@@ -67,6 +68,28 @@ class PipelineConfig(BaseModel):
     #: deployments that deliberately run one retriever; a dense-only pipeline still needs a
     #: BM25 index object for its vocabulary, but never queries it.
     channels: tuple[Literal["bm25", "dense"], ...] = ("bm25", "dense")
+    # --- noisy-input probes (t23): every one is additive, the raw query keeps its arm -----
+    noisy_probes: bool = True
+    #: The one noise probe that measured positive (§15.3): function-word filtering for
+    #: telegraphic input. Clean queries never trigger it, so clean recall is unchanged.
+    focus_probe: bool = True
+    #: Clause promotion and expansion promotion are implemented and measured, and are OFF by
+    #: default because they cost doc-level recall on our corpus (see docs/retrieval.md §15.3).
+    clause_probes: bool = False
+    max_clause_probes: int = Field(default=4, ge=0, le=8)
+    rewrite_probe: bool = True
+    #: When True, transliteration/edit-distance terms run as their own (demoted) probe.
+    #: When False they are appended to the primary sparse query instead — the t5 behaviour,
+    #: kept selectable so the ablation can compare the two designs on our own data.
+    expansion_probe: bool = False
+    #: How many ranks a noise probe may lift a candidate past the primary ranking. With RRF
+    #: k=60 an offset of 5 means "a probe's rank-1 counts about as much as the primary's
+    #: rank-6": it can rescue evidence the raw message buried, but it cannot outvote the head.
+    noise_probe_offset: int = Field(default=0, ge=0, le=50)
+    #: Fold all noise probes into a single "consensus" vote (one extra arm) instead of one
+    #: vote per probe. Measured: folding is what keeps the noisy probes from crowding the
+    #: fused head (see docs/retrieval.md §15.3).
+    noise_probe_fold: bool = True
 
     @field_validator("channels")
     @classmethod
@@ -222,37 +245,131 @@ class RetrievalPipeline:
 
     # -- stages -------------------------------------------------------------------
     def _sparse_candidates(self, analysis: QueryAnalysis, top_k: int) -> list[RetrievedPassage]:
-        """Expanded-query probe, plus the identifier must-match probe (merged)."""
+        """Sparse channel: the primary probe, the identifier probe, then *demoted* noise probes.
+
+        The primary probe always carries the user's own tokens (plus canonical identifiers and
+        layout repairs), so the raw query is always an arm (``FR-RET-06``). Noise probes are
+        merged **with a rank offset** (``noise_probe_offset``): they can lift evidence the raw
+        message buried, but they cannot outvote the primary's head — which is what makes the
+        clean-query non-regression gate a structural property rather than a hope.
+
+        Gating is deterministic and surface-level: the focus probe fires only for telegraphic
+        input, clause probes only when the message had to be split, the expansion probe only
+        when transliteration/edit-distance actually produced a term, and the rewrite probe only
+        when an operator enabled a rewriter. A clean, typo-free question therefore issues
+        exactly the probes it issued before t23.
+        """
         if "bm25" not in self.config.channels:
             return []
-        primary = self.bm25.search_terms(analysis.lexical_terms, top_k)
-        if not (self.config.identifier_probe and analysis.identifier_tokens):
-            return primary
-        must_match = self.bm25.search_terms(
-            analysis.lexical_terms,
-            top_k,
-            required=[token.lower() for token in analysis.identifier_tokens],
+        head_terms = (
+            analysis.lexical_terms
+            if not self.config.expansion_probe and analysis.expansion_terms
+            else analysis.primary_terms
         )
-        if not must_match:
-            return primary
-        return merge_probes(primary, must_match)
+        merged = self.bm25.search_terms(head_terms, top_k)
+        if self.config.identifier_probe and analysis.identifier_tokens:
+            merged = merge_probes(
+                merged,
+                self.bm25.search_terms(
+                    analysis.primary_terms,
+                    top_k,
+                    required=[token.lower() for token in analysis.identifier_tokens],
+                ),
+            )
+        if not self.config.noisy_probes:
+            return merged
+        offset = self.config.noise_probe_offset
+        noise: list[RetrievedPassage] = []
+        for probe in self._noise_probes(analysis):
+            candidate_list = _offset_ranks(probe(top_k), offset)
+            if candidate_list:
+                noise = merge_probes(noise, candidate_list) if noise else candidate_list
+        if self.config.noise_probe_fold and noise:
+            # One "noise consensus" vote instead of one vote per probe: a candidate found by
+            # several probes keeps its best rank, a candidate found by one probe gets a single
+            # vote instead of crowding the fused head with five of them.
+            merged = merge_probes(merged, noise)
+        elif noise:
+            merged = merge_probes(merged, noise)
+        return merged
+
+    def _noise_probes(self, analysis: QueryAnalysis) -> list[Any]:
+        """The extra sparse probes for malformed input, in a fixed order (deterministic)."""
+        probes: list[Any] = []
+        config = self.config
+        if (
+            config.focus_probe
+            and analysis.focus_terms
+            and analysis.is_telegraphic
+            and analysis.focus_terms != analysis.primary_terms
+        ):
+            focus_terms = list(analysis.focus_terms)
+            probes.append(
+                lambda top_k, terms=focus_terms: _tag(
+                    self.bm25.search_terms(terms, top_k), "focus_probe"
+                )
+            )
+        if config.clause_probes and analysis.is_run_on:
+            for index, clause in enumerate(analysis.clauses[: config.max_clause_probes]):
+                terms = tokenize(clause, with_canonical=False)
+                if len(terms) < 2:
+                    continue
+                probes.append(
+                    lambda top_k, terms=terms, index=index: _tag(
+                        self.bm25.search_terms(terms, top_k), f"clause_probe_{index + 1}"
+                    )
+                )
+        if config.expansion_probe and analysis.expansion_terms:
+            expansion_terms = list(analysis.expansion_terms)
+            probes.append(
+                lambda top_k, terms=expansion_terms: _tag(
+                    self.bm25.search_terms(terms, top_k), "expansion_probe"
+                )
+            )
+        if config.rewrite_probe and analysis.rewrite:
+            rewrite_terms = tokenize(analysis.rewrite, with_canonical=False)
+            if len(rewrite_terms) >= 2:
+                probes.append(
+                    lambda top_k, terms=rewrite_terms: _tag(
+                        self.bm25.search_terms(terms, top_k), "rewrite_probe"
+                    )
+                )
+        return probes
 
     def _dense_candidates(self, analysis: QueryAnalysis, top_k: int) -> list[RetrievedPassage]:
         """Dense probe over the *unexpanded* query, plus optional extra phrasings."""
         if "dense" not in self.config.channels or self.dense is None or self.dense.size == 0:
             return []
         primary = self.dense.search(analysis.dense_text, top_k)
-        if not analysis.multi_query:
+        extra: list[str] = list(analysis.multi_query)
+        if self.config.rewrite_probe and analysis.rewrite:
+            extra.append(analysis.rewrite)
+        if not extra:
             return primary
         merged = list(primary)
         seen = {passage.chunk.chunk_id for passage in merged}
-        for variant in analysis.multi_query:
+        for variant in extra:
             for passage in self.dense.search(variant, max(1, top_k // 2)):
                 if passage.chunk.chunk_id in seen:
                     continue
                 seen.add(passage.chunk.chunk_id)
                 merged.append(passage.model_copy(update={"rank": len(merged) + 1}))
         return merged
+
+
+def _offset_ranks(passages: list[RetrievedPassage], offset: int) -> list[RetrievedPassage]:
+    """Push a probe's ranking behind the primary one (RRF then treats it as a weaker arm)."""
+    if offset <= 0:
+        return passages
+    return [passage.model_copy(update={"rank": passage.rank + offset}) for passage in passages]
+
+
+def _tag(passages: list[RetrievedPassage], probe: str) -> list[RetrievedPassage]:
+    """Mark which noise probe produced a passage (trace diagnostics, no ranking effect)."""
+    return [
+        passage.model_copy(update={"contributions": {**passage.contributions, probe: 1.0}})
+        for passage in passages
+    ]
 
 
 def _ms(started: float) -> float:

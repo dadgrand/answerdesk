@@ -56,6 +56,8 @@ from answerdesk.index.store import (
 from answerdesk.rerank.cross_encoder import LexicalOverlapReranker
 from answerdesk.rerank.mmr import DEFAULT_MMR_LAMBDA, MMRDiversifier, vector_similarity
 from answerdesk.retrieval.datasets import (
+    CLEAN_CATEGORIES,
+    NOISY_CATEGORY,
     RetrievalCase,
     SplitBundle,
     build_cases,
@@ -78,6 +80,7 @@ from answerdesk.retrieval.metrics import (
     per_case_scores,
 )
 from answerdesk.retrieval.pipeline import PipelineConfig, RetrievalPipeline
+from answerdesk.retrieval.query_analysis import QueryAnalysisConfig, QueryAnalyzer
 
 #: Report format version — bumped when the table's shape changes.
 ABLATION_SCHEMA_VERSION = "1.0.0"
@@ -216,6 +219,7 @@ class AblationReport(BaseModel):
     hybrid_uplift_ci: list[float] = Field(default_factory=list)
     hybrid_uplift_strict: float | None = None
     primary_arm: str = PRIMARY_ARM
+    noise_ablation: NoiseAblationReport | None = None
     generated_at: str = ""
     timings: dict[str, float] = Field(default_factory=dict)
     notes: list[str] = Field(default_factory=list)
@@ -497,6 +501,231 @@ def _limit(config: PipelineConfig) -> int:
     return config.top_k
 
 
+class NoiseCell(BaseModel):
+    """One (slice, condition, arm) measurement in the noisy-input ablation."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    slice: str
+    condition: str
+    arm: str
+    n: int
+    recall_any_at_20: float
+    recall_any_at_10: float
+
+
+class NoiseDelta(BaseModel):
+    """``noisy − baseline`` for one (slice, arm), with the paired-bootstrap interval."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    slice: str
+    arm: str
+    n: int
+    delta_at_20: float
+    delta_at_10: float
+    ci_low: float | None = None
+    ci_high: float | None = None
+    significant: bool | None = None
+
+    @property
+    def improved(self) -> bool:
+        return self.delta_at_20 > 0.0
+
+
+class NoiseAblationReport(BaseModel):
+    """Evidence that noisy-input handling helps and clean input does not regress."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    noisy_n: int = 0
+    clean_n: int = 0
+    cells: list[NoiseCell] = Field(default_factory=list)
+    deltas: list[NoiseDelta] = Field(default_factory=list)
+    by_style: dict[str, dict[str, float]] = Field(default_factory=dict)
+    clean_threshold: float = 0.01
+    clean_non_regression_ok: bool = True
+    bootstrap_samples: int = 0
+    notes: list[str] = Field(default_factory=list)
+
+    def delta(self, slice_name: str, arm: str) -> NoiseDelta | None:
+        for delta in self.deltas:
+            if delta.slice == slice_name and delta.arm == arm:
+                return delta
+        return None
+
+
+#: Conditions compared on both slices: the pre-t23 analyser and the noisy-input analyser.
+_NOISE_CONDITIONS: dict[str, QueryAnalysisConfig] = {
+    "baseline": QueryAnalysisConfig(
+        clause_segmentation=False,
+        focus_probe=False,
+        fuzzy_edit_distance=False,
+        transliteration=False,
+        max_expansions=3,
+    ),
+    "noisy": QueryAnalysisConfig(),
+}
+
+
+def _noise_arms() -> tuple[ArmSpec, ...]:
+    return (
+        ArmSpec(name="bm25", fuser="none", channels=("bm25",)),
+        ArmSpec(name="dense", fuser="none", channels=("dense",)),
+        ArmSpec(name="hybrid-rrf", fuser="rrf"),
+    )
+
+
+def run_noise_ablation(
+    *,
+    index: IndexBundle,
+    cases: Sequence[RetrievalCase],
+    params: FusionParams,
+    config: PipelineConfig,
+    bootstrap: int = 0,
+    clean_sample: int = 600,
+) -> NoiseAblationReport:
+    """Measure the noisy-input analyser against the pre-t23 analyser on both slices.
+
+    The same indexes, the same fusion parameters and the same arms are used in both
+    conditions — only ``QueryAnalysisConfig`` changes — so a delta is attributable to the
+    analysis, not to a different retriever. Candidates are computed once per condition and
+    replayed through the arms, exactly like the main table.
+    """
+    noisy = [case for case in cases if case.category == NOISY_CATEGORY]
+    clean = sorted(
+        (case for case in cases if case.category in CLEAN_CATEGORIES),
+        key=lambda case: case.case_id,
+    )[:clean_sample]
+    slices = {"noisy": noisy, "clean": clean}
+    report = NoiseAblationReport(
+        noisy_n=len(noisy),
+        clean_n=len(clean),
+        bootstrap_samples=bootstrap,
+        notes=[
+            "both conditions share the same index, fusion parameters and arms; only the "
+            "query-analysis config differs (baseline = pre-t23 stages off)",
+            "gold labels are document-level (the query's document plus its supporting docs)",
+        ],
+    )
+    if not noisy or not clean:
+        report.notes.append("ablation skipped: the corpus has no noisy or no clean slice")
+        return report
+
+    reranker = LexicalOverlapReranker()
+    rankings: dict[tuple[str, str, str], dict[str, list[str]]] = {}
+    for condition, analysis_config in _NOISE_CONDITIONS.items():
+        pipeline = RetrievalPipeline(
+            bm25=index.bm25,
+            dense=index.dense,
+            fuser=params.build(),
+            analyzer=QueryAnalyzer(index.bm25.vocabulary, config=analysis_config),
+            config=config,
+        )
+        cache = _candidate_sets(pipeline, [*noisy, *clean], top_k=config.top_k)
+        for case_slice, case_list in slices.items():
+            for arm in _noise_arms():
+                rankings[(condition, case_slice, arm.name)] = {
+                    case.case_id: _ranked_ids(
+                        arm,
+                        candidates=cache[case.case_id],
+                        params=params,
+                        config=config,
+                        reranker=reranker,
+                        query=case.query,
+                    )
+                    for case in case_list
+                }
+
+    for case_slice, case_list in slices.items():
+        gold = [case.gold_chunk_ids for case in case_list]
+        for arm in _noise_arms():
+            cell_metrics: dict[str, list[float]] = {}
+            for condition in _NOISE_CONDITIONS:
+                ordered = [
+                    rankings[(condition, case_slice, arm.name)][case.case_id] for case in case_list
+                ]
+                wide = evaluate_cases(ordered, gold, RECALL_K)
+                narrow = evaluate_cases(ordered, gold, NARROW_K)
+                report.cells.append(
+                    NoiseCell(
+                        slice=case_slice,
+                        condition=condition,
+                        arm=arm.name,
+                        n=wide.n,
+                        recall_any_at_20=round(wide.recall_any, 6),
+                        recall_any_at_10=round(narrow.recall_any, 6),
+                    )
+                )
+                cell_metrics[condition] = per_case_scores(ordered, gold, RECALL_K)
+
+            noisy_scores = cell_metrics["noisy"]
+            baseline_scores = cell_metrics["baseline"]
+            delta20 = sum(noisy_scores) / len(noisy_scores) - sum(baseline_scores) / len(
+                baseline_scores
+            )
+            narrow_delta = _delta_at(rankings, slices, case_slice, arm.name, case_list, NARROW_K)
+            ci_low: float | None = None
+            ci_high: float | None = None
+            significant: bool | None = None
+            if bootstrap > 0:
+                _mean, ci_low, ci_high = paired_bootstrap_diff(
+                    noisy_scores, baseline_scores, samples=bootstrap, seed=1337
+                )
+                significant = ci_low > 0.0 or ci_high < 0.0
+            report.deltas.append(
+                NoiseDelta(
+                    slice=case_slice,
+                    arm=arm.name,
+                    n=len(case_list),
+                    delta_at_20=round(delta20, 6),
+                    delta_at_10=round(narrow_delta, 6),
+                    ci_low=(round(ci_low, 6) if ci_low is not None else None),
+                    ci_high=(round(ci_high, 6) if ci_high is not None else None),
+                    significant=significant,
+                )
+            )
+
+    # Clean-slice non-regression gate: every arm must stay within the threshold.
+    failing = [
+        delta.arm
+        for delta in report.deltas
+        if delta.slice == "clean" and delta.delta_at_20 < -report.clean_threshold
+    ]
+    report.clean_non_regression_ok = not failing
+    if failing:
+        report.notes.append(f"clean-slice regression beyond threshold in: {failing}")
+
+    hybrid = next(arm for arm in _noise_arms() if arm.name == "hybrid-rrf")
+    for style in sorted({case.style for case in noisy if case.style}):
+        style_cases = [case for case in noisy if case.style == style]
+        style_gold = [case.gold_chunk_ids for case in style_cases]
+        row: dict[str, float] = {"n": float(len(style_cases))}
+        for condition in _NOISE_CONDITIONS:
+            ordered = [
+                rankings[(condition, "noisy", hybrid.name)][case.case_id] for case in style_cases
+            ]
+            row[condition] = round(evaluate_cases(ordered, style_gold, RECALL_K).recall_any, 6)
+        report.by_style[style] = row
+    return report
+
+
+def _delta_at(
+    rankings: dict[tuple[str, str, str], dict[str, list[str]]],
+    slices: dict[str, list[RetrievalCase]],
+    case_slice: str,
+    arm_name: str,
+    case_list: Sequence[RetrievalCase],
+    k: int,
+) -> float:
+    gold = [case.gold_chunk_ids for case in case_list]
+    values = {}
+    for condition in _NOISE_CONDITIONS:
+        ordered = [rankings[(condition, case_slice, arm_name)][case.case_id] for case in case_list]
+        values[condition] = sum(per_case_scores(ordered, gold, k)) / len(case_list)
+    return values["noisy"] - values["baseline"]
+
+
 def _ensure_corpus(corpus_dir: Path, echo: Any) -> None:
     if (corpus_dir / "manifest.json").is_file():
         return
@@ -517,6 +746,8 @@ def run_ablation(
     fit_method: Literal["coordinate_search", "logistic_regression"] = "coordinate_search",
     bootstrap: int = 0,
     latency_sample: int = 20,
+    noise_ablation: bool = True,
+    noise_clean_sample: int = 600,
     echo: Any = print,
 ) -> AblationReport:
     """Fit on dev, evaluate every arm on test, write the artifact and return the report.
@@ -654,6 +885,22 @@ def run_ablation(
         arms_metrics.extend(measured)
         rankings_by_arm.update(rankings)
 
+    noise_report: NoiseAblationReport | None = None
+    if noise_ablation:
+        noise_report = run_noise_ablation(
+            index=index,
+            cases=cases,
+            params=params_for["rrf"],
+            config=config,
+            bootstrap=bootstrap,
+            clean_sample=noise_clean_sample,
+        )
+        echo(
+            f"noise ablation: noisy n={noise_report.noisy_n} "
+            f"clean n={noise_report.clean_n} "
+            f"clean_non_regression_ok={noise_report.clean_non_regression_ok}"
+        )
+
     uplift, ci = _hybrid_uplift(bundle.test, rankings_by_arm, bootstrap=bootstrap)
     uplift_strict, _ = _hybrid_uplift(bundle.test, rankings_by_arm, bootstrap=0, strict=True)
 
@@ -669,6 +916,7 @@ def run_ablation(
         hybrid_uplift=(round(uplift, 6) if uplift is not None else None),
         hybrid_uplift_ci=[round(value, 6) for value in ci],
         hybrid_uplift_strict=(round(uplift_strict, 6) if uplift_strict is not None else None),
+        noise_ablation=noise_report,
         generated_at=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         timings={"total_ms": round((time.perf_counter() - started) * 1000.0, 3)},
         notes=[
@@ -826,9 +1074,60 @@ def format_table(report: AblationReport) -> str:
             f"{primary.per_locale[locale]:.3f}" for locale in sorted(primary.per_locale)
         )
         lines.extend([header, divider, f"{values} | {macro_average(primary.per_locale):.3f} |"])
+    lines.extend(_format_noise_table(report.noise_ablation))
     for note in report.notes:
         lines.append(f"> {note}")
     return "\n".join(lines)
+
+
+def _format_noise_table(noise: NoiseAblationReport | None) -> list[str]:
+    """Markdown for the noisy-input ablation: deltas first, then the per-style breakdown."""
+    if noise is None:
+        return []
+    lines = [
+        "",
+        "### Noisy-input ablation (t23)",
+        "",
+        f"- noisy slice: {noise.noisy_n} queries (`noisy_freeform`), "
+        f"clean slice: {noise.clean_n} queries",
+        f"- clean non-regression gate (|Δ| ≤ {noise.clean_threshold:.2f}): "
+        f"**{'OK' if noise.clean_non_regression_ok else 'FAIL'}**",
+        "",
+        "| slice | arm | n | baseline recall@20 | noisy recall@20 | Δ@20 | 95% CI | "
+        "baseline@10 | noisy@10 |",
+        "|---|---|---|---|---|---|---|---|---|",
+    ]
+    cells = {(cell.slice, cell.condition, cell.arm): cell for cell in noise.cells}
+    for delta in noise.deltas:
+        baseline = cells[(delta.slice, "baseline", delta.arm)]
+        noisy = cells[(delta.slice, "noisy", delta.arm)]
+        interval = (
+            f"[{delta.ci_low:+.3f}, {delta.ci_high:+.3f}]"
+            if delta.ci_low is not None and delta.ci_high is not None
+            else "n/a"
+        )
+        lines.append(
+            f"| {delta.slice} | {delta.arm} | {delta.n} | {baseline.recall_any_at_20:.3f} "
+            f"| {noisy.recall_any_at_20:.3f} | {delta.delta_at_20:+.3f} | {interval} "
+            f"| {baseline.recall_any_at_10:.3f} | {noisy.recall_any_at_10:.3f} |"
+        )
+    if noise.by_style:
+        lines.extend(
+            [
+                "",
+                "Per-style `recall_any@20` (hybrid arm):",
+                "",
+                "| style | n | baseline | noisy | Δ |",
+                "|---|---|---|---|---|",
+            ]
+        )
+        for style, style_row in sorted(noise.by_style.items()):
+            shift = style_row["noisy"] - style_row["baseline"]
+            lines.append(
+                f"| {style} | {int(style_row['n'])} | {style_row['baseline']:.3f} "
+                f"| {style_row['noisy']:.3f} | {shift:+.3f} |"
+            )
+    return lines
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -846,6 +1145,17 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--profile", default=None, help="offline | api | local")
     parser.add_argument(
         "--no-fit", action="store_true", help="use config defaults instead of fitting"
+    )
+    parser.add_argument(
+        "--no-noise-ablation",
+        action="store_true",
+        help="skip the noisy-input ablation (t23 evidence section)",
+    )
+    parser.add_argument(
+        "--noise-clean-sample",
+        type=int,
+        default=600,
+        help="clean-slice queries used for the noisy ablation non-regression gate",
     )
     parser.add_argument(
         "--method",
@@ -867,6 +1177,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         fit_method=args.method,
         bootstrap=args.bootstrap,
         latency_sample=args.latency_sample,
+        noise_ablation=not args.no_noise_ablation,
+        noise_clean_sample=args.noise_clean_sample,
         echo=lambda message: print(message, flush=True),
     )
     if not report.arms:  # pragma: no cover - defensive

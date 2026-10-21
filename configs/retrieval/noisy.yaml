@@ -1,0 +1,45 @@
+# Noisy-input handling: query analysis stages, probe promotion and the optional LLM rewrite.
+#
+# Owner: t23. These knobs live in their own file on purpose — `configs/default.yaml` is the
+# frozen runtime configuration the service reads, and a retrieval experiment must not be able
+# to change what production does by editing the file the service also parses. The pipeline
+# accepts these values explicitly (`PipelineConfig`, `QueryAnalysisConfig`), and the ablation
+# runner builds both conditions from the table below.
+version: "1.0.0"
+
+# Query-analysis stages. Every one is additive: the user's tokens stay in `primary_terms`, and
+# `lexical_terms` is always a superset of them (FR-RET-06).
+analysis:
+  clause_segmentation: true   # split run-on messages; see docs/retrieval.md §15.1
+  max_clauses: 4
+  focus_probe: true           # compute the content-word-only view (the shipped probe)
+  fuzzy_edit_distance: true   # bounded Levenshtein fallback for typos trigrams miss
+  transliteration: true       # Latin -> Cyrillic readings ("zaym" -> "займ")
+  max_expansions: 4
+  fuzzy_threshold: 0.6        # the high-precision trigram path, tried before edit distance
+
+# Probe promotion. Measured on the frozen corpus (corpus-77d7d081813738a6, 474 noisy items):
+#   focus probe      noisy recall@20 +0.004, recall@10 +0.015, clean +0.000  -> SHIPPED
+#   clause probes    noisy recall@20 -0.006, clean -0.005                   -> off by default
+#   expansion probe  noisy recall@20 -0.038                                 -> off by default
+# Turning one back on is a measurement decision, not a preference: re-run the ablation.
+pipeline:
+  noisy_probes: true
+  focus_probe: true
+  clause_probes: false
+  max_clause_probes: 4
+  expansion_probe: false
+  rewrite_probe: true
+  noise_probe_offset: 0
+  noise_probe_fold: true
+
+# Optional LLM rewrite. OFF by default: it costs a model call on the hot path and the
+# mechanical handling above already covers typos, transliteration and run-on text. When
+# enabled it is cached, deterministic (temperature 0) and identifier-guarded — a rewrite that
+# invents or drops a number/date/order code is discarded.
+rewrite:
+  enabled: false
+  provider_preset: fake       # fake | openai | openai_compatible | ollama | vllm | llama_cpp
+  prompt_version: query-rewrite-v1
+  cache_entries: 1024
+  max_words: 25

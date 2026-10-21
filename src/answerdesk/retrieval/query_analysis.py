@@ -38,6 +38,9 @@ from answerdesk.index.text import (
     script_counts,
     tokenize,
 )
+from answerdesk.retrieval.noisy import FuzzyMatcher, segment_clauses, transliteration_candidates
+from answerdesk.retrieval.rewrite import QueryRewriter, validate_rewrite
+from answerdesk.retrieval.words import FUNCTION_WORDS, content_terms
 
 #: Bumped whenever analysis changes — it is part of the fusion artifact provenance.
 QUERY_ANALYSIS_VERSION = "qa-v2"
@@ -50,229 +53,8 @@ SUPPORTED_LOCALES: tuple[str, ...] = ("ru", "tg", "uz", "ky", "tr", "zh")
 #: below are tuned on the checked-in query set (720 items, 6 locales): 99.3% accuracy
 #: overall after tuning, with the residual being three-character typo queries that carry
 #: no function word at all — reported as ``und`` rather than guessed.
-_STOPWORDS: dict[str, frozenset[str]] = {
-    "ru": frozenset(
-        [
-            "что",
-            "как",
-            "для",
-            "это",
-            "или",
-            "при",
-            "после",
-            "можно",
-            "нужно",
-            "если",
-            "почему",
-            "сколько",
-            "какой",
-            "какая",
-            "какое",
-            "где",
-            "когда",
-            "мне",
-            "мой",
-            "моя",
-            "ваш",
-            "ваша",
-            "не",
-            "на",
-            "по",
-            "с",
-            "со",
-            "из",
-            "до",
-            "за",
-            "от",
-            "у",
-            "же",
-            "ли",
-            "бы",
-            "есть",
-            "нет",
-            "будет",
-            "стоит",
-            # Short particles: needed so a two-word query ("Ошибка и блокировка") is still
-            # recognised as Russian instead of falling back to "und".
-            "и",
-            "в",
-            "а",
-            "но",
-            "то",
-            "уже",
-            "тоже",
-            "ещё",
-            "еще",
-        ]
-    ),
-    "tg": frozenset(
-        [
-            "ва",
-            "барои",
-            "чӣ",
-            "чи",
-            "кадом",
-            "мебошад",
-            "карда",
-            "шуда",
-            "бо",
-            "аз",
-            "дар",
-            "куҷо",
-            "чаро",
-            "ман",
-            "шумо",
-            "оё",
-            "ҳаст",
-            "нест",
-            "кунам",
-            "метавонам",
-            "дорад",
-            "мешавад",
-            "намешавад",
-            "диҳад",
-            "медиҳад",
-            "аст",
-            "чанд",
-            "бояд",
-            "шудааст",
-            "кунад",
-            "кардан",
-            "буда",
-            "ҳама",
-            "дубора",
-            "бораи",
-            "бар",
-        ]
-    ),
-    "ky": frozenset(
-        [
-            "жана",
-            "менен",
-            "үчүн",
-            "канча",
-            "болобу",
-            "жок",
-            "бар",
-            "экен",
-            "кантип",
-            "ким",
-            "эмне",
-            "мен",
-            "сиз",
-            "ошондой",
-            "болот",
-            "болбойт",
-            "керек",
-            "турат",
-            "алат",
-            "чейин",
-            "кийин",
-            "аркылуу",
-            "эмес",
-            "кандай",
-            "качан",
-            "кайсы",
-            "балким",
-            "боюнча",
-            "жатат",
-            "эмнени",
-            "билдирет",
-            "катасы",
-            "алам",
-            "алабыз",
-        ]
-    ),
-    "tr": frozenset(
-        [
-            "için",
-            "nasıl",
-            "neden",
-            "niçin",
-            "hangi",
-            "bir",
-            "ve",
-            "ile",
-            "bu",
-            "ne",
-            "mi",
-            "mı",
-            "mu",
-            "mü",
-            "yok",
-            "var",
-            "kadar",
-            "daha",
-            "olarak",
-            "olur",
-            "değil",
-        ]
-    ),
-    "uz": frozenset(
-        [
-            "uchun",
-            "qanday",
-            "nima",
-            "kerak",
-            "bormi",
-            "va",
-            "bilan",
-            "bu",
-            "men",
-            "siz",
-            "yo'q",
-            "bor",
-            "mumkin",
-            "qachon",
-            "qayerda",
-            "bo'ladi",
-            "bo'lsa",
-            "qancha",
-            "yoki",
-            "lar",
-            "dan",
-            "ga",
-            "ni",
-            "da",
-            "xatosi",
-            "nimani",
-            "bildiradi",
-            "turadi",
-        ]
-    ),
-    "en": frozenset(
-        [
-            "the",
-            "what",
-            "how",
-            "why",
-            "when",
-            "where",
-            "which",
-            "is",
-            "are",
-            "was",
-            "can",
-            "do",
-            "does",
-            "did",
-            "my",
-            "your",
-            "our",
-            "for",
-            "with",
-            "and",
-            "to",
-            "of",
-            "in",
-            "on",
-            "at",
-            "it",
-            "this",
-            "that",
-        ]
-    ),
-}
+#: One source of truth with the noise filter and the clause splitter (see words.py).
+_STOPWORDS: dict[str, frozenset[str]] = FUNCTION_WORDS
 
 _LETTER_CUES: dict[str, frozenset[str]] = {
     # ``ы`` is deliberately absent: Kyrgyz writes it too, and including it made Kyrgyz
@@ -300,11 +82,20 @@ class QueryAnalysisConfig(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     typo_tolerance: bool = True
-    max_expansions: int = Field(default=3, ge=0, le=10)
+    max_expansions: int = Field(default=4, ge=0, le=10)
     fuzzy_threshold: float = Field(default=0.6, gt=0.0, le=1.0)
     layout_repair: bool = True
     multi_query: bool = False
     detect_language: bool = True
+    # --- noisy-input handling (t23); every stage is additive and independently switchable --
+    clause_segmentation: bool = True
+    max_clauses: int = Field(default=4, ge=1, le=8)
+    focus_probe: bool = True
+    #: ``None`` follows ``typo_tolerance``: switching typo handling off switches the whole
+    #: typo stack off, while an explicit value overrides just this mechanism.
+    fuzzy_edit_distance: bool | None = None
+    transliteration: bool = True
+    rewrite: bool = False
 
 
 class QueryAnalysis(BaseModel):
@@ -320,9 +111,24 @@ class QueryAnalysis(BaseModel):
     protected_spans: list[str] = Field(default_factory=list)
     base_terms: list[str] = Field(default_factory=list)
     expanded_terms: list[str] = Field(default_factory=list)
+    #: High-precision tokens: the user's own terms, canonical identifiers and layout repairs.
+    primary_terms: list[str] = Field(default_factory=list)
+    #: Recall-oriented additions (transliteration, trigram and edit-distance matches). Kept
+    #: out of the primary probe on purpose: a wrong expansion in the same bag of words dilutes
+    #: BM25 for *every* document, while as its own probe it only votes for its own matches.
+    expansion_terms: list[str] = Field(default_factory=list)
+    #: primary + expansions: the full additive list (never drops a user token).
     lexical_terms: list[str] = Field(default_factory=list)
     dense_text: str = ""
     multi_query: list[str] = Field(default_factory=list)
+    #: Clauses of a run-on message (``[normalized]`` when it is not run-on).
+    clauses: list[str] = Field(default_factory=list)
+    #: Content-word-only view of the query, used as an extra probe for telegraphic input.
+    focus_terms: list[str] = Field(default_factory=list)
+    #: Terms that only exist because a Latin term was read as Cyrillic (``zaym`` -> ``займ``).
+    transliterated_terms: list[str] = Field(default_factory=list)
+    #: Optional LLM rewrite, validated: no invented identifiers, never a replacement.
+    rewrite: str | None = None
     notes: list[str] = Field(default_factory=list)
     version: str = QUERY_ANALYSIS_VERSION
 
@@ -330,6 +136,27 @@ class QueryAnalysis(BaseModel):
     def is_empty(self) -> bool:
         """True when the query carries no retrievable term at all."""
         return not self.lexical_terms and not self.identifier_tokens
+
+    @property
+    def is_run_on(self) -> bool:
+        """True when the message had to be split into two or more clauses."""
+        return len(self.clauses) > 1
+
+    @property
+    def is_telegraphic(self) -> bool:
+        """True for short, function-word-heavy messages ("деньги как получит").
+
+        Two conditions, both surface-level and deterministic: at most five word tokens, and
+        at most 60% of them carrying content. A clean short question ("Refund policy?") has a
+        high content share and is therefore *not* routed to the focus probe.
+        """
+        words = list(self.base_terms)
+        if not words or len(words) > 5:
+            return False
+        content = content_terms(words, locale=self.language)
+        if not content or len(content) == len(words):
+            return False  # no function word at all: a terse but well-formed query
+        return len(content) < len(words)
 
 
 def detect_language(text: str) -> tuple[str, float]:
@@ -381,14 +208,24 @@ class QueryAnalyzer:
         vocabulary: TermVocabulary | None = None,
         *,
         config: QueryAnalysisConfig | None = None,
+        rewriter: QueryRewriter | None = None,
     ) -> None:
         self.vocabulary = vocabulary
         self.config = config or QueryAnalysisConfig()
+        self.rewriter = rewriter if self.config.rewrite else None
+        self._matcher: FuzzyMatcher | None = None
 
     # -- construction helpers ----------------------------------------------------
     def with_vocabulary(self, vocabulary: TermVocabulary) -> QueryAnalyzer:
         """A copy bound to a corpus vocabulary (the pipeline does this once at build)."""
-        return QueryAnalyzer(vocabulary, config=self.config)
+        return QueryAnalyzer(vocabulary, config=self.config, rewriter=self.rewriter)
+
+    @property
+    def matcher(self) -> FuzzyMatcher | None:
+        """Cached bounded edit-distance matcher over the corpus vocabulary (built once)."""
+        if self._matcher is None and self.vocabulary is not None:
+            self._matcher = FuzzyMatcher(self.vocabulary.terms)
+        return self._matcher
 
     # -- the analysis ------------------------------------------------------------
     def analyze(self, query: str) -> QueryAnalysis:
@@ -406,10 +243,28 @@ class QueryAnalyzer:
 
         protected = identifier_tokens(normalized)
         base_terms = tokenize(normalized, with_canonical=False)
-        expanded, expansion_notes = self._expand(base_terms)
+        primary_additions, expansion_additions, expansion_notes = self._expand(
+            base_terms, language=language
+        )
         notes.extend(expansion_notes)
+        primary = _dedupe(
+            [*base_terms, *primary_additions, *[token.lower() for token in protected]]
+        )
+        expansions = [term for term in expansion_additions if term not in primary]
 
-        lexical = _dedupe([*base_terms, *expanded, *[token.lower() for token in protected]])
+        expanded = _dedupe([*primary_additions, *expansions])
+        clauses = self._clauses(normalized, language=language)
+        if len(clauses) > 1:
+            notes.append(f"clause segmentation: {len(clauses)} clauses")
+        focus = self._focus(primary, language=language)
+        transliterated = (
+            [term for term in expansions if term and not term.isascii()]
+            if self.config.transliteration
+            else []
+        )
+
+        rewrite = self._rewrite(normalized, protected, notes)
+        lexical = _dedupe([*primary, *expansions])
         multi: list[str] = []
         if self.config.multi_query:
             candidates = [normalized, " ".join(base_terms), " ".join(protected)]
@@ -424,27 +279,89 @@ class QueryAnalyzer:
             protected_spans=protected,
             base_terms=base_terms,
             expanded_terms=expanded,
+            primary_terms=primary,
+            expansion_terms=expansions,
             lexical_terms=lexical,
             dense_text=normalized,
             multi_query=multi,
+            clauses=clauses,
+            focus_terms=focus,
+            transliterated_terms=transliterated,
+            rewrite=rewrite,
             notes=notes,
         )
 
+    # -- noisy-input stages ------------------------------------------------------
+    def _clauses(self, normalized: str, *, language: str) -> list[str]:
+        """Clauses of a run-on message; ``[normalized]`` signals "not run-on"."""
+        if not self.config.clause_segmentation or not normalized:
+            return [normalized] if normalized else []
+        return segment_clauses(normalized, locale=language, max_clauses=self.config.max_clauses)
+
+    def _focus(self, base_terms: Sequence[str], *, language: str) -> list[str]:
+        """Content words only: the probe that rescues telegraphic, function-word-heavy input."""
+        if not self.config.focus_probe:
+            return []
+        focus = content_terms(base_terms, locale=language)
+        return focus if len(focus) >= 1 and focus != list(base_terms) else []
+
+    def _rewrite(self, normalized: str, protected: Sequence[str], notes: list[str]) -> str | None:
+        """Optional LLM reformulation, validated: identifiers may not appear or vanish."""
+        if self.rewriter is None or not normalized:
+            return None
+        try:
+            candidate = self.rewriter.rewrite(normalized)
+        except Exception as exc:  # pragma: no cover - a provider failure must never break search
+            notes.append(f"rewrite unavailable: {type(exc).__name__}")
+            return None
+        confirmed = validate_rewrite(normalized, candidate)
+        if confirmed is None:
+            notes.append("rewrite rejected (identifier guard, length or emptiness)")
+            return None
+        missing = [token for token in protected if token.lower() not in confirmed.lower()]
+        if missing:
+            notes.append(f"rewrite rejected: dropped identifiers {missing}")
+            return None
+        notes.append("rewrite probe added")
+        return confirmed
+
     # -- expansion ---------------------------------------------------------------
-    def _expand(self, base_terms: Sequence[str]) -> tuple[list[str], list[str]]:
-        """Additive typo/layout repair against the corpus vocabulary (FR-RET-06)."""
+    def _expand(
+        self, base_terms: Sequence[str], *, language: str = "und"
+    ) -> tuple[list[str], list[str], list[str]]:
+        """Additive expansion, split by precision.
+
+        * **layout repairs** go into the *primary* probe: the other-layout spelling only
+          exists when the corpus contains it, so the precision is high;
+        * **transliteration and edit-distance matches** go into a *separate* recall probe: a
+          wrong candidate in the same bag of words dilutes every BM25 score, whereas as its
+          own probe it can only vote for its own matches (see ``docs/retrieval.md`` §16).
+
+        The original terms are never removed (``FR-RET-06``).
+        """
         config = self.config
         vocabulary = self.vocabulary
-        added: list[str] = []
+        layout: list[str] = []
+        recall: list[str] = []
         notes: list[str] = []
-        if vocabulary is None or not (config.typo_tolerance or config.layout_repair):
-            if vocabulary is None and (config.typo_tolerance or config.layout_repair):
+        edit_enabled = (
+            config.typo_tolerance
+            if config.fuzzy_edit_distance is None
+            else config.fuzzy_edit_distance
+        )
+        if vocabulary is None or not (
+            config.typo_tolerance or config.layout_repair or edit_enabled
+        ):
+            if vocabulary is None and (
+                config.typo_tolerance or config.layout_repair or edit_enabled
+            ):
                 notes.append("no corpus vocabulary bound; typo tolerance inactive")
-            return added, notes
+            return layout, recall, notes
 
         seen = set(base_terms)
+        budget = config.max_expansions
         for term in base_terms:
-            if len(added) >= config.max_expansions:
+            if len(layout) + len(recall) >= budget:
                 break
             if term in vocabulary or len(term) < MIN_FUZZY_LEN:
                 continue
@@ -452,21 +369,55 @@ class QueryAnalyzer:
                 repaired = vocabulary.repair_layout(term)
                 if repaired is not None and repaired not in seen:
                     seen.add(repaired)
-                    added.append(repaired)
+                    layout.append(repaired)
                     notes.append(f"layout repair: {term!r} -> {repaired!r}")
                     continue
+            # Precision order: a high-threshold trigram match first (the t5 path), then
+            # transliteration, then bounded edit distance as the last resort. Trying the
+            # loosest mechanism first measured worse on typo queries (docs/retrieval.md §15.3).
+            high_precision: list[str] = []
             if config.typo_tolerance:
-                for candidate in vocabulary.fuzzy(
-                    term, threshold=config.fuzzy_threshold, limit=config.max_expansions
-                ):
-                    if len(added) >= config.max_expansions:
+                high_precision = vocabulary.fuzzy(
+                    term, threshold=config.fuzzy_threshold, limit=budget
+                )
+            if high_precision:
+                for candidate in high_precision:
+                    if len(layout) + len(recall) >= budget:
                         break
                     if candidate in seen:
                         continue
                     seen.add(candidate)
-                    added.append(candidate)
+                    recall.append(candidate)
                     notes.append(f"typo expansion: {term!r} -> {candidate!r}")
-        return added, notes
+                continue
+            matcher = self.matcher
+            sources: list[tuple[str, list[str]]] = []
+            if config.transliteration and matcher is not None and term.isascii():
+                sources.append(
+                    (
+                        "transliteration",
+                        transliteration_candidates(
+                            term, vocabulary=vocabulary.terms, matcher=matcher
+                        ),
+                    )
+                )
+            if edit_enabled and matcher is not None:
+                sources.append(
+                    (
+                        "edit-distance",
+                        [candidate for candidate, _d, _j in matcher.match(term, limit=2)],
+                    )
+                )
+            for label, candidates in sources:
+                for candidate in candidates:
+                    if len(layout) + len(recall) >= budget:
+                        break
+                    if candidate in seen:
+                        continue
+                    seen.add(candidate)
+                    recall.append(candidate)
+                    notes.append(f"{label}: {term!r} -> {candidate!r}")
+        return layout, recall, notes
 
 
 def _dedupe(values: Sequence[str]) -> list[str]:

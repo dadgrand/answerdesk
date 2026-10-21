@@ -43,6 +43,16 @@ from answerdesk.retrieval.splits import SPLIT_SALT, SplitAssignment, assign
 IDENTIFIER_CATEGORIES: frozenset[str] = frozenset({"identifier", "numeric_date"})
 PERTURBED_CATEGORIES: frozenset[str] = frozenset({"typo", "code_switch"})
 
+#: Malformed, free-form user messages (t22's ``noisy_freeform`` slice).
+NOISY_CATEGORY = "noisy_freeform"
+
+#: Categories that count as "clean" input for the non-regression gate: well-formed questions
+#: of every kind the corpus emits, excluding the adversarial ones (unanswerable, PII,
+#: injection) whose recall is not a meaningful target and the noisy slice itself.
+CLEAN_CATEGORIES: frozenset[str] = frozenset(
+    {"direct", "numeric_date", "identifier", "code_switch", "typo", "multi_hop"}
+)
+
 
 class RetrievalCase(BaseModel):
     """One retrieval evaluation item with both label granularities and its split."""
@@ -59,6 +69,8 @@ class RetrievalCase(BaseModel):
     gold_chunk_ids: list[str] = Field(default_factory=list)
     answer_chunk_ids: list[str] = Field(default_factory=list)
     perturbations: list[str] = Field(default_factory=list)
+    #: Noise style of a ``noisy_freeform`` item (telegraphic / run_on / …); "" otherwise.
+    style: str = ""
     split: Split | None = None
 
     @property
@@ -91,6 +103,15 @@ def _strings(value: object) -> list[str]:
     return []
 
 
+def _dedupe_documents(documents: Sequence[str]) -> list[str]:
+    """Stable, de-duplicated document list: the query's own doc plus its supporting docs."""
+    out: list[str] = []
+    for document in documents:
+        if document and document not in out:
+            out.append(document)
+    return out
+
+
 def _overlap(first: str, second: str) -> float:
     """Jaccard overlap of token sets — the heuristic behind ``answer_chunk_ids``."""
     left = set(tokenize(first, with_canonical=False))
@@ -118,6 +139,8 @@ def build_cases(
         query = str(row.get("text") or row.get("base_text") or "").strip()
         if not query:
             continue
+        supporting = [str(value) for value in _strings(row.get("supporting_doc_ids"))]
+        gold_documents = _dedupe_documents([document, *supporting])
         reference = str(row.get("operator_reply") or "")
         best_position = 0
         best_score = -1.0
@@ -135,9 +158,12 @@ def build_cases(
                 query=query,
                 queries_text=str(row.get("base_text") or ""),
                 gold_document=document,
-                gold_chunk_ids=sorted(chunk.chunk_id for chunk in document_chunks),
+                gold_chunk_ids=sorted(
+                    chunk.chunk_id for doc in gold_documents for chunk in by_document.get(doc, [])
+                ),
                 answer_chunk_ids=[best.chunk_id] if reference else [],
                 perturbations=_strings(row.get("perturbations")),
+                style=str(row.get("style") or ""),
             )
         )
     return cases
@@ -183,7 +209,9 @@ def split_cases(
 
 
 __all__ = [
+    "CLEAN_CATEGORIES",
     "IDENTIFIER_CATEGORIES",
+    "NOISY_CATEGORY",
     "PERTURBED_CATEGORIES",
     "RetrievalCase",
     "SplitBundle",

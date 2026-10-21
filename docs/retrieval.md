@@ -774,7 +774,173 @@ the adapters retry 429s, but they do not throttle.
 
 ---
 
-## 15. Reproduce
+## 15. Noisy input: telegraphic, run-on and typo'd messages
+
+The golden set types like a specification; users do not. The owner's three messages are the
+specimen this section answers:
+
+```
+как займ оформит                                              telegraphic, truncated verb
+деньги как получит                                            telegraphic, mangled order
+денги первод таджикистан сделал денги нет брату не дошли      run-on, no punctuation, two typos,
+                                                              mixed intent (transfer + not arrived)
+```
+
+### 15.1 Pipeline
+
+Everything below is **additive** (`FR-RET-06`): the user's own tokens stay in
+`primary_terms`, and no stage can remove them.
+
+```
+                 ┌─ segmentation ──▶ clauses (bounded, ≤ max_clauses)
+normalised query ┼─ focus view ────▶ content terms (function words out, tokens intact)
+                 ├─ expansion ─────▶ layout repair │ transliteration │ trigram │ edit distance
+                 └─ rewrite (opt) ─▶ cached LLM reformulation, identifier-guarded
+```
+
+| stage | mechanism | shipped |
+|---|---|---|
+| **clause segmentation** | punctuation → clause conjunctions → negation restart → repeated token → balanced long split (§15.2) | computed, *promotion off* (measured, §15.3) |
+| **focus view** | content words only, same language filter table as the language detector | **on** (the one promoting probe) |
+| **transliteration** | rule-based Latin→Cyrillic (`zaym`→`займ`, `dengi`→`денги`→`деньги`) | on, inside the primary query |
+| **trigram expansion** | the t5 path, threshold 0.6 | on, first (highest precision) |
+| **edit-distance fallback** | trigram-prefiltered, banded Levenshtein, k=1 (5–7 chars) / k=2 (≥8) | on, last resort |
+| **LLM rewrite** | cached, `temperature 0`, identifier-guarded | **off by default** |
+
+Probe promotion is what turns analysis into ranking. The design that shipped:
+
+* the **primary probe** always carries `primary_terms` (user tokens + canonical identifiers +
+  layout repairs) — the raw query is therefore always an arm;
+* the **identifier must-match probe** merges with no penalty (exact evidence should win);
+* the **focus probe** fires only for telegraphic input (`is_telegraphic`: ≤ 5 word tokens, at
+  least one function word, at least one content word), and is merged **through a single
+  "noise consensus" vote** (`noise_probe_fold`) so several probes cannot each promote their own
+  favourite into the fused head;
+* **clause** and **expansion promotion** are implemented, config-gated and *off*: measured
+  neutral-to-negative (§15.3). Turning one on is a measurement decision, not a preference.
+
+### 15.2 Segmentation, in the order the boundaries are tried
+
+1. **punctuation** — a comma/semicolon/dash is an explicit boundary;
+2. **clause-initial conjunction** (`а`, `и`, `но`, `and`, `but`, `ва`, `жана`, `ve`, …) — the
+   conjunction is dropped from the following clause;
+3. **negation restart** — run-on text often continues with a negation rather than a
+   conjunction: `… сделал денги **нет** брату не дошли` splits before `нет`, which is what
+   gets the whole message out of the fraud-document region;
+4. **repeated content token** — a self-repair (`денги … денги`) marks a restart;
+5. **balanced long split** — a ≥ 8-word message with no other boundary is cut near the middle
+   at the most function-word-ish position, because two probes for two possible intents beat
+   one diluted bag of words.
+
+Each boundary requires at least two words on both sides, so a normal sentence is never
+shredded, and the result is capped at `max_clauses` with the remainder appended (never
+dropped).
+
+### 15.3 Measurement (frozen corpus `corpus-77d7d081813738a6`)
+
+Reproduce with `uv run python -m answerdesk.retrieval.ablation --bootstrap 1000`
+(artifacts in `data/index/ablation/`; the section also lands in the printed table). Both
+conditions share the same index, the same fusion parameters and the same arms — only
+`QueryAnalysisConfig` differs, so a delta is attributable to the analysis.
+
+| slice | arm | n | baseline recall@20 | noisy recall@20 | Δ@20 | 95% CI | baseline@10 | noisy@10 |
+|---|---|---|---|---|---|---|---|---|
+| noisy | bm25 | 474 | 0.951 | 0.962 | **+0.011** | [−0.002, +0.023] | 0.905 | 0.897 |
+| noisy | dense | 474 | 0.363 | 0.363 | +0.000 | [0.000, 0.000] | 0.304 | 0.304 |
+| noisy | hybrid-rrf | 474 | 0.897 | 0.899 | +0.002 | [−0.015, +0.017] | 0.643 | 0.650 |
+| clean | bm25 | 600 | 0.967 | 0.968 | +0.002 | [−0.007, +0.010] | 0.917 | 0.918 |
+| clean | dense | 600 | 0.475 | 0.475 | +0.000 | [0.000, 0.000] | 0.383 | 0.383 |
+| clean | hybrid-rrf | 600 | 0.925 | 0.927 | +0.002 | [−0.003, +0.007] | 0.778 | 0.782 |
+
+Per style (hybrid arm, `recall_any@20`):
+
+| style | n | baseline | noisy | Δ |
+|---|---|---|---|---|
+| translit (`zaym kak oformit`) | 127 | 0.835 | 0.874 | **+0.039** |
+| run_on (`… сделал денги нет …`) | 133 | 0.940 | 0.940 | +0.000 |
+| dropped_preposition | 27 | 0.741 | 0.741 | +0.000 |
+| telegraphic (`как займ оформит`) | 80 | 0.950 | 0.938 | −0.012 |
+| typo_mix | 107 | 0.916 | 0.888 | −0.028 |
+
+**Clean-input gate: PASS.** Every clean arm moves by at most +0.002 and all intervals contain
+zero; the contract's threshold is −0.01. This is structural rather than lucky: a clean,
+typo-free, multi-word question triggers *no* extra probe, so its candidate list is identical to
+the pre-t23 one.
+
+What the numbers say, including the parts that are not flattering:
+
+* **Transliterated queries gain the most (+0.039).** A user typing Russian in a Latin layout
+  was previously unreachable; the rule-based table plus the fuzzy fallback resolve it.
+* **Aggregate gains are small** (+0.011 BM25, +0.002 hybrid at 20; +0.007 hybrid at 10)
+  because the baseline is already near-saturated on document-level labels (0.95 for BM25):
+  there is very little headroom to win at k=20 on this corpus. The intervals contain zero, so
+  the honest claim is "no regression, small positive point estimate", not "significant".
+* **typo_mix loses 2.8 points and telegraphic 1.2.** The corpus's typo generator mangles a
+  question whose un-mangled words already retrieve the right article; the extra expansion
+  then perturbs a working primary. The focus probe is what helps telegraphic messages
+  individually (the owner's `деньги как получит` moved from rank 18 to rank 3) while the
+  short-message aggregate slips slightly — both facts are reported rather than smoothed.
+* **Three mechanisms were measured and rejected** (all implemented, all one flag away):
+  clause promotion (−0.006 @20, −0.005 clean), expansion-as-a-separate-probe (−0.038 @20),
+  and demoting probes by a rank offset (no gain, and it *removed* the owner-case improvement
+  because a demoted probe can no longer outvote a diluted primary). Trying the loosest
+  expansion first was also worse: precision order is trigram → transliteration → edit distance.
+* **The owner's cases** (hybrid, `final_k = 20`): `деньги как получит` rank 18 → **3**;
+  the run-on message rank 11 → **7**; `как займ оформит` 19 → 19 (it now retrieves a
+  *different* loan article first — the corpus has several, and the document-level label is
+  one of them).
+
+Latency: the analyser stays at ~0.15 ms per query; the bounded fuzzy stage adds **≤ 0.3 ms**
+for a telegraphic message (8 unknown terms × ≤ 24 candidates, banded DP with early exit —
+measured, and a unit test fails if 8 terms exceed 5 ms). The rejected full-scan design cost
+12 ms per term and is documented here as the reason the pool is capped.
+
+### 15.4 Knobs and the optional rewrite hook
+
+`configs/retrieval/noisy.yaml` (in-scope file, not the service configuration) carries the
+analysis stages, the promotion flags and the rewrite settings:
+
+```yaml
+analysis: {clause_segmentation: true, focus_probe: true, fuzzy_edit_distance: true,
+           transliteration: true, max_expansions: 4, fuzzy_threshold: 0.6}
+pipeline: {noisy_probes: true, focus_probe: true, clause_probes: false,
+           expansion_probe: false, noise_probe_offset: 0, noise_probe_fold: true}
+rewrite:  {enabled: false, provider_preset: fake, prompt_version: query-rewrite-v1,
+           cache_entries: 1024}
+```
+
+The rewrite hook (`answerdesk.retrieval.rewrite`) is a `ChatProvider` consumer: it asks the
+model for a terse reformulation, then **validates** it — a candidate is discarded if it invents
+any digit-bearing token or date/money/order-code form, drops an identifier the user typed, is
+empty, or is model chatter. Accepted rewrites are cached on `(rewriter name, normalised query)`
+and used as one extra probe; the raw query keeps its arm. It is off by default, deterministic
+(`temperature 0`, seeded nothing — the provider is the only source of variation, and the cache
+removes it on replay), and tested with `FakeProvider` offline.
+
+### 15.5 Honest limits
+
+1. **Word order and dropped prepositions are not recoverable from surface form.** `деньги как
+   получит` has no signal saying *which* money; segmentation and the focus view can only
+   improve the odds. `dropped_preposition` shows a flat 0.000 delta for exactly this reason.
+2. **Multi-intent ambiguity is softened, not solved.** Each clause becomes a probe and fusion
+   decides which intent wins; when both intents are equally supported, the context carries
+   both and the generator has to disambiguate (t6's clarify path). There is no "ask the user"
+   step in retrieval.
+3. **Spam and off-topic messages are out of scope.** A message with no domain vocabulary
+   retrieves nothing better after noise handling; escalation (t8) is the answer, not retrieval.
+4. **Vocabulary is the hard ceiling.** A word that no document contains cannot be matched to
+   anything: `займ` was unreachable until the corpus gained loan articles. Noise handling makes
+   a *known* domain reachable through bad typing; it cannot invent knowledge.
+5. **The numbers are corpus-specific.** Every figure above is from the frozen corpus
+   `corpus-77d7d081813738a6` with the hashing embedder (a machinery check, §6.3). A real
+   multilingual embedder (t16/t11) will change the dense column and therefore the hybrid one.
+6. **`typo_mix` regresses on this corpus** (−0.028) and `telegraphic` slips −0.012 while the
+   owner's individual cases improve sharply. Both are reported; a future iteration should
+   gate the edit-distance fallback on a *typo-confidence* signal rather than on "unknown term".
+
+---
+
+## 16. Reproduce
 
 ```bash
 cd answerdesk
