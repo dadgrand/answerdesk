@@ -277,7 +277,7 @@ delimiter (`ANSWERDESK_LLM__PRESET=ollama`).
 | `openai_compatible` | `http://127.0.0.1:8000/v1` | `default` | optional |
 | `deepseek` | `https://api.deepseek.com/v1` | `deepseek-chat` | `DEEPSEEK_API_KEY` |
 | `openrouter` | `https://openrouter.ai/api/v1` | `openai/gpt-4o-mini` | `OPENROUTER_API_KEY` |
-| `vllm` | `http://127.0.0.1:8000/v1` | `Qwen/Qwen3-8B-Instruct` | none |
+| `vllm` | `http://127.0.0.1:8000/v1` | `Qwen/Qwen3-8B` | none |
 | `llama_cpp` | `http://127.0.0.1:8080/v1` | `local-model` | none |
 | `ollama` | `http://127.0.0.1:11434/v1` | `qwen3:8b` | none |
 | `fake` | `memory://fake` | `fake-model` | none (CI only) |
@@ -361,7 +361,7 @@ uv run python -c "import torch; print(torch.__version__, torch.cuda.is_available
 # 4. Point the stack at a local OpenAI-compatible server:
 #    Ollama:     ollama serve ; ollama pull qwen3:8b
 #    llama.cpp:  llama-server -m model.gguf --port 8080 --chat-template ... (OpenAI API mode)
-#    vLLM:       vllm serve Qwen/Qwen3-8B-Instruct --port 8000
+#    vLLM:       vllm serve Qwen/Qwen3-8B --port 8000
 uv run answerdesk --profile local config check
 ```
 

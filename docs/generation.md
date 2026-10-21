@@ -40,7 +40,7 @@ AST check: `providers.py` may not contain a comparison or `match` on a preset-na
 | `deepseek` | `https://api.deepseek.com/v1` | `deepseek-chat` | `DEEPSEEK_API_KEY` | remote |
 | `openrouter` | `https://openrouter.ai/api/v1` | `openai/gpt-4o-mini` | `OPENROUTER_API_KEY` | remote |
 | `openai_compatible` | `http://127.0.0.1:8000/v1` | `default` | none | local |
-| `vllm` | `http://127.0.0.1:8000/v1` | `Qwen/Qwen3-8B-Instruct` | none | local |
+| `vllm` | `http://127.0.0.1:8000/v1` | `Qwen/Qwen3-8B` | none | local |
 | `llama_cpp` | `http://127.0.0.1:8080/v1` | `local-model` | none | local |
 | `ollama` | `http://127.0.0.1:11434/v1` | `qwen3:8b` | none | local |
 | `fake` | `memory://fake` | `fake-model` | none | CI double only |
@@ -59,7 +59,7 @@ ollama serve & ollama pull qwen3:8b
 ANSWERDESK_LLM__PRESET=ollama uv run answerdesk config check
 
 # vLLM (OpenAI-compatible server)
-vllm serve Qwen/Qwen3-8B-Instruct --port 8000
+vllm serve Qwen/Qwen3-8B --port 8000
 ANSWERDESK_LLM__PRESET=vllm uv run answerdesk config check
 
 # llama.cpp server (OpenAI API mode)

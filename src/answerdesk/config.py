@@ -77,7 +77,7 @@ PROVIDER_PRESETS: dict[str, ProviderPreset] = {
     "vllm": ProviderPreset(
         name="vllm",
         base_url="http://127.0.0.1:8000/v1",
-        model="Qwen/Qwen3-8B-Instruct",
+        model="Qwen/Qwen3-8B",
         api_key_env="VLLM_API_KEY",
         requires_api_key=False,
     ),

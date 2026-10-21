@@ -61,7 +61,7 @@ answerdesk serve --port 8765
 # vLLM (OpenAI server on :8000)
 export ANSWERDESK_LLM__PRESET=vllm
 export ANSWERDESK_LLM__BASE_URL=http://127.0.0.1:8000/v1
-export ANSWERDESK_LLM__MODEL=Qwen/Qwen3-8B-Instruct
+export ANSWERDESK_LLM__MODEL=Qwen/Qwen3-8B
 
 # llama.cpp server
 export ANSWERDESK_LLM__PRESET=llama_cpp
