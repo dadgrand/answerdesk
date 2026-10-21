@@ -4,24 +4,24 @@
     "injection": 24,
     "numeric_date": 72,
     "pii": 18,
-    "typo_code_switch": 234,
+    "typo_code_switch": 224,
     "unanswerable": 66
   },
   "by_locale": {
-    "ky": 90,
+    "ky": 85,
     "ru": 90,
-    "tg": 90,
+    "tg": 85,
     "tr": 90,
     "uz": 90,
     "zh": 90
   },
   "by_split": {
     "dev": 216,
-    "test": 540
+    "test": 530
   },
   "composition": [
     {
-      "actual": 540,
+      "actual": 530,
       "name": "test_total",
       "passed": true,
       "target": ">= 300"
@@ -135,7 +135,7 @@
       "target": ">= 1"
     },
     {
-      "actual": 39,
+      "actual": 34,
       "name": "test_cell[tg:typo_code_switch]",
       "passed": true,
       "target": ">= 1"
@@ -231,7 +231,7 @@
       "target": ">= 1"
     },
     {
-      "actual": 39,
+      "actual": 34,
       "name": "test_cell[ky:typo_code_switch]",
       "passed": true,
       "target": ">= 1"
@@ -633,7 +633,7 @@
       "target": ">= 120"
     },
     {
-      "actual": 378,
+      "actual": 368,
       "name": "perturbation_set",
       "passed": true,
       "target": ">= 120"
@@ -645,43 +645,43 @@
       "target": ">= 200"
     }
   ],
-  "corpus_hash": "7ef3fc20400131dc966904bc68d517a805faf48e98b62584f44e086270e246d6",
-  "corpus_version": "corpus-96f93db4f7f648b5",
+  "corpus_hash": "ae30066e61e1dc1402b4a51a12f4c4f66335d72c207073b496ef5cd9e5378a36",
+  "corpus_version": "corpus-77d7d081813738a6",
   "files": [
     {
       "items": 242,
       "path": "golden/v1/adversarial/claims.jsonl",
-      "sha256": "fdf88cd2604c908f079d1b005d75329d016fefa40ec81a3b599403b4337804c2"
+      "sha256": "fa59193a25adae7752769403813109177d21bbaf4776b71228b52a6c3a32200e"
     },
     {
       "items": 78,
       "path": "golden/v1/adversarial/injection.jsonl",
-      "sha256": "ebe31647977f627b2eb7bfc1854ed5d1c735241e51cdc317c25e0bd5845fe6f7"
+      "sha256": "1478213fc0c692feb680889eeab7b77b11b42e1fc4a866b493f608ca14b33414"
     },
     {
       "items": 144,
       "path": "golden/v1/adversarial/near_miss.jsonl",
-      "sha256": "c03700545dc4801244f85e1eb7e3088994cc441f71f76906d955c5d99c4d8a73"
+      "sha256": "baefa760964018d3243b5a812b55f59bbde11bc33ac7c894cb6f0c9e795da6dd"
     },
     {
-      "items": 378,
+      "items": 368,
       "path": "golden/v1/adversarial/perturbation.jsonl",
-      "sha256": "3307e0bbb1a414442aced2adb3e9a4fe20fd73ea4eb63d90bbce0aaeb9edd929"
+      "sha256": "83dc5055f9bcbe29629e986cca708bd2ef2b162d62541057762dc156b366f91b"
     },
     {
       "items": 72,
       "path": "golden/v1/adversarial/pii.jsonl",
-      "sha256": "695a7738797a0b30402a4a59233cf88072c12168286d9c164b7c2cb0041e11db"
+      "sha256": "f79371dbd11db74358683ebcf9f66b2bb8e03cf60c177786071f4acd32f0d02e"
     },
     {
       "items": 216,
       "path": "golden/v1/dev.jsonl",
-      "sha256": "92b07b2b0ce7e77940c3360601e6cae344e3070321860b623e9009c9b3d417f2"
+      "sha256": "b46b57a35ada07262d715ce9730c49789f22e1fa31cf42f708d19027a65a71e0"
     },
     {
-      "items": 540,
+      "items": 530,
       "path": "golden/v1/test.jsonl",
-      "sha256": "f6d950243843ad4fb119fecf60b4908f4b6de19905c5a4d82c28eb9a3b46943a"
+      "sha256": "b1846f0279685f108c1b17059ada6618dfb6de281a97ef8c19c255ab3ca9e594"
     }
   ],
   "generator": "eval-generator-v1",
@@ -726,7 +726,7 @@
     "ky:injection": 4,
     "ky:numeric_date": 12,
     "ky:pii": 3,
-    "ky:typo_code_switch": 39,
+    "ky:typo_code_switch": 34,
     "ky:unanswerable": 11,
     "ru:direct": 21,
     "ru:injection": 4,
@@ -738,7 +738,7 @@
     "tg:injection": 4,
     "tg:numeric_date": 12,
     "tg:pii": 3,
-    "tg:typo_code_switch": 39,
+    "tg:typo_code_switch": 34,
     "tg:unanswerable": 11,
     "tr:direct": 21,
     "tr:injection": 4,
@@ -761,6 +761,6 @@
   },
   "notes": "Synthetic, machine-labelled golden set: labels derive from the corpus structure, not from human annotation. §10.3 gates are therefore NOT satisfied by this set — it validates the harness, and every judged number is REPLAY-MODE (§10.7).",
   "seed": 20261021,
-  "split_hash": "5e57276f1c92ad3af6c99b13a8664d7d379b66985f5f2cc3400678d53a75df43",
+  "split_hash": "f4738e34a3032806b5d94b212980436cb284d4feb920c9698cb9b7edceea6ae7",
   "version": "v1"
 }

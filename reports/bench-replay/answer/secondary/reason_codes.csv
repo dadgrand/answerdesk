@@ -1,1 +1,3 @@
-empty
+reason_code,count,share
+LOW_CONFIDENCE,10,0.625
+CLARIFY_AMBIGUOUS,6,0.375

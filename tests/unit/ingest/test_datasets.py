@@ -90,9 +90,15 @@ def test_non_redistributable_data_may_not_be_committed(tmp_path: Path) -> None:
         adapter.assert_redistributable(record)
 
 
-def test_download_target_must_stay_repository_relative() -> None:
-    """AT-ING-09: an absolute cache path would escape the git-ignore rule."""
-    adapter = PublicDatasetAdapter(BITEXT, cache_root=Path("D:/absolute/cache"))
+def test_download_target_must_stay_repository_relative(tmp_path: Path) -> None:
+    """AT-ING-09: an absolute cache path would escape the git-ignore rule.
+
+    ``Path("D:/absolute/cache")`` is *relative* on Linux, so the guard would not
+    fire there; ``tmp_path`` is genuinely absolute on every platform (t38).
+    """
+    absolute_cache = (tmp_path / "cache").resolve()
+    assert absolute_cache.is_absolute()
+    adapter = PublicDatasetAdapter(BITEXT, cache_root=absolute_cache)
     with pytest.raises(LicenseError, match="relative"):
         adapter.assert_redistributable_safe_download(_record())
 

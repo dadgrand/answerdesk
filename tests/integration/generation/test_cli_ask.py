@@ -7,7 +7,10 @@ from __future__ import annotations
 
 import json
 
+import re
+
 import pytest
+from typer.main import get_command
 from typer.testing import CliRunner
 
 from answerdesk.cli import app

@@ -192,12 +192,8 @@ def test_unhandled_error_logs_a_redacted_diagnostic_and_no_traceback(make_app) -
     _assert_no_raw_values(line, "the formatted diagnostic line")
 
 
-def test_json_formatter_alone_does_not_redact_tracebacks() -> None:
-    """Characterises the gap that forces the rule above: formatter redaction is key-based.
-
-    Recorded as L-10 in docs/robustness.md. If the formatter later runs value-level redaction,
-    this test turns red and the service rule can be relaxed.
-    """
+def test_json_formatter_redacts_traceback_values() -> None:
+    """L-10 closed: the formatter redacts the traceback, not just secret-named keys."""
     import sys
 
     from answerdesk.logging import JsonFormatter
@@ -209,7 +205,8 @@ def test_json_formatter_alone_does_not_redact_tracebacks() -> None:
             "answerdesk.service", logging.ERROR, __file__, 1, "x", None, sys.exc_info()
         )
     line = JsonFormatter().format(record)
-    assert PII_EMAIL in line, "the formatter redacts values now; see L-10 for the follow-up"
+    _assert_no_raw_values(line, "the formatted traceback")
+    assert "[EMAIL]" in line and "[SECRET]" in line
 
 
 def test_provider_error_path_redaction_in_traces_and_logs(make_app) -> None:

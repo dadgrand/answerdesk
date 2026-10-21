@@ -84,6 +84,10 @@ def _append_rows(path: Path, rows: Sequence[dict[str, Any]]) -> None:
 
 
 def turn_from_row(row: dict[str, str], arm: str) -> TurnRecord:
+    def _float(name: str) -> float | None:
+        value = row.get(name)
+        return float(value) if value not in (None, "", "None") else None
+
     return TurnRecord(
         case_id=row["case_id"],
         locale=row["locale"],
@@ -103,7 +107,41 @@ def turn_from_row(row: dict[str, str], arm: str) -> TurnRecord:
         gold_chunk_ids=[c for c in (row.get("gold") or "").split(";") if c],
         cited_chunk_ids=[c for c in (row.get("cited") or "").split(";") if c],
         intent_bucket=IntentBucket.INFORMATIONAL,
+        evidence_cited=row.get("evidence_cited") == "True",
+        # derived from the stored per-turn artefacts: the rubric's "supported" band is a
+        # score >= 4, and citation precision/recall are computed from the cited and gold ids
+        # that the turn file carries (the per-claim rubric scores are kept in rubric_score).
+        groundedness=_grounded(row),
+        groundedness_judged=(
+            1.0 if (_float("rubric_score") or 0.0) >= 4.0 else (0.0 if _float("rubric_score") else None)
+        ),
+        citation_precision=_citation_rate(row, precision=True),
+        citation_recall=_citation_rate(row, precision=False),
+        rubric_score=_float("rubric_score"),
+        rubric_pass=(None if row.get("rubric_pass") in (None, "", "None") else row["rubric_pass"] == "True"),
+        reference_rubric_score=_float("reference_rubric_score"),
+        language_match=row.get("language_match") == "True",
+        claims_supported=int(row.get("claims_supported") or 0),
     )
+
+
+def _grounded(row: dict[str, str]) -> float | None:
+    score = row.get("rubric_score")
+    if score in (None, "", "None"):
+        return None
+    return 1.0 if float(score) >= 4.0 else 0.0
+
+
+def _citation_rate(row: dict[str, str], *, precision: bool) -> float | None:
+    cited = [c for c in (row.get("cited") or "").split(";") if c]
+    acceptable = [c for c in (row.get("gold") or "").split(";") if c]
+    if not cited:
+        return None
+    if precision:
+        return len(set(cited) & set(acceptable)) / len(set(cited))
+    if not acceptable:
+        return None
+    return len(set(cited) & set(acceptable)) / len(set(acceptable))
 
 
 def case_from_row(row: dict[str, str]) -> EvalCase:

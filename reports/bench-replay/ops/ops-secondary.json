@@ -1,31 +1,38 @@
 {
-  "answered": 12,
+  "answered": 8,
   "arm": "secondary",
   "hardware": "Windows 11 / Python 3.12.10",
   "latency": [
     {
-      "mean_ms": 1.955,
-      "n": 12,
-      "p50_ms": 1.911,
-      "p95_ms": 2.062,
+      "mean_ms": 2.14,
+      "n": 24,
+      "p50_ms": 2.007,
+      "p95_ms": 2.607,
       "stage": "retrieval"
     },
     {
-      "mean_ms": 1.912,
-      "n": 12,
-      "p50_ms": 1.926,
-      "p95_ms": 2.63,
+      "mean_ms": 0.965,
+      "n": 24,
+      "p50_ms": 0.986,
+      "p95_ms": 1.268,
+      "stage": "policy"
+    },
+    {
+      "mean_ms": 2.024,
+      "n": 24,
+      "p50_ms": 2.154,
+      "p95_ms": 2.841,
       "stage": "generation"
     },
     {
-      "mean_ms": 3.867,
-      "n": 12,
-      "p50_ms": 3.782,
-      "p95_ms": 4.503,
+      "mean_ms": 5.128,
+      "n": 24,
+      "p50_ms": 5.1,
+      "p95_ms": 6.209,
       "stage": "total"
     }
   ],
-  "n": 12,
+  "n": 24,
   "pricing": [
     {
       "input_usd_per_1k_tokens": 0.0,
@@ -57,10 +64,10 @@
     }
   ],
   "tokens": {
-    "input_per_answer": 1588.0,
-    "input_total": 19056,
-    "output_per_answer": 48.0,
-    "output_total": 576
+    "input_per_answer": 5064.0,
+    "input_total": 40512,
+    "output_per_answer": 144.0,
+    "output_total": 1152
   },
   "usd_per_answer": 0.0,
   "usd_total": 0.0

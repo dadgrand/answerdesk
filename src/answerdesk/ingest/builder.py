@@ -169,6 +169,29 @@ class BuildResult(IngestModel):
     manifest: CorpusManifest
 
 
+def normalise_line_endings(payload: bytes) -> bytes:
+    """Return ``payload`` with CRLF and lone CR folded to LF (t38).
+
+    The corpus must be byte-identical on a Windows checkout, a Linux checkout and a
+    fresh build. Every text artifact goes through this function before it is written, and
+    the artifact comparison in the integration test normalises the same way, so a
+    ``core.autocrlf=true`` checkout cannot fail the build for line endings alone.
+    """
+    return payload.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+
+
+def write_canonical_text(path: Path, text: str) -> None:
+    """Write UTF-8 text with LF newlines only, creating parent directories (t38)."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(normalise_line_endings(text.encode("utf-8")))
+
+
+def write_canonical_bytes(path: Path, payload: bytes) -> None:
+    """Write bytes that are guaranteed to contain no CRLF (t38)."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(normalise_line_endings(payload))
+
+
 def _json_bytes(payload: object) -> bytes:
     """Canonical JSON: sorted keys, UTF-8, trailing newline, no NaN, no timestamps."""
     return (
@@ -212,7 +235,7 @@ def build_demo(
     for document in generated:
         target = root / document.relative_path
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(document.text, encoding="utf-8", newline="\n")
+        write_canonical_text(target, document.text)
 
     result = _build_corpus(
         root,
@@ -363,12 +386,13 @@ def _build_corpus(
     chunks.sort(key=lambda chunk: chunk.chunk_id)
 
     chunks_path = root / CHUNKS_FILE
-    chunks_path.write_bytes(
+    write_canonical_bytes(
+        chunks_path,
         "\n".join(
             json.dumps(chunk.model_dump(mode="json"), ensure_ascii=False, sort_keys=True)
             for chunk in chunks
         ).encode("utf-8")
-        + b"\n"
+        + b"\n",
     )
     queries_path = _write_queries(root, queries)
 
@@ -389,7 +413,7 @@ def _build_corpus(
         grounding=grounding,
     )
     manifest_path = root / MANIFEST_FILE
-    manifest_path.write_bytes(_json_bytes(manifest.model_dump(mode="json")))
+    write_canonical_bytes(manifest_path, _json_bytes(manifest.model_dump(mode="json")))
     return BuildResult(
         corpus_dir=root.as_posix(),
         manifest_path=manifest_path.as_posix(),
