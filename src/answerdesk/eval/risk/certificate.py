@@ -115,7 +115,11 @@ def certify(
     n = len(scores)
     if n == 0:
         return Certificate(alpha, delta, bound, 0, 1.0, 1.0, 0.0, 1.0, False, tuple())
-    thresholds = sorted(set(float(score) for score in scores), reverse=True)
+    # A fixed, data-independent grid is what Learn-then-Test requires: deriving the
+    # thresholds from this run's scores made the certificate grid length itself depend on
+    # platform-level float noise (92 vs 91 levels across Linux/Windows). 200 fixed levels
+    # keep the gate byte-stable and the certificate honest.
+    thresholds = sorted({round(0.005 * index, 4) for index in range(1, 201)}, reverse=True)
     if grid is not None:
         thresholds = sorted({*thresholds, *[float(value) for value in grid]}, reverse=True)
     levels: list[dict[str, Any]] = []

@@ -316,7 +316,9 @@ def evaluate(
             steps=steps,
             unavailable=benchpop.UNAVAILABLE,
         )
-        bench["source"] = f"{benchpop.BENCH_DEV} / {benchpop.BENCH_TEST}"
+        bench["source"] = (
+            f"{Path(benchpop.BENCH_DEV).as_posix()} / {Path(benchpop.BENCH_TEST).as_posix()}"
+        )
         bench["description"] = (
             "the product's own frozen test split (t11 turns, 200 dev / 200 test); labels are "
             "cross-family judge answer_ok"
