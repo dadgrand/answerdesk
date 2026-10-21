@@ -296,7 +296,7 @@ Population: the frozen bench turns re-answered with the shipped pipeline and re-
 | coverage at realised risk <= 5% | 0.012579 | >= 0.20 |
 | AURC | 0.683738 | - |
 
-Certificate at alpha 0.05, delta 0.1: **ABSENT** (threshold 0.978643, calibration risk 1.0, UCB 1.0, n=485). The required rows for a 5% certificate at zero observed risk are Bentkus ~46.1 / Hoeffding ~460.5; the population's base error (0.855346 on test) leaves no sufficiently large error-free plateau, so the policy abstains and **no 5% guarantee is claimed**. Coverage target 0.2 is a documented miss at 0.012579 (oracle frontier point).
+Certificate at alpha 0.05, delta 0.1: **ABSENT** (threshold 1.0, calibration risk 1.0, UCB 1.0, n=485). The required rows for a 5% certificate at zero observed risk are Bentkus ~46.1 / Hoeffding ~460.5; the population's base error (0.855346 on test) leaves no sufficiently large error-free plateau, so the policy abstains and **no 5% guarantee is claimed**. Coverage target 0.2 is a documented miss at 0.012579 (oracle frontier point).
 
 ## Calibration verdict (does risk control hold?)
 

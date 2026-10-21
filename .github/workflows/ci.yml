@@ -60,6 +60,8 @@ jobs:
       # canonical LF bytes, so it passes on a CRLF checkout and on an LF archive.
       - name: risk-v2 reproducibility (--check)
         run: uv run python scripts/risk-v2.py --check
+      - name: risk-v3 reproducibility (--check)
+        run: uv run python scripts/risk-v3.py --check
       - name: Contracts import smoke
         run: uv run python -c "import answerdesk; from answerdesk.contracts import Answer; print('ok')"
 

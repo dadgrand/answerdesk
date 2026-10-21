@@ -80,6 +80,9 @@ def test_the_release_gates_run_in_github_actions_not_only_locally(workflow: dict
     assert "scripts/risk-v2.py --check" in fast_runs, (
         "the risk-v2 reproducibility gate is not in the fast gate"
     )
+    assert "scripts/risk-v3.py --check" in fast_runs, (
+        "the risk-v3 reproducibility gate is not in the fast gate"
+    )
 
     test_runs = " ".join(
         str(step.get("run", "")) for step in jobs["test"].get("steps", []) if isinstance(step, dict)
