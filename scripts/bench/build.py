@@ -78,6 +78,11 @@ def _rank(*parts: object) -> str:
     return sha256_text(":".join(str(part) for part in (SEED, *parts)))
 
 
+def _lf_bytes(payload: bytes) -> bytes:
+    """Force canonical LF line endings (a checkout on Windows must not change bytes)."""
+    return payload.replace(b"\r\n", b"\n")
+
+
 def _jsonl(rows: Iterable[Mapping[str, Any]]) -> bytes:
     lines = [
         json.dumps(row, ensure_ascii=False, sort_keys=True, separators=(",", ":")) for row in rows
@@ -416,6 +421,16 @@ def contact_values(text: str, language: str) -> dict[str, str]:
     }
 
 
+def _text_hash(path: Path) -> str:
+    """SHA-256 of the file's text with LF endings.
+
+    ``Path.read_text`` uses universal newlines, so a Windows CRLF checkout and a Linux LF
+    checkout hash identically. Recording raw bytes here would make the exclusion record
+    platform-dependent and make ``--verify`` warn on a fresh CI checkout.
+    """
+    return sha256_text(path.read_text(encoding="utf-8"))
+
+
 def golden_exclusions(
     golden_dir: Path, splits_file: Path
 ) -> tuple[set[str], set[str], dict[str, str]]:
@@ -442,7 +457,7 @@ def golden_exclusions(
         path = golden_dir / relative
         if not path.is_file():
             continue
-        hashes[path.relative_to(golden_dir.parent.parent.parent).as_posix()] = sha256_file(path)
+        hashes[path.relative_to(golden_dir.parent.parent.parent).as_posix()] = _text_hash(path)
         for record in iter_jsonl(path):
             metadata = record.get("metadata") if isinstance(record.get("metadata"), Mapping) else {}
             for key in ("doc_id", "document_id"):
@@ -456,7 +471,7 @@ def golden_exclusions(
             if isinstance(question, str) and question.strip():
                 questions.add(normalise_question(question))
     if splits_file.is_file():
-        hashes[splits_file.relative_to(splits_file.parent.parent.parent).as_posix()] = sha256_file(
+        hashes[splits_file.relative_to(splits_file.parent.parent.parent).as_posix()] = _text_hash(
             splits_file
         )
     return documents, questions, hashes
@@ -949,8 +964,8 @@ def assemble(
         json.dumps(exclusions, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
     ).encode("utf-8")
     for cache_relative, release_relative in LICENSE_FILES:
-        files[release_relative] = (cache_dir / cache_relative).read_bytes()
-    files["LICENSES/MIT.txt"] = (REPO_ROOT / "LICENSE").read_bytes()
+        files[release_relative] = _lf_bytes((cache_dir / cache_relative).read_bytes())
+    files["LICENSES/MIT.txt"] = _lf_bytes((REPO_ROOT / "LICENSE").read_bytes())
     files["schema.json"] = (
         json.dumps(schema.json_schema(), ensure_ascii=False, indent=2, sort_keys=True) + "\n"
     ).encode("utf-8")

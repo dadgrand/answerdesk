@@ -28,6 +28,25 @@ def test_committed_files_are_canonical_jsonl(data_files: dict[str, bytes]) -> No
             assert line == canonical, path
 
 
+def test_committed_release_is_lf_only(bench_dir: Path) -> None:
+    """Every committed text file in the release is LF-only and BOM-free.
+
+    A fresh git checkout must be byte-identical on Windows and Linux: the manifest hashes
+    the release files, so CRLF drift would invalidate every hash (``docs/benchmark.md`` §7).
+    """
+    offenders: list[str] = []
+    checked = 0
+    for path in sorted(bench_dir.rglob("*")):
+        if not path.is_file() or path.suffix not in (".jsonl", ".json", ".md", ".txt"):
+            continue
+        checked += 1
+        payload = path.read_bytes()
+        if b"\r\n" in payload or payload.startswith(b"\xef\xbb\xbf"):
+            offenders.append(path.relative_to(bench_dir).as_posix())
+    assert checked >= 30
+    assert offenders == []
+
+
 def test_mini_build_is_byte_identical(mini_outputs: dict[str, Any]) -> None:
     first, second = mini_outputs["first"], mini_outputs["second"]
     assert first["files"] == second["files"]
@@ -127,11 +146,12 @@ def _stale_reason() -> str | None:
             / "exclusions.json"
         ).read_text(encoding="utf-8")
     )
-    for relative, expected in exclusions["source_files"].items():
-        from bench.normalize import sha256_file
+    from bench.build import golden_exclusions
+    from bench.config import GOLDEN_DIR, SPLITS_FILE
 
-        if sha256_file(REPO_ROOT / relative) != expected:
-            return f"{relative} changed since the release was built"
+    _, _, golden_hashes = golden_exclusions(GOLDEN_DIR, SPLITS_FILE)
+    if exclusions["source_files"] != golden_hashes:
+        return "the golden snapshot changed since the release was built"
     return None
 
 

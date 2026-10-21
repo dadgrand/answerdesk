@@ -183,7 +183,7 @@ current t11 split.
 ```bash
 uv run python scripts/build_bench.py --fetch    # network; cache only
 uv run python scripts/build_bench.py --build    # offline; writes the release dir
-uv run python scripts/build_bench.py --verify   # offline; 26 checks
+uv run python scripts/build_bench.py --verify   # offline; 27 checks
 ```
 
 * **No network outside `--fetch`.** `--build` reads the cache and the repository; `--verify`
@@ -266,6 +266,34 @@ snapshot, so if the synthetic corpus or the golden split is regenerated after th
 refresh". It still fails on a real document overlap with t11, a corrupted release file or a
 missing licence. This keeps CI honest in a repository where the corpus is a generated
 artifact that other tasks may rebuild, without ever hiding a genuine leak.
+
+### 7.1 Rebinding to a new golden snapshot
+
+`answerdesk-bench` is a snapshot of two repository artifacts: the synthetic corpus
+(`corpus_version`, pinned in `sources.lock.json` and in every domain item's
+`provenance.corpus_manifest_sha256`) and the t11 golden items (the SHA-256 of every
+`evals/golden/v1/*.jsonl` and of `evals/splits/v1.json`, recorded in
+`domain/exclusions.json#source_files` and summarised as `golden_snapshot_sha256`). The domain
+slice may only use documents that **no golden item uses**, so when t11 regenerates the golden
+set the exclusion set must be recomputed and the release re-frozen. That is the *only*
+reason to touch this benchmark outside a version bump:
+
+```bash
+cd answerdesk
+uv run python scripts/build_bench.py --build     # recomputes exclusions, rewrites the manifest
+uv run python scripts/build_bench.py --verify    # 27 checks, must print 0 failed / 0 warnings
+```
+
+The rebuild is deterministic and changes exactly two files when the selection is unchanged —
+`manifest.json` (new `self_sha256`, new `data_sha256`) and `domain/exclusions.json` (new
+`source_files`, `golden_snapshot_sha256`). If the new golden set also moves documents into or
+out of the domain sample, the affected `domain/<lang>.jsonl` files change too; review that
+diff before committing. `sources.lock.json` only changes if the corpus itself changed (then
+re-pin its two hashes). Commit the rebuilt release together with the golden snapshot it was
+built from: a checkout that mixes an old golden with a new benchmark (or the reverse) will
+report overlapping documents and fail `--verify`. `tests/unit/bench/test_leakage.py` guards
+the same invariant, and `test_bench_determinism.py` proves the release is LF-canonical so the
+hashes do not depend on the checkout platform.
 
 What it cannot prove: that a label is *semantically* right. It proves that a Belebele answer
 is the upstream labelled option, that a domain answer is a verbatim slice of its article,

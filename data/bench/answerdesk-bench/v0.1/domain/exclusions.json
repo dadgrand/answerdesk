@@ -1172,16 +1172,16 @@
     "ff7e9369a4ad1570cd2de459c4d0aaff2df15bde51fd5a7ae1a3c7b9c77aad9b"
   ],
   "excluded_questions": 736,
-  "golden_snapshot_sha256": "d4734611aef8b7d8a254b35ce8fa56108599215897e72f4b8444e62a9a5cc06f",
+  "golden_snapshot_sha256": "ae9c5e7458f18d46f2d4fb98a46a7565bf93f78da32f5beb55f26afb13b518fe",
   "policy": "domain items must not share a document with a t11 golden item (evals/golden/v1 test, dev and adversarial files); the split file assigns every corpus document to dev or test by construction, so split membership is recorded but not used for exclusion",
   "source_files": {
-    "evals/golden/v1/adversarial/claims.jsonl": "f51feebd33da6f12dd0acd2191b1d14132fb2332d5f736bec4b9ca1611bf3c7e",
-    "evals/golden/v1/adversarial/injection.jsonl": "ea3aa9cf61cce948cfc26def7636308f1d94b26e9d6faff80c9d633bcefcc3ad",
-    "evals/golden/v1/adversarial/near_miss.jsonl": "983d66fc99bb7ce244d7e92c46e35a1a231b7905a392377e6043620d1a33160e",
-    "evals/golden/v1/adversarial/perturbation.jsonl": "070c0a1e78de6f8a1c4f86e540c847123af0a62f372c289a7fe3432e5ad45dfe",
-    "evals/golden/v1/adversarial/pii.jsonl": "4a97a0ec1e4c71ff6c561d5784faf74a8debd4ad38c2f4a69ebb1a3e6e830256",
-    "evals/golden/v1/dev.jsonl": "a6e3724084c0bec28cdacb0e4f4312f912f3fdd6d45a8a9f72de2c08da3b11b0",
-    "evals/golden/v1/test.jsonl": "9995648a9eeb63587a83b02b33aa741b7c30cbf3070c6db44d5a62d2cfd6e07f",
-    "evals/splits/v1.json": "2342e1fbbbb7b9c5b5abde050a18648924e0037a184e32cb6d30e130382c4973"
+    "evals/golden/v1/adversarial/claims.jsonl": "fa59193a25adae7752769403813109177d21bbaf4776b71228b52a6c3a32200e",
+    "evals/golden/v1/adversarial/injection.jsonl": "1478213fc0c692feb680889eeab7b77b11b42e1fc4a866b493f608ca14b33414",
+    "evals/golden/v1/adversarial/near_miss.jsonl": "baefa760964018d3243b5a812b55f59bbde11bc33ac7c894cb6f0c9e795da6dd",
+    "evals/golden/v1/adversarial/perturbation.jsonl": "83dc5055f9bcbe29629e986cca708bd2ef2b162d62541057762dc156b366f91b",
+    "evals/golden/v1/adversarial/pii.jsonl": "f79371dbd11db74358683ebcf9f66b2bb8e03cf60c177786071f4acd32f0d02e",
+    "evals/golden/v1/dev.jsonl": "b46b57a35ada07262d715ce9730c49789f22e1fa31cf42f708d19027a65a71e0",
+    "evals/golden/v1/test.jsonl": "b1846f0279685f108c1b17059ada6618dfb6de281a97ef8c19c255ab3ca9e594",
+    "evals/splits/v1.json": "643a28c89c36abf8be343103caa70a06a8c5174414f29f7ebedcf0e8f3fc29ea"
   }
 }

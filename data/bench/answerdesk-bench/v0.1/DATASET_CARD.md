@@ -17,7 +17,7 @@ came from.
 | **Code licence** | MIT (`../../../LICENSE`, `LICENSES/MIT.txt`) |
 | **Data licences** | CC BY-SA 4.0 (`belebele/`), Apache-2.0 (`mrtydi/`), CC0-1.0 (`domain/`) |
 | **Built by** | `scripts/build_bench.py` (`--fetch`, `--build`, `--verify`) |
-| **Verified by** | `scripts/build_bench.py --verify` (26 checks; see §9) |
+| **Verified by** | `scripts/build_bench.py --verify` (27 checks; see §9) |
 
 > **The repository is MIT; this dataset is not.** The code that fetches, builds and
 > verifies the benchmark is MIT. The Belebele-derived files are CC BY-SA 4.0 and the
@@ -254,7 +254,7 @@ languages the slice does not cover.
 cd answerdesk
 uv run python scripts/build_bench.py --fetch    # network; fills .cache/answerdesk-bench/
 uv run python scripts/build_bench.py --build    # offline; deterministic
-uv run python scripts/build_bench.py --verify   # offline; 26 checks, exit code 0/1
+uv run python scripts/build_bench.py --verify   # offline; 27 checks, exit code 0/1
 uv run pytest -q tests/unit/bench               # offline; schema/counts/licence/dedup/leakage
 ```
 

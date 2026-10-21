@@ -193,7 +193,7 @@
     "qa_items": 750,
     "retrieval_queries": 3119
   },
-  "data_sha256": "c86387d96b5b54561bea956bd95812e2741fb9baa91e985fa16adff9768ad1ea",
+  "data_sha256": "2e20768ff9846336f6670096f7603cdde2047cebd8e092dd59571fd2727efd2a",
   "files": [
     {
       "bytes": 1080,
@@ -326,7 +326,7 @@
       "items": 0,
       "license": "CC0-1.0",
       "path": "domain/exclusions.json",
-      "sha256": "618e11629ee109914ac1b51062df062fe5350df12d151c00d30a821e980e4965"
+      "sha256": "57997c69fc810e0104423b005e4686bece7fcdc711c81c4bb0da19cf73f4c236"
     },
     {
       "bytes": 51832,
@@ -450,7 +450,7 @@
   },
   "schema_version": "1.0",
   "seed": 20261021,
-  "self_sha256": "74801d988e740e91243b4bee63889bf084f67ac23b282fbaf5290777d97b4265",
+  "self_sha256": "65de8498b494b653b82be70bc854c7cb24f543fd911cfeda61705b522d356671",
   "sources": [
     {
       "citation": "Bandarkar et al. 2023, The Belebele Benchmark: a Parallel Reading Comprehension Dataset in 122 Language Variants (arXiv:2308.16884)",

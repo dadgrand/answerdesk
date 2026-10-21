@@ -285,6 +285,7 @@ def verify(
 
     verdicts.extend(_golden_checks(items, bench_dir, golden_dir, splits_file))
     verdicts.extend(_domain_evidence_checks(items, corpus_dir))
+    verdicts.append(_line_ending_check(bench_dir))
     verdicts.extend(_license_checks(bench_dir))
     verdicts.append(_archive_check(bench_dir))
     verdicts.append(_sources_check(manifest, lock_path, lock))
@@ -448,6 +449,26 @@ def _domain_evidence_checks(items: Sequence[Mapping[str, Any]], corpus_dir: Path
             f"{live_hash[:12]}… — rebuild to refresh",
         )
     ]
+
+
+def _line_ending_check(bench_dir: Path) -> Verdict:
+    """The release must be byte-canonical on every platform: LF, no BOM."""
+    problems: list[str] = []
+    checked = 0
+    for path in sorted(bench_dir.rglob("*")):
+        if not path.is_file() or path.suffix not in (".jsonl", ".json", ".md", ".txt"):
+            continue
+        checked += 1
+        payload = path.read_bytes()
+        if b"\r\n" in payload:
+            problems.append(f"{path.relative_to(bench_dir).as_posix()} has CRLF")
+        if payload.startswith(b"\xef\xbb\xbf"):
+            problems.append(f"{path.relative_to(bench_dir).as_posix()} has a UTF-8 BOM")
+    return (
+        _pass("line_endings", f"{checked} text files are LF-only without BOM")
+        if not problems
+        else _fail("line_endings", "; ".join(problems[:6]))
+    )
 
 
 def _license_checks(bench_dir: Path) -> list[Verdict]:
