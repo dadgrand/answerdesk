@@ -853,9 +853,7 @@ def generate_golden(
         noisy_pool = [
             query
             for query in corpus.query_pool(locale=locale)
-            if query.category == "noisy_freeform"
-            and query.answerable
-            and query.doc_id in test_docs
+            if query.category == "noisy_freeform" and query.answerable and query.doc_id in test_docs
         ]
         noisy_picked = _sample(
             [query.query_id for query in noisy_pool],

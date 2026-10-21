@@ -49,6 +49,7 @@ from typing import Any
 import httpx
 
 from answerdesk.errors import AnswerdeskError
+from answerdesk.telemetry.redaction import redact_str
 
 
 @dataclass(frozen=True)
@@ -97,7 +98,17 @@ ERROR_TAXONOMY: Mapping[str, ErrorSpec] = {
 
 
 class ServiceError(AnswerdeskError):
-    """An error with a taxonomy-backed code, status and retryability."""
+    """An error with a taxonomy-backed code, status and retryability.
+
+    Two texts are kept apart on purpose (finding F-5, docs/robustness.md):
+
+    * ``message`` / ``detail`` are the **caller-facing** envelope. They are either our own
+      fixed strings or, for anything that came from below the service, a generic message
+      per code plus a status hint — never upstream text, never a validation input.
+    * ``diagnostic`` is the **trace/log** text: the original exception and its detail, fully
+      redacted. It is never serialised into an HTTP response, so an operator keeps the
+      upstream wording while a caller does not receive it.
+    """
 
     def __init__(
         self,
@@ -107,19 +118,30 @@ class ServiceError(AnswerdeskError):
         detail: str | None = None,
         retry_after_s: float | None = None,
         headers: Mapping[str, str] | None = None,
+        diagnostic: str | None = None,
     ) -> None:
         spec = ERROR_TAXONOMY.get(code)
         if spec is None:  # a code outside the table is a programming error, not a 500
             raise ValueError(f"unknown service error code {code!r}")
-        super().__init__(message, detail=detail)
+        super().__init__(_public_text(message) or "", detail=_public_text(detail))
         self.code = code
         self.http_status = spec.status
         self.retryable = spec.retryable
         self.retry_after_s = retry_after_s
         self.headers = dict(headers or {})
+        self.diagnostic = _public_text(diagnostic) if diagnostic else None
 
     def envelope(self, trace_id: str) -> dict[str, Any]:
         payload = super().to_envelope(trace_id)
+        # defence in depth: even a message assembled elsewhere cannot carry a PII/secret
+        # pattern or an unbounded upstream string to a caller
+        payload["message"] = _public_text(payload["message"])
+        if "detail" in payload:
+            detail = _public_text(payload["detail"])
+            if detail:
+                payload["detail"] = detail
+            else:
+                payload.pop("detail")
         if self.retry_after_s is not None:
             payload["retry_after_s"] = round(float(self.retry_after_s), 3)
         return payload
@@ -210,6 +232,60 @@ class StreamFailed(ServiceError):
 #: Module error codes that are already taxonomy codes.
 _DIRECT_CODES = frozenset(ERROR_TAXONOMY)
 
+#: Longest caller-facing text. An upstream message can be arbitrarily long; the envelope
+#: must stay bounded (and it is not a transport for diagnostics).
+PUBLIC_TEXT_LIMIT = 240
+
+#: Generic caller-facing messages for anything that originated below the service. A provider
+#: message is *never* copied into an envelope: it may quote request content (finding F-5).
+_GENERIC_MESSAGES: Mapping[str, str] = {
+    "provider_error": "the upstream provider rejected the call",
+    "provider_timeout": "the upstream call timed out",
+    "provider_unreachable": "the upstream provider could not be reached",
+    "provider_bad_response": "the upstream provider returned an unusable response",
+    "provider_circuit_open": "the provider circuit is open; retry after the cooldown",
+}
+
+
+def _public_text(text: str | None) -> str | None:
+    """Redact PII/credentials and bound the length of a caller-facing string."""
+    if text is None:
+        return None
+    redacted = redact_str(str(text))
+    return redacted[:PUBLIC_TEXT_LIMIT]
+
+
+def _status_hint(exc: BaseException) -> str | None:
+    """The one upstream fact a caller may see: the HTTP status, if there was one."""
+    status = getattr(exc, "status_code", None)
+    if not isinstance(status, int):
+        response = getattr(exc, "response", None)
+        status = getattr(response, "status_code", None)
+    return f"HTTP {status}" if isinstance(status, int) and status else None
+
+
+def _diagnostic(exc: BaseException) -> str:
+    """The trace/log text: the original exception, redacted, bounded by the trace writer."""
+    detail = getattr(exc, "detail", None)
+    return f"{type(exc).__name__}: {exc}" + (f" ({detail})" if detail else "")
+
+
+def _mapped(
+    code: str,
+    exc: BaseException,
+    *,
+    message: str | None = None,
+    detail: str | None = None,
+) -> ServiceError:
+    """Build a taxonomy error whose caller-facing text never quotes the upstream error."""
+    public = _GENERIC_MESSAGES.get(code) or message or "the call failed"
+    return ServiceError(
+        code,
+        public,
+        detail=_status_hint(exc) if detail is None else detail,
+        diagnostic=_diagnostic(exc),
+    )
+
 
 def to_service_error(exc: BaseException) -> ServiceError:
     """Translate any module error into the taxonomy (the only mapping point).
@@ -218,34 +294,46 @@ def to_service_error(exc: BaseException) -> ServiceError:
     wrappers: a provider transport error that escaped the LLM layer, a malformed body that
     Starlette decoded itself, or a database conflict. None of them may become a bare 500
     without a taxonomy code — the operator would have no code to act on.
+
+    Provider-family failures are reduced to a generic message plus an HTTP status hint; the
+    full upstream text is kept in ``diagnostic`` for the trace and the log (F-5).
     """
     if isinstance(exc, ServiceError):
+        if exc.diagnostic is None:
+            exc.diagnostic = _public_text(_diagnostic(exc))
         return exc
     if isinstance(exc, AnswerdeskError):
         code = exc.code if exc.code in _DIRECT_CODES else _code_for_status(exc.http_status)
-        return ServiceError(code, exc.message, detail=exc.detail)
-    if isinstance(exc, TimeoutError):
-        return ServiceError("provider_timeout", "the upstream call timed out")
-    if isinstance(exc, httpx.TimeoutException):
-        return ServiceError("provider_timeout", "the upstream call timed out")
-    if isinstance(exc, httpx.HTTPStatusError):
-        status = exc.response.status_code if exc.response is not None else 0
+        if code in _GENERIC_MESSAGES:
+            return _mapped(code, exc)
         return ServiceError(
-            "provider_error",
-            f"the upstream provider rejected the call (HTTP {status})",
-            detail=str(status),
+            code,
+            exc.message,
+            detail=exc.detail,
+            diagnostic=_diagnostic(exc),
         )
+    if isinstance(exc, TimeoutError):
+        return _mapped("provider_timeout", exc)
+    if isinstance(exc, httpx.TimeoutException):
+        return _mapped("provider_timeout", exc)
+    if isinstance(exc, httpx.HTTPStatusError):
+        return _mapped("provider_error", exc)
     if isinstance(exc, httpx.TransportError):
-        return ServiceError("provider_unreachable", "the upstream provider could not be reached")
+        return _mapped("provider_unreachable", exc)
     if isinstance(exc, RecursionError):
-        return ServiceError("bad_request", "the request payload is nested too deeply")
+        return _mapped("bad_request", exc, message="the request payload is nested too deeply")
     if isinstance(exc, (json.JSONDecodeError, UnicodeDecodeError, UnicodeEncodeError)):
-        return ServiceError("bad_request", "the request body could not be decoded")
+        return _mapped("bad_request", exc, message="the request body could not be decoded")
     if isinstance(exc, sqlite3.IntegrityError):
-        return ServiceError("conflict", "a concurrent write conflicted; retry the request")
+        return _mapped("conflict", exc, message="a concurrent write conflicted; retry the request")
     if isinstance(exc, sqlite3.Error):
-        return ServiceError("service_unavailable", "the session store is unavailable")
-    return ServiceError("internal_error", "internal error", detail=type(exc).__name__)
+        return _mapped("service_unavailable", exc, message="the session store is unavailable")
+    return ServiceError(
+        "internal_error",
+        "internal error",
+        detail=type(exc).__name__,
+        diagnostic=_diagnostic(exc),
+    )
 
 
 def _code_for_status(status: int) -> str:

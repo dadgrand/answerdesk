@@ -31,3 +31,25 @@ pricing:
     output_usd_per_1k_tokens: 0.0
     retrieved_at: "2026-10-20"
     source: "self-hosted (vLLM / llama.cpp / Ollama): electricity only, recorded as 0"
+
+  # --- models used by the t11 evidence run ------------------------------------
+  # The keys used for the benchmark exposed no per-token billing statement, so the
+  # recorded rate is 0.0 with this note. Token counts are measured and reported next to
+  # the USD figure, so a priced comparison is possible once list prices are recorded here.
+  - model: qwen3.6-35b-a3b
+    input_usd_per_1k_tokens: 0.0
+    output_usd_per_1k_tokens: 0.0
+    retrieved_at: "2026-10-21"
+    source: "NeuralDeep free tariff at measurement — no per-token charge observed"
+
+  - model: qwen3.6-35b-a3b-noreason
+    input_usd_per_1k_tokens: 0.0
+    output_usd_per_1k_tokens: 0.0
+    retrieved_at: "2026-10-21"
+    source: "NeuralDeep free tariff at measurement — no per-token charge observed"
+
+  - model: deepseek-flash
+    input_usd_per_1k_tokens: 0.0
+    output_usd_per_1k_tokens: 0.0
+    retrieved_at: "2026-10-21"
+    source: "key used for the benchmark exposed no billing statement; token counts recorded"

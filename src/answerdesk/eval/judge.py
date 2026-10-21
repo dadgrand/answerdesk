@@ -198,14 +198,35 @@ class RubricJudge:
             context="\n\n".join(context) or "(no cited context)",
             candidate=candidate_answer or "(empty answer)",
         )
-        completion = self.provider.complete(
-            [
-                Message(role=Role.SYSTEM, content=_SYSTEM),
-                Message(role=Role.USER, content=prompt),
-            ],
-            response_schema=None,
-        )
-        score, rationale = _parse_score(completion.text)
+        messages = [
+            Message(role=Role.SYSTEM, content=_SYSTEM),
+            Message(role=Role.USER, content=prompt),
+        ]
+        completion = self.provider.complete(messages, response_schema=None)
+        text = completion.text
+        if not text.strip():
+            # A reasoning-style judge can spend its whole budget on the trace and return an
+            # empty content field. One strict re-ask, then surface the failure.
+            completion = self.provider.complete(
+                [
+                    messages[0],
+                    Message(
+                        role=Role.USER,
+                        content=(
+                            prompt + "\n\nReturn ONLY the JSON object on a single line. "
+                            "No reasoning, no explanation, no markdown."
+                        ),
+                    ),
+                ],
+                response_schema=None,
+            )
+            text = completion.text
+            if not text.strip():
+                raise JudgeError(
+                    "the judge returned an empty reply twice",
+                    detail=f"finish_reason={completion.finish_reason}",
+                )
+        score, rationale = _parse_score(text)
         return JudgeScore(
             score=score,
             rubric_version=self.rubric_version,
@@ -384,9 +405,7 @@ def judge_metadata(
     """
     kappas = {locale: value for locale, (value, _) in (agreement or {}).items()}
     counts = {locale: count for locale, (_, count) in (agreement or {}).items()}
-    human_calibrated = bool(kappas) and all(
-        value >= KAPPA_REPORTABLE for value in kappas.values()
-    )
+    human_calibrated = bool(kappas) and all(value >= KAPPA_REPORTABLE for value in kappas.values())
     generator_family = model_family(generator_model) if generator_model else ""
     resolved_judge_family = judge_family or model_family(judge_model)
     cross_family = bool(generator_family) and generator_family != resolved_judge_family

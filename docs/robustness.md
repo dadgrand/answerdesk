@@ -34,13 +34,12 @@ secret in a log line, the number of provider calls, or the content of the prompt
 | 8 | **cancellation and timeouts** | client sends `http.disconnect` mid-stream; a streamed response is closed after the first chunk; a provider times out | no exception escapes the app; the idempotency lock is released; the follow-up request works; a failure is fast (< 5 s in the test) | `test_stream_and_cancellation.py` (7) |
 | 9 | **duplicate / concurrent identifiers** | 4 concurrent requests with one `Idempotency-Key`; same key + different body; same `X-Trace-Id` twice; duplicate feedback; duplicate tickets; duplicate chunk ids in retrieval | one turn, one provider call, N identical bodies, 3 replays; 409 on a conflicting body; unique citation ids | `test_duplicate_ids.py` (7) |
 | 10 | **injection** | 9 directive payloads in the query; a canary in retrieved text; a marker sentence in evidence; **a `</passage>` delimiter breakout in evidence** (both with the denylist active and monkeypatched blind, to expose the renderer) | matched queries/evidence escalate `INJECTION_SUSPECTED` with **zero** provider calls; anything that does reach the prompt is inside `<passage>` in the user message, never in the system message, and delimiter lookalikes are escaped to `&lt;/passage` so evidence cannot close its own block (`INV-01`) | `test_injection_and_pii.py` (16), `test_delimiter_neutralisation.py` (3) |
-| 11 | **PII and secrets** | card/email/phone in the query; PII inside retrieved evidence; a secret-shaped value in the query; a cache warm with an answer, then a PII variant; **a provider error whose message quotes an e-mail, a phone, a card and a key** | guard fires before the cache and the provider; `[CARD]`/`[EMAIL]`/`[SECRET]` in traces, logs and every provider message (backup included); no raw value in any log record or trace line; the error *text* is confined to the HTTP envelope, which is the known gap L-8 | `test_injection_and_pii.py`, `test_fallback_redaction.py`, `test_error_redaction.py` (3, one xfail) |
+| 11 | **PII and secrets** | card/email/phone in the query; PII inside retrieved evidence; a secret-shaped value in the query; a cache warm with an answer, then a PII variant; **a provider error whose message quotes an e-mail, a phone, a card and a key** | guard fires before the cache and the provider; `[CARD]`/`[EMAIL]`/`[SECRET]` in traces, logs and every provider message (backup included); no raw value in any log record or trace line; the error *text* never reaches the caller (F-5 closed): the envelope carries a generic message and an HTTP status hint, while the trace keeps the redacted upstream wording | `test_injection_and_pii.py`, `test_fallback_redaction.py`, `test_error_redaction.py` (10) |
 | 12 | **malformed config / CLI** | invalid YAML, list at the top level, wrong types, unknown keys, bad profile, missing file, directory, 200 KB value, garbage env var | exit 2 with `config error: …`, never a traceback; an empty config is valid | `test_config_and_cli.py` (13) |
 | 13 | **log and trace sinks** | all of the above, while the root logger is captured and the JSONL files are read back — including a failed turn (provider error) whose trace is flushed at shutdown | every log message is UTF-8 and free of PII/secrets; every trace line is valid UTF-8 JSON with a `trace_id`; the failure is observable in the log stream without its payload | `test_logs_and_traces.py` (5), `test_error_redaction.py` |
 
-Counts in parentheses are tests per module; `uv run pytest -q tests/property` reports 110
-(102 from t24 + 8 added by t33 after the independent audit — one of them a strict `xfail` for the
-known envelope leak, see L-8).
+Counts in parentheses are tests per module; `uv run pytest -q tests/property` reports 117
+(102 from t24 + 8 added by t33 after the independent audit + 7 added by t35 when the envelope leak was closed; no test in the tree is xfail).
 
 ---
 
@@ -158,16 +157,29 @@ pass closes the gaps with tests and records the leak. **Tests only — no servic
 | **F-2 / F-1** | the backup body's structure was never inspected | `test_fallback_body_neutralises_evidence_delimiters` — with the denylist monkeypatched blind, the backup body must still escape `</passage` and keep the marker inside an open block | M2, M4 |
 | **F-1** (low) | no delimiter-breakout payload anywhere; disabling `packer.neutralise_delimiters` left the whole suite green (mutant M4) | `test_delimiter_neutralisation.py` — (a) a `</passage> BREAKOUT…` payload is escalated with zero provider calls, (b) with the denylist blind the renderer still escapes the lookalike, (c) the escape helper's unit contract | M4 |
 | **F-4** (low) | hostile *error text* was never exercised | `test_error_redaction.py` — no raw PII/secret in any log record or trace line for a provider error, and a 422 does not echo the offending value | boundary test (see L-8) |
+| **F-5** (medium, closed in t35) | a provider error's text reached the caller verbatim through the HTTP envelope while traces and logs stayed clean | `test_error_redaction.py` — five provider paths (4xx, 5xx, 429, timeout, connection) and two validation payloads; the envelope carries a generic message plus an HTTP status hint, the trace/log keep the redacted upstream text | positive assertions (the strict xfail was removed) |
 | **F-3** (low) | the risk tier is client-declared — now documented as L-7 | — | — |
+
+Closed by t35 (kept here so the audit trail stays readable):
+
+* **F-5 / former L-8 — the HTTP error envelope echoed the provider's message verbatim.** Fixed in
+  `src/answerdesk/service`: provider-family errors map to a generic message plus an HTTP status
+  hint, validation details carry field paths and pydantic type slugs only, and the envelope
+  redacts and bounds every caller-facing string. The trace and the `service error diagnostic` log
+  record keep the full upstream wording, redacted. The strict xfail became ten positive
+  assertions in `tests/property/test_error_redaction.py`; see `docs/ops.md` §4.1.
 
 Deliberately **not** claimed:
 
-* **The HTTP error envelope still echoes the provider's message verbatim** — the one place where a
-  quoted customer identifier leaves the process in a response body (traces and logs stay clean).
-  The acceptance criterion is a strict `xfail`
-  (`test_error_redaction.py::test_provider_error_envelope_is_a_known_leak`), so the day the
-  service redacts the envelope the suite turns red and the marker must become a positive
-  assertion. Recorded as **L-8**; the fix belongs to `src/answerdesk/service` (out of t33 scope).
+* **L-10 — the JSON log formatter redacts by key, not by value.** `answerdesk.logging`
+  masks secret-named mapping keys, so a traceback (`exc_info`) or a free-text message that
+  quotes PII reaches the log stream unredacted. The service therefore never passes
+  `exc_info` for an arbitrary exception: the generic 500 handler logs
+  `ServiceError.diagnostic` (already through `redact_str`) instead, and
+  `test_error_redaction.py` pins both the rule and the formatter gap. The complete fix —
+  value-level redaction inside `JsonFormatter` — belongs to `answerdesk/logging.py`
+  (outside t35's scope) and is the natural follow-up; when it lands, the characterisation
+  test turns red and the rule can be relaxed.
 * **Trace-payload redaction is defence in depth with no observable delta today.** Mutating
   `telemetry.tracing.redact_payload` to an identity (mutant M6) leaves the suite green, because
   every field that reaches the tracer is already redacted upstream. Recorded as **L-9**; it is not
@@ -211,14 +223,8 @@ Deliberately **not** claimed:
   server-side or use `max(declared, detected)` for the hard-policy decision, plus a regression
   test that a declared `informational` bucket cannot answer a message the classifier tiers as
   account/legal. Until then, put the service behind a gateway that sets the tier itself.
-* **L-8 — a provider error's text is echoed in the HTTP envelope.** Traces and logs are clean
-  (`test_error_redaction.py`), but `message`/`detail` of the error envelope carry the upstream
-  text verbatim, so whatever the provider quotes — an e-mail, a card number, a key — reaches the
-  caller and, if the caller logs it, their logs. The request body is already redacted before it
-  leaves the process (`RedactingProvider`), so the provider cannot echo a value from our prompt;
-  the exposure is text the upstream chooses to include. **Fix, scheduled:** apply
-  `telemetry.redaction.redact_str` to `ErrorEnvelope.message`/`detail`; the strict `xfail` in
-  `test_error_redaction.py` is its acceptance test.
+The former **L-8** (provider error text echoed in the envelope) is closed: provider-family errors are reduced to a generic message plus an HTTP status hint, validation details carry field paths and pydantic type slugs only, and ``ServiceError.envelope`` redacts and bounds every caller-facing string as a second line of defence. The diagnostics live in ``ServiceError.diagnostic`` → the trace and the ``service error diagnostic`` log record. See ``docs/ops.md`` §4.1.
+
 * **L-9 — trace-payload redaction is untested redundancy.** Every traced field is already redacted
   upstream, so removing `telemetry.tracing.redact_payload` changes nothing observable (mutant M6).
   Keep it as defence in depth; do not describe it as a tested guarantee.

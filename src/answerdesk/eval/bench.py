@@ -31,19 +31,18 @@ is labelled ``replay``.
 
 from __future__ import annotations
 
+import contextlib
 import json
-import math
 import platform
 import time
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any
 
 from answerdesk.config import Settings
 from answerdesk.contracts import (
     Action,
-    CacheStatus,
     ChatProvider,
     EvalCase,
     IntentBucket,
@@ -52,9 +51,9 @@ from answerdesk.contracts import (
     Split,
 )
 from answerdesk.eval.calibration import summarise
-from answerdesk.eval.corpus import Corpus, anchor_tokens, load_corpus
+from answerdesk.eval.corpus import Corpus, load_corpus
 from answerdesk.eval.datasets import load_golden
-from answerdesk.eval.judge import PASS_SCORE, RubricJudge, judge_metadata, model_family
+from answerdesk.eval.judge import PASS_SCORE, RubricJudge, judge_metadata
 from answerdesk.eval.live import (
     answer_from_result,
     bucket_of,
@@ -73,7 +72,7 @@ from answerdesk.eval.metrics import (
     retrieval_cells,
     score_retrieval,
 )
-from answerdesk.eval.models import MetricCell, TurnRecord
+from answerdesk.eval.models import TurnRecord
 from answerdesk.eval.stats import mcnemar, paired_bootstrap, wilson_interval
 from answerdesk.generate.language import languages_agree
 from answerdesk.generate.pipeline import AnswerPipeline
@@ -95,6 +94,19 @@ class BenchConfig:
     run_id: str = "bench"
     golden_version: str = "v1"
     test_limit: int | None = None
+    retrieval_limit: int | None = None
+    #: Cases used for the (expensive, API-bound) rerank arm; other arms use the full split.
+    rerank_limit: int | None = 80
+    #: Retriever used by the generation arms. The hosted reranker is measured in the
+    #: retrieval ablation; generation uses the fast convex-combination path because the
+    #: free-tier rerank queue cannot sustain hundreds of sequential calls inside a run.
+    #: The hosted embedding queue is rate-limited on the free tariff, so generation
+    #: retrieves with BM25 (no API calls per case); the hybrid/dense arms are measured in
+    #: the retrieval ablation, which needs far fewer calls.
+    answer_retriever: str = "bm25"
+    #: Judge the generated answers? False = judge-free arm (retrieval/escalation/latency/
+    #: cost only), used when the cross-family judge's provider quota is exhausted.
+    judge_enabled: bool = True
     dev_limit: int | None = None
     answer_limit: int | None = None
     locales: tuple[str, ...] = ()
@@ -108,6 +120,8 @@ class BenchConfig:
     generator_arms: tuple[str, ...] = ("primary", "secondary")
     force_index: bool = False
     replay: bool = False
+    #: Fit split-conformal q-hat on the dev split before evaluating on test (INV-09).
+    calibrate_on_dev: bool = True
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -200,7 +214,9 @@ def unsafe_kind(case: EvalCase) -> str:
     return "answerable"
 
 
-def _subset(cases: Sequence[EvalCase], *, locales: Sequence[str], limit: int | None, seed: int) -> list[EvalCase]:
+def _subset(
+    cases: Sequence[EvalCase], *, locales: Sequence[str], limit: int | None, seed: int
+) -> list[EvalCase]:
     selected = [case for case in cases if not locales or case.locale in set(locales)]
     if limit is None or limit >= len(selected):
         return sorted(selected, key=lambda case: case.case_id)
@@ -225,7 +241,12 @@ def _subset(cases: Sequence[EvalCase], *, locales: Sequence[str], limit: int | N
 
 def _retrieval_ranked(trace: Any, k: int) -> list[str]:
     """The ranked chunk ids the pipeline produced, from the best available stage."""
-    for stage in ("reranked", "diversity" if hasattr(trace, "diversity") else "", "fused", "candidates"):
+    for stage in (
+        "reranked",
+        "diversity" if hasattr(trace, "diversity") else "",
+        "fused",
+        "candidates",
+    ):
         passages = getattr(trace, stage, None)
         if passages:
             return [passage.chunk.chunk_id for passage in passages][:k]
@@ -281,13 +302,11 @@ def prepare(settings: Settings, config: BenchConfig, *, evals_root: Path) -> Ben
 def _pricing(settings: Settings) -> PricingTable:
     try:
         return PricingTable.default()
-    except Exception:  # noqa: BLE001 - pricing is optional in a replay run
+    except Exception:
         return PricingTable.from_entries([])
 
 
-def _load_engine(
-    settings: Settings, config: BenchConfig, corpus: Corpus, state: BenchState
-) -> Any:
+def _load_engine(settings: Settings, config: BenchConfig, corpus: Corpus, state: BenchState) -> Any:
     """t8's DecisionEngine from a sealed calibration artifact (never a hand-picked cutoff)."""
     if not config.calibration_path:
         state.calibration_note = (
@@ -318,18 +337,49 @@ def run_retrieval(
     from answerdesk.policy import OverlapScorer
 
     scorer = OverlapScorer()
-    selected = list(cases if cases is not None else state.test_cases)
+    selected = list(
+        cases
+        if cases is not None
+        else _subset(
+            state.test_cases,
+            locales=state.config.locales,
+            limit=state.config.retrieval_limit
+            if state.config.retrieval_limit is not None
+            else state.config.test_limit,
+            seed=state.config.seed,
+        )
+    )
     arms = state.config.retrieval_arms or tuple(state.variants)
     results: dict[str, Any] = {"arms": {}, "n": len(selected)}
     all_turns: dict[str, list[TurnRecord]] = {}
+    degraded = 0
     for arm_name in arms:
         pipeline = state.variants.get(arm_name)
         if pipeline is None:
             continue
+        fallback = state.variants.get("cc@0.75") if arm_name.endswith("+rerank") else None
         turns: list[TurnRecord] = []
-        for case in selected:
+        arm_cases = list(selected)
+        if arm_name.endswith("+rerank") and state.config.rerank_limit:
+            arm_cases = _subset(
+                selected,
+                locales=state.config.locales,
+                limit=state.config.rerank_limit,
+                seed=state.config.seed,
+            )
+        for case in arm_cases:
             started = time.perf_counter()
-            trace = pipeline.retrieve(case.question, final_k=state.settings.generate.context_k_max)
+            try:
+                trace = pipeline.retrieve(
+                    case.question, final_k=state.settings.generate.context_k_max
+                )
+            except Exception:  # a degraded case is counted in the artefacts, never hidden
+                if fallback is None:
+                    raise
+                degraded += 1
+                trace = fallback.retrieve(
+                    case.question, final_k=state.settings.generate.context_k_max
+                )
             elapsed = (time.perf_counter() - started) * 1000.0
             ranked = _retrieval_ranked(trace, state.settings.generate.context_k_max)
             score = float(scorer.score(case.question, _packed_passages(trace)))
@@ -365,7 +415,11 @@ def run_retrieval(
             seed=state.config.seed,
             samples=state.config.bootstrap,
         )
-        noisy = [turn for turn, case in zip(turns, selected, strict=True) if case_stratum(case) == "noisy"]
+        noisy = [
+            turn
+            for turn, case in zip(turns, arm_cases, strict=True)
+            if case_stratum(case) == "noisy"
+        ]
         results["arms"][arm_name] = {
             "n_labeled": sum(1 for turn in turns if turn.gold_chunk_ids),
             "cells": [cell.model_dump(mode="json") for cell in cells],
@@ -373,10 +427,16 @@ def run_retrieval(
                 sum(turn.latency_ms["retrieval"] for turn in turns) / max(1, len(turns)), 3
             ),
             "noisy_cells": (
-                [cell.model_dump(mode="json") for cell in retrieval_cells(
-                    noisy, ks=(10, 20), arm=f"{arm_name}:noisy", seed=state.config.seed,
-                    samples=state.config.bootstrap,
-                )]
+                [
+                    cell.model_dump(mode="json")
+                    for cell in retrieval_cells(
+                        noisy,
+                        ks=(10, 20),
+                        arm=f"{arm_name}:noisy",
+                        seed=state.config.seed,
+                        samples=state.config.bootstrap,
+                    )
+                ]
                 if noisy
                 else []
             ),
@@ -396,12 +456,19 @@ def run_retrieval(
             ],
         )
     comparisons = []
-    names = [name for name in all_turns]
-    pairs = [("bm25", "dense"), ("bm25", "rrf@60"), ("rrf@60", "cc@0.75"), ("cc@0.75", "cc@0.75+rerank")]
+    pairs = [
+        ("bm25", "dense"),
+        ("bm25", "rrf@60"),
+        ("rrf@60", "cc@0.75"),
+        ("cc@0.75", "cc@0.75+rerank"),
+    ]
     for left, right in pairs:
         if left in all_turns and right in all_turns:
-            comparisons.append(_compare(all_turns[left], all_turns[right], state.config, left, right))
+            comparisons.append(
+                _compare(all_turns[left], all_turns[right], state.config, left, right)
+            )
     results["comparisons"] = comparisons
+    results["degraded_cases"] = degraded
     results["per_language"] = _per_language_retrieval(all_turns)
     _write_json(out_dir / "retrieval" / "results.json", results)
     _plot_retrieval(results, out_dir / "retrieval" / "recall_by_arm.png")
@@ -409,7 +476,12 @@ def run_retrieval(
 
 
 def _compare(
-    left: Sequence[TurnRecord], right: Sequence[TurnRecord], config: BenchConfig, left_name: str, right_name: str, k: int = 10
+    left: Sequence[TurnRecord],
+    right: Sequence[TurnRecord],
+    config: BenchConfig,
+    left_name: str,
+    right_name: str,
+    k: int = 10,
 ) -> dict[str, Any]:
     left_scores = paired_scores(left, k)
     right_scores = paired_scores(right, k)
@@ -418,9 +490,7 @@ def _compare(
     right_map = dict(zip(right_scores.case_ids, right_scores.any_hit, strict=True))
     vector_a = [left_map[case_id] for case_id in common]
     vector_b = [right_map[case_id] for case_id in common]
-    difference = paired_bootstrap(
-        vector_a, vector_b, samples=config.bootstrap, seed=config.seed
-    )
+    difference = paired_bootstrap(vector_a, vector_b, samples=config.bootstrap, seed=config.seed)
     b = sum(1 for a, b_value in zip(vector_a, vector_b, strict=True) if a > b_value)
     c = sum(1 for a, b_value in zip(vector_a, vector_b, strict=True) if a < b_value)
     test = mcnemar(b, c)
@@ -476,7 +546,11 @@ def _plot_retrieval(results: Mapping[str, Any], path: Path) -> Path:
     for arm in arms:
         cells = results["arms"][arm]["cells"]
         value = next(
-            (cell["value"] for cell in cells if cell["name"] == "recall_any@10" and cell["locale"] == "macro"),
+            (
+                cell["value"]
+                for cell in cells
+                if cell["name"] == "recall_any@10" and cell["locale"] == "macro"
+            ),
             0.0,
         )
         macro.append(value)
@@ -530,17 +604,17 @@ def _provider_for_arm(state: BenchState, arm: str) -> tuple[ChatProvider, str]:
     secondary.llm.api_key = api_key
     secondary.llm.timeout_s = settings.eval.secondary_timeout_s
     secondary.llm.max_tokens = settings.eval.secondary_max_tokens
-    return build_provider(secondary), model
+    from answerdesk.eval.live import SchemaFallbackProvider
+
+    return SchemaFallbackProvider(build_provider(secondary)), model
 
 
-def _judge_for_arm(
-    state: BenchState, generator_model: str
-) -> tuple[Any, Any, str]:
+def _judge_for_arm(state: BenchState, generator_model: str) -> tuple[Any, Any, str]:
     """Cross-family judge (§10.5): its own provider, its own model id, its own metadata."""
     if state.config.replay:
         from answerdesk.testing.doubles import FakeJudge
 
-        judge = FakeJudge()
+        judge: Any = FakeJudge()
         metadata = judge_metadata(
             judge_model=judge.judge_model,
             prompt_version="none (deterministic double)",
@@ -588,10 +662,11 @@ def run_answers(
     provider, generator_model = _provider_for_arm(state, arm)
     judge, judge_meta, judge_model = _judge_for_arm(state, generator_model)
     pipeline = AnswerPipeline.from_settings(provider, settings)
-    retriever = state.variants.get("cc@0.75+rerank") or state.variants.get("cc@0.75")
+    retriever = state.variants.get(state.config.answer_retriever) or state.variants.get("cc@0.75")
     turns: list[TurnRecord] = []
     rows: list[dict[str, Any]] = []
     escalated = 0
+    judge_failures = 0
     for case in selected:
         record, row = _measure_case(
             state=state,
@@ -606,6 +681,7 @@ def run_answers(
         turns.append(record)
         rows.append(row)
         escalated += 1 if record.escalated else 0
+        judge_failures += 1 if row.get("judge_failed") else 0
     cells = (
         answer_cells(
             turns, arm=arm, seed=state.config.seed, samples=state.config.bootstrap, judged=True
@@ -636,11 +712,22 @@ def run_answers(
         else []
     )
     escalations = [turn for turn in turns if turn.escalated]
+    judged = sum(1 for row in rows if row.get("claims"))
+    failure_rate = (judge_failures / judged) if judged else 0.0
+    judge_payload = judge_meta.model_dump(mode="json")
+    if failure_rate > 0.10:
+        judge_payload["reportable"] = False
+        judge_payload["note"] = (
+            f"{judge_payload.get('note', '')} — {judge_failures}/{judged} judge calls failed "
+            f"({failure_rate:.1%}); judged metrics for this arm are diagnostic"
+        )
     payload = {
         "arm": arm,
+        "judge_failure_rate": round(failure_rate, 6),
         "generator_model": generator_model,
         "judge_model": judge_model,
-        "judge": judge_meta.model_dump(mode="json"),
+        "judge": judge_payload,
+        "judge_failures": judge_failures,
         "replay": state.config.replay,
         "n": len(turns),
         "escalated": escalated,
@@ -657,6 +744,11 @@ def run_answers(
         ).to_dict(),
     }
     arm_dir = out_dir / "answer" / _slug(arm)
+    noisy_rows = [
+        row for row, case in zip(rows, selected, strict=True) if case_stratum(case) == "noisy"
+    ]
+    if noisy_rows:
+        _write_rows(arm_dir / "noisy-per-example.csv", noisy_rows)
     _write_json(arm_dir / "cells.json", payload)
     _write_rows(arm_dir / "turns.csv", rows)
     _write_rows(arm_dir / "per_language.csv", payload["per_language"])
@@ -726,8 +818,8 @@ def _measure_case(
         timings["generation"] = (time.perf_counter() - anchor) * 1000.0
         answer_text = result.text
         cost = {
-            "input_tokens": result.usage.input_tokens,
-            "output_tokens": result.usage.output_tokens,
+            "input_tokens": int(result.usage.input_tokens),
+            "output_tokens": int(result.usage.output_tokens),
             "usd": result.usage.usd,
         }
     claims_total = len(result.claims) if result is not None else 0
@@ -751,21 +843,29 @@ def _measure_case(
     )
     rubric_score: float | None = None
     rubric_pass: bool | None = None
-    if result is not None and result.claims:
+    judge_failed = False
+    if result is not None and result.claims and state.config.judge_enabled:
         anchor = time.perf_counter()
         by_id = {citation.citation_id: citation for citation in result.citations}
         scores = []
+        from answerdesk.eval.judge import JudgeError
+
         for claim in result.claims:
             quotes = [by_id[cid].quote for cid in claim.citation_ids if cid in by_id]
-            score = judge.grade(
-                question=case.question,
-                reference_answer=(
-                    case.reference_answer if case.metadata.get("reference_verifiable") else None
-                ),
-                candidate_answer=claim.text,
-                context=quotes,
-            )
-            scores.append(score.score)
+            try:
+                score = judge.grade(
+                    question=case.question,
+                    reference_answer=(
+                        case.reference_answer if case.metadata.get("reference_verifiable") else None
+                    ),
+                    candidate_answer=claim.text,
+                    context=quotes,
+                )
+                scores.append(score.score)
+            except JudgeError:
+                # A judge failure is data, not a crash: it is counted per arm and, above a
+                # threshold, downgrades the arm's judged metrics to diagnostic.
+                judge_failed = True
         timings["judge"] = (time.perf_counter() - anchor) * 1000.0
         if scores:
             rubric_score = round(sum(scores) / len(scores), 6)
@@ -815,12 +915,13 @@ def _measure_case(
         answer_ok=answer_ok,
         confidence=min(1.0, max(0.0, p_correct)),
         latency_ms=timings,
-        usd=cost["usd"],
-        input_tokens=cost["input_tokens"],
-        output_tokens=cost["output_tokens"],
+        usd=float(cost["usd"]),
+        input_tokens=int(cost["input_tokens"]),
+        output_tokens=int(cost["output_tokens"]),
     )
     row = {
         "case_id": case.case_id,
+        "question": case.question,
         "locale": case.locale,
         "category": case.category.value,
         "corpus_category": str(case.metadata.get("corpus_category", "")),
@@ -842,6 +943,7 @@ def _measure_case(
         "latency_retrieval_ms": round(timings.get("retrieval", 0.0), 3),
         "latency_generation_ms": round(timings.get("generation", 0.0), 3),
         "latency_judge_ms": round(timings.get("judge", 0.0), 3),
+        "judge_failed": judge_failed,
         "input_tokens": cost["input_tokens"],
         "output_tokens": cost["output_tokens"],
         "usd": cost["usd"],
@@ -869,7 +971,6 @@ def _reason_codes(turns: Sequence[TurnRecord]) -> list[dict[str, Any]]:
 def _confusion(turns: Sequence[TurnRecord], cases: Sequence[EvalCase]) -> dict[str, Any]:
     """TP/FP/FN/TN against the definition "must escalate = the case is not answerable"."""
     tp = fp = fn = tn = 0
-    matrix: list[dict[str, Any]] = []
     for turn, case in zip(turns, cases, strict=True):
         predicted = turn.escalated
         actual = not case.answerable
@@ -894,6 +995,21 @@ def _confusion(turns: Sequence[TurnRecord], cases: Sequence[EvalCase]) -> dict[s
         "coverage": round(tn / (fp + tn), 6) if (fp + tn) else None,
         "specificity": round(tn / (fp + tn), 6) if (fp + tn) else None,
     }
+
+
+def _version_tuple(state: BenchState, model: str) -> Any:
+    """Cache key versions (t8 ``VersionTuple``): anything that changes an answer invalidates."""
+    from answerdesk.cache import VersionTuple
+
+    return VersionTuple(
+        corpus_version=state.corpus.version,
+        index_version=getattr(state.index, "fingerprint", "") or "index-bench",
+        prompt_version="grounded-answer-1.0.0",
+        model_id=model,
+        policy_artifact_hash=(
+            getattr(state.engine, "artifact_hash", "") if state.engine is not None else "none"
+        ),
+    )
 
 
 def _per_language_answer(turns: Sequence[TurnRecord]) -> list[dict[str, Any]]:
@@ -952,6 +1068,47 @@ def _curve(turns: Sequence[TurnRecord]) -> list[dict[str, Any]]:
     return points
 
 
+def select_operating_threshold(dev_turns: Sequence[TurnRecord], target: float) -> dict[str, Any]:
+    """Choose the answering threshold on the **dev/calibration** turns only.
+
+    Picking the last curve point with risk ≤ target *on the test split* would fit the
+    threshold to the reported data (multiple comparisons over thresholds) and report an
+    optimistically biased coverage. The threshold is therefore selected on the split the
+    conformal quantile is fitted on, and the test split only ever reports the result of
+    applying that fixed threshold.
+    """
+    curve = _curve(dev_turns)
+    chosen: dict[str, Any] | None = None
+    min_risk_point = min(curve, key=lambda point: point["risk"]) if curve else None
+    for point in curve:
+        if point["risk"] <= target:
+            chosen = point
+    if chosen is None:
+        return {
+            "source": (
+                "no feasible point at the target risk on the calibration split; the "
+                "conformal engine's own threshold is the shipped rule"
+            ),
+            "threshold": 1.0,
+            "dev_coverage": 0.0,
+            "dev_risk": 0.0,
+            "dev_n": len(dev_turns),
+            "dev_min_risk": min_risk_point["risk"] if min_risk_point else None,
+            "dev_coverage_at_min_risk": min_risk_point["coverage"] if min_risk_point else None,
+            "feasible": False,
+        }
+    return {
+        "source": "dev-selected threshold (risk-constrained on the calibration split)",
+        "threshold": chosen["threshold"],
+        "dev_coverage": chosen["coverage"],
+        "dev_risk": chosen["risk"],
+        "dev_n": len(dev_turns),
+        "dev_min_risk": min_risk_point["risk"] if min_risk_point else None,
+        "dev_coverage_at_min_risk": min_risk_point["coverage"] if min_risk_point else None,
+        "feasible": True,
+    }
+
+
 def run_escalation(
     *,
     state: BenchState,
@@ -959,14 +1116,51 @@ def run_escalation(
     cases: Sequence[EvalCase],
     out_dir: Path,
     arm: str,
+    dev_operating: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """The escalation block the owner asked for: both directions, both readings of E-3."""
+    """The escalation block the owner asked for: both directions, both readings of E-3.
+
+    Two operating points are reported and never conflated:
+
+    * **headline** — the threshold selected on the dev/calibration turns, applied unchanged
+      to the held-out test turns (what the system would actually do);
+    * **oracle upper bound** — the best point on the *test* curve. It is labelled
+      diagnostic, excluded from the headline table, and exists only to bound the gap.
+    """
     target = state.config.target_risk
     curve = _curve(turns)
-    operating = None
+    oracle = None
     for point in curve:
         if point["risk"] <= target:
-            operating = point
+            oracle = point
+    operating: dict[str, Any] | None = None
+    if dev_operating is not None:
+        threshold = float(dev_operating.get("threshold", 1.0))
+        answered_at_threshold = [turn for turn in turns if turn.confidence >= threshold]
+        wrong = sum(1 for turn in answered_at_threshold if not turn.answer_ok)
+        coverage_interval = wilson_interval(len(answered_at_threshold), len(turns))
+        risk_interval = (
+            wilson_interval(wrong, len(answered_at_threshold)) if answered_at_threshold else None
+        )
+        nearest = min(curve, key=lambda point: abs(point["threshold"] - threshold))
+        operating = {
+            "source": dev_operating.get("source", "dev-selected"),
+            "threshold": round(threshold, 6),
+            "coverage": round(coverage_interval.value, 6),
+            "coverage_ci": f"[{coverage_interval.low:.3f},{coverage_interval.high:.3f}]",
+            "risk": round(risk_interval.value, 6) if risk_interval else None,
+            "risk_ci": (
+                f"[{risk_interval.low:.3f},{risk_interval.high:.3f}]" if risk_interval else "n/a"
+            ),
+            "n_answered": len(answered_at_threshold),
+            "dev_coverage": dev_operating.get("dev_coverage"),
+            "dev_risk": dev_operating.get("dev_risk"),
+            "curve_point": nearest,
+        }
+    else:
+        operating = dict(oracle) if oracle else None
+        if operating is not None:
+            operating["source"] = "test-curve point (no dev calibration available — diagnostic)"
     # per unsafe family (E-2) and per language
     families: list[dict[str, Any]] = []
     for kind in sorted({unsafe_kind(case) for case in cases}):
@@ -996,7 +1190,9 @@ def run_escalation(
         ]
         answerable = [(turn, case) for turn, case in pairs if case.answerable]
         unsafe = [(turn, case) for turn, case in pairs if not case.answerable]
-        coverage = wilson_interval(sum(1 for turn, _ in answerable if turn.answered), len(answerable))
+        coverage = wilson_interval(
+            sum(1 for turn, _ in answerable if turn.answered), len(answerable)
+        )
         recall = wilson_interval(sum(1 for turn, _ in unsafe if turn.escalated), len(unsafe))
         languages.append(
             {
@@ -1047,21 +1243,43 @@ def run_escalation(
                 "n_answered": len(answered),
             }
         )
+    actions: dict[str, int] = {}
+    for turn in turns:
+        actions[turn.action.value] = actions.get(turn.action.value, 0) + 1
     payload = {
         "arm": arm,
         "target_risk": target,
         "n": len(turns),
+        "actions": actions,
+        "definition": (
+            "not auto-answered = action is escalate, refuse or clarify; the confusion matrix "
+            "uses that definition for 'predicted escalation'"
+        ),
         "confusion": _confusion(turns, cases),
         "families": families,
         "languages": languages,
         "reason_codes": _reason_codes([turn for turn in turns if turn.escalated]),
         "curve": curve,
         "operating_point": operating,
+        "oracle_upper_bound": (
+            {
+                "coverage": oracle["coverage"],
+                "risk": oracle["risk"],
+                "threshold": oracle["threshold"],
+                "n_answered": oracle["n_answered"],
+                "label": "oracle upper bound (diagnostic, not the shipped operating point)",
+            }
+            if oracle is not None
+            else None
+        ),
         "cost_sensitivity": sensitivity,
+        "policy_variants": _policy_table(turns),
         "e3": {
             "gated_precision": round(precision_gated.value, 6) if precision_gated else None,
             "gated_ci": (
-                f"[{precision_gated.low:.3f},{precision_gated.high:.3f}]" if precision_gated else "n/a"
+                f"[{precision_gated.low:.3f},{precision_gated.high:.3f}]"
+                if precision_gated
+                else "n/a"
             ),
             "late": "the gated reading counts every escalation in the denominator",
             "literal_precision": round(precision_literal.value, 6) if precision_literal else None,
@@ -1076,6 +1294,7 @@ def run_escalation(
             ),
         },
     }
+    _write_json(out_dir / "escalation" / f"{_slug(arm)}.json", payload)
     _write_json(out_dir / "escalation" / "results.json", payload)
     _write_rows(out_dir / "escalation" / "curve.csv", curve)
     _write_rows(out_dir / "escalation" / "families.csv", families)
@@ -1083,6 +1302,54 @@ def run_escalation(
     _write_rows(out_dir / "escalation" / "cost_sensitivity.csv", sensitivity)
     _plot_curve(curve, out_dir / "escalation" / "risk_coverage.png", target)
     return payload
+
+
+def _policy_table(turns: Sequence[TurnRecord]) -> list[dict[str, Any]]:
+    """Escalation policy variants: fixed thresholds vs the cost band vs the shipped engine.
+
+    The fixed thresholds are configuration constants (not fitted on the test split), and the
+    engine row is the system's actual decision, so the three are comparable as *policies*.
+    """
+    rows: list[dict[str, Any]] = []
+    candidates: list[tuple[str, float | None]] = [
+        ("fixed threshold 0.95 (cost band default)", 0.95),
+        ("fixed threshold 0.80 (5:1 band)", 0.80),
+        ("fixed threshold 0.90 (10:1 band)", 0.90),
+        ("conformal+cost engine (dev-fitted, shipped)", None),
+    ]
+    for name, threshold in candidates:
+        if threshold is None:
+            answered = [turn for turn in turns if turn.answered]
+        else:
+            answered = [turn for turn in turns if turn.confidence >= threshold]
+        answered_ids = {turn.case_id for turn in answered}
+        wrong = sum(1 for turn in answered if not turn.answer_ok)
+        coverage = wilson_interval(len(answered), len(turns))
+        risk = wilson_interval(wrong, len(answered)) if answered else None
+        must = [turn for turn in turns if turn.must_escalate]
+        caught = sum(1 for turn in must if turn.case_id not in answered_ids)
+        recall = wilson_interval(caught, len(must))
+        escalated = [turn for turn in turns if turn.case_id not in answered_ids]
+        true_positive = sum(1 for turn in escalated if turn.must_escalate)
+        precision = wilson_interval(true_positive, len(escalated)) if escalated else None
+        rows.append(
+            {
+                "policy": name,
+                "threshold": threshold,
+                "coverage": round(coverage.value, 6),
+                "coverage_ci": f"[{coverage.low:.3f},{coverage.high:.3f}]",
+                "realised_risk": round(risk.value, 6) if risk else None,
+                "risk_ci": f"[{risk.low:.3f},{risk.high:.3f}]" if risk else "n/a",
+                "must_escalate_recall": round(recall.value, 6),
+                "recall_ci": f"[{recall.low:.3f},{recall.high:.3f}]",
+                "escalation_precision": round(precision.value, 6) if precision else None,
+                "precision_ci": (
+                    f"[{precision.low:.3f},{precision.high:.3f}]" if precision else "n/a"
+                ),
+                "n_answered": len(answered),
+            }
+        )
+    return rows
 
 
 def _plot_curve(curve: Sequence[Mapping[str, Any]], path: Path, target: float) -> Path:
@@ -1195,7 +1462,11 @@ def run_cache(
             embedding=state.embedder.embed_query(sibling.text),
         )
         latency = (time.perf_counter() - anchor) * 1000.0
-        hit = lookup.status.value == "hit" if hasattr(lookup.status, "value") else str(lookup.status) == "hit"
+        hit = (
+            lookup.status.value == "hit"
+            if hasattr(lookup.status, "value")
+            else str(lookup.status) == "hit"
+        )
         if hit:
             hits += 1
             hit_latencies.append(latency)
@@ -1204,9 +1475,7 @@ def run_cache(
                 citation.chunk_id
                 for citation in (lookup.answer.citations if lookup.answer is not None else [])
             }
-            sibling_gold = {
-                chunk.chunk_id for chunk in state.corpus.faq_chunks(previous.doc_id)
-            }
+            sibling_gold = {chunk.chunk_id for chunk in state.corpus.faq_chunks(previous.doc_id)}
             wrong = bool(sibling_gold) and not (cited & sibling_gold)
             wrong_hits += 1 if wrong else 0
             rows.append(
@@ -1269,7 +1538,9 @@ def _pct(values: Sequence[float], q: float) -> float:
 # --------------------------------------------------------------------------------------
 
 
-def run_ops(*, turns: Sequence[TurnRecord], state: BenchState, out_dir: Path, arm: str) -> dict[str, Any]:
+def run_ops(
+    *, turns: Sequence[TurnRecord], state: BenchState, out_dir: Path, arm: str
+) -> dict[str, Any]:
     stages = ("retrieval", "policy", "generation", "judge", "total")
     rows: list[dict[str, Any]] = []
     for stage in stages:
@@ -1304,7 +1575,9 @@ def run_ops(*, turns: Sequence[TurnRecord], state: BenchState, out_dir: Path, ar
         "usd_total": round(usd, 8),
         "usd_per_answer": round(usd / max(1, len(answered)), 8),
         "pricing": pricing_rows,
-        "hardware": f"{platform.system()} {platform.release()} / Python {platform.python_version()}",
+        "hardware": (
+            f"{platform.system()} {platform.release()} / Python {platform.python_version()}"
+        ),
     }
     _write_json(out_dir / "ops" / f"ops-{_slug(arm)}.json", payload)
     _write_rows(out_dir / "ops" / f"latency-{_slug(arm)}.csv", rows)
@@ -1361,6 +1634,16 @@ def run_bench(
     """Run the whole evidence suite and write ``reports/<run>/`` artifacts."""
     started = time.perf_counter()
     directory = Path(out_dir).resolve()
+    # Never let a replay run overwrite live evidence: a fresh checkout (no keys) re-running
+    # the documented command must not destroy the reported artefacts, so it lands beside them.
+    summary_path = directory / "summary.json"
+    if config.replay and summary_path.is_file():
+        try:
+            existing = json.loads(summary_path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            existing = {}
+        if not existing.get("replay", True):
+            directory = directory.with_name(f"{directory.name}-replay")
     directory.mkdir(parents=True, exist_ok=True)
     state = prepare(settings, config, evals_root=Path(evals_root))
     summary: dict[str, Any] = {
@@ -1374,10 +1657,28 @@ def run_bench(
         "test_cases": len(state.test_cases),
         "dev_cases": len(state.dev_cases),
         "calibration": state.calibration_note,
-        "hardware": f"{platform.system()} {platform.release()} / Python {platform.python_version()}",
+        "hardware": (
+            f"{platform.system()} {platform.release()} / Python {platform.python_version()}"
+        ),
         "notes": list(state.notes),
         "models": {},
     }
+    if config.calibrate_on_dev and config.generator_arms:
+        dev_selected = _subset(
+            state.dev_cases,
+            locales=config.locales,
+            limit=config.dev_limit if config.dev_limit is not None else 120,
+            seed=config.seed,
+        )
+        _, dev_turns, _ = run_answers(
+            state, arm="primary", out_dir=directory / "calibration", cases=dev_selected
+        )
+        state.engine, calibration_payload = calibrate_engine_from_dev(
+            state=state, dev_turns=dev_turns, out_dir=directory
+        )
+        dev_operating = select_operating_threshold(dev_turns, config.target_risk)
+        calibration_payload["operating_point_selection"] = dev_operating
+        summary["calibration"] = calibration_payload
     retrieval = run_retrieval(state, out_dir=directory)
     summary["retrieval"] = {
         arm: {
@@ -1391,6 +1692,12 @@ def run_bench(
         for arm, payload in retrieval["arms"].items()
     }
     summary["retrieval_comparisons"] = retrieval["comparisons"]
+    resolved_calibration = summary.get("calibration")
+    selected_operating: dict[str, Any] | None = (
+        resolved_calibration.get("operating_point_selection")
+        if isinstance(resolved_calibration, Mapping)
+        else None
+    )
     answers: dict[str, Any] = {}
     escalations: dict[str, Any] = {}
     ops: dict[str, Any] = {}
@@ -1407,13 +1714,20 @@ def run_bench(
             "n": payload["n"],
         }
         escalations[arm] = run_escalation(
-            state=state, turns=turns, cases=selected, out_dir=directory / "escalation", arm=arm
+            state=state,
+            turns=turns,
+            cases=selected,
+            out_dir=directory,
+            arm=arm,
+            dev_operating=selected_operating,
         )
         ops[arm] = run_ops(turns=turns, state=state, out_dir=directory, arm=arm)
     if config.generator_arms:
         primary_provider, _ = _provider_for_arm(state, "primary")
         primary_pipeline = AnswerPipeline.from_settings(primary_provider, settings)
-        retriever = state.variants.get("cc@0.75+rerank") or state.variants.get("cc@0.75")
+        retriever = state.variants.get(state.config.answer_retriever) or state.variants.get(
+            "cc@0.75"
+        )
         summary["cache"] = run_cache(
             state,
             out_dir=directory,
@@ -1445,9 +1759,7 @@ def run_bench(
         }
         for arm, payload in answers.items()
     }
-    summary["noisy"] = {
-        arm: payload["noisy_cells"] for arm, payload in answers.items()
-    }
+    summary["noisy"] = {arm: payload["noisy_cells"] for arm, payload in answers.items()}
     summary["duration_s"] = round(time.perf_counter() - started, 1)
     _write_json(directory / "summary.json", summary)
     (directory / "report.md").write_text(
@@ -1456,7 +1768,9 @@ def run_bench(
     return summary
 
 
-def _cell_value(cells: Sequence[Mapping[str, Any]], name: str, locale: str = "macro") -> dict[str, Any] | None:
+def _cell_value(
+    cells: Sequence[Mapping[str, Any]], name: str, locale: str = "macro"
+) -> dict[str, Any] | None:
     for cell in cells:
         if cell.get("name") == name and cell.get("locale") == locale:
             return {
@@ -1546,7 +1860,10 @@ def render_bench_report(
     lines.append(_markdown_table(("pair", "n", "Δ", "95% CI", "McNemar p", "CI excludes 0"), rows))
     lines.extend(["", "## Answer quality and escalation per arm", ""])
     for arm, payload in answers.items():
-        lines.append(f"### `{arm}` — generator `{payload['generator_model']}`, judge `{payload['judge_model']}`")
+        lines.append(
+            f"### `{arm}` — generator `{payload['generator_model']}`, "
+            f"judge `{payload['judge_model']}`"
+        )
         lines.append("")
         judge = payload["judge"]
         lines.append(
@@ -1607,8 +1924,13 @@ def render_bench_report(
                 _markdown_table(
                     ("family", "n", "escalated", "recall", "95% CI"),
                     [
-                        [row["family"], row["n"], row["escalated"], row["recall"],
-                         f"[{row['ci_low']:.3f}, {row['ci_high']:.3f}]"]
+                        [
+                            row["family"],
+                            row["n"],
+                            row["escalated"],
+                            row["recall"],
+                            f"[{row['ci_low']:.3f}, {row['ci_high']:.3f}]",
+                        ]
                         for row in escalation["families"]
                     ],
                 )
@@ -1626,8 +1948,13 @@ def render_bench_report(
                 _markdown_table(
                     ("cost ratio", "threshold", "coverage", "realised risk", "n answered"),
                     [
-                        [row["cost_ratio_wrong_to_abstain"], row["threshold"], row["coverage"],
-                         row["realised_risk"], row["n_answered"]]
+                        [
+                            row["cost_ratio_wrong_to_abstain"],
+                            row["threshold"],
+                            row["coverage"],
+                            row["realised_risk"],
+                            row["n_answered"],
+                        ]
                         for row in escalation["cost_sensitivity"]
                     ],
                 )
@@ -1646,7 +1973,10 @@ def render_bench_report(
                     ("hits / attempts", f"{cache.get('hits')} / {cache.get('attempts')}"),
                     ("hit rate", _fmt_pct(cache.get("hit_rate"))),
                     ("wrong-hit rate", _fmt_pct(cache.get("wrong_hit_rate"))),
-                    ("hit latency p50/p95", f"{cache.get('hit_latency_p50_ms')} / {cache.get('hit_latency_p95_ms')} ms"),
+                    (
+                        "hit latency p50/p95",
+                        f"{cache.get('hit_latency_p50_ms')} / {cache.get('hit_latency_p95_ms')} ms",
+                    ),
                     ("saved USD (hits)", cache.get("saved_usd")),
                 ],
             )
@@ -1681,8 +2011,12 @@ def render_bench_report(
                 _markdown_table(
                     ("metric", "value", "95% CI", "n"),
                     [
-                        [cell["name"], cell["value"],
-                         f"[{cell['ci_low']:.3f}, {cell['ci_high']:.3f}]", cell["n"]]
+                        [
+                            cell["name"],
+                            cell["value"],
+                            f"[{cell['ci_low']:.3f}, {cell['ci_high']:.3f}]",
+                            cell["n"],
+                        ]
                         for cell in cells
                     ],
                 )
@@ -1699,10 +2033,19 @@ def render_bench_report(
     return "\n".join(lines)
 
 
-def _fmt(cell: Mapping[str, Any] | None, digits: int = 3) -> str:
-    if not cell:
+def _fmt(cell: Any, digits: int = 3) -> str:
+    """Format a cell dict (value + interval) or a bare number."""
+    if cell is None:
         return "n/a"
-    return f"{cell['value']:.{digits}f} [{cell['ci_low']:.{digits}f}, {cell['ci_high']:.{digits}f}]"
+    if isinstance(cell, (int, float)):
+        return f"{float(cell):.{digits}f}"
+    if not isinstance(cell, Mapping) or "value" not in cell:
+        return "n/a"
+    low = cell.get("ci_low")
+    high = cell.get("ci_high")
+    if low is None or high is None:
+        return f"{float(cell['value']):.{digits}f}"
+    return f"{float(cell['value']):.{digits}f} [{float(low):.{digits}f}, {float(high):.{digits}f}]"
 
 
 def _fmt_pct(value: Any) -> str:
@@ -1712,3 +2055,332 @@ def _fmt_pct(value: Any) -> str:
 
 
 __all__ += ["render_bench_report", "run_bench"]
+# --------------------------------------------------------------------------------------
+# Dev-fitted conformal calibration (the policy instance used by the reported run)
+# --------------------------------------------------------------------------------------
+
+
+def calibrate_engine_from_dev(
+    *,
+    state: BenchState,
+    dev_turns: Sequence[TurnRecord],
+    out_dir: Path,
+) -> tuple[Any, dict[str, Any]]:
+    """Fit split-conformal q̂ per intent bucket on the **dev** split (INV-09).
+
+    The shipped artifact (t8) was sealed on t8's own study; §8.6 requires a refresh per
+    corpus, so the evidence run fits its own thresholds on dev and evaluates on test. The
+    engine is t8's :class:`DecisionEngine` — only the numbers differ.
+    """
+    import hashlib
+
+    from answerdesk.policy import (
+        ConformalCertificate,
+        ConformalSet,
+        CostProvenance,
+        CostSet,
+        DecisionEngine,
+        GuardConfig,
+        build_threshold_table,
+        conformal_quantile,
+    )
+
+    settings = state.settings
+    alpha_by_bucket = {
+        IntentBucket.INFORMATIONAL: settings.policy.alpha[IntentBucket.INFORMATIONAL],
+        IntentBucket.TRANSACTIONAL: settings.policy.alpha[IntentBucket.TRANSACTIONAL],
+        IntentBucket.ACCOUNT_LEGAL: settings.policy.alpha[IntentBucket.ACCOUNT_LEGAL],
+    }
+    certificates: list[Any] = []
+    rows: list[dict[str, Any]] = []
+    for bucket in (
+        IntentBucket.INFORMATIONAL,
+        IntentBucket.TRANSACTIONAL,
+        IntentBucket.ACCOUNT_LEGAL,
+    ):
+        subset = [turn for turn in dev_turns if turn.intent_bucket is bucket]
+        pooled = False
+        if not subset:
+            # A bucket with no dev cases falls back to the pooled dev distribution and says
+            # so: refusing to decide would be worse than a documented conservative fallback.
+            subset = list(dev_turns)
+            pooled = True
+        if not subset:
+            continue
+        risks = [1.0 - turn.confidence for turn in subset]
+        alpha = alpha_by_bucket[bucket]
+        quantile = conformal_quantile(risks, alpha)
+        certificates.append(
+            ConformalCertificate(
+                bucket=bucket,
+                alpha=alpha,
+                n=len(subset),
+                rank=quantile.rank,
+                q_hat=quantile.q_hat,
+                feasible=quantile.feasible,
+                coverage_lower_bound=min(1.0, 1.0 - alpha),
+                calibration_hash="dev-" + state.corpus.version[:12],
+                scorer_name="OverlapScorer",
+                scorer_version="policy-overlap-1",
+                notes=(
+                    "fitted on the dev split by the t11 benchmark"
+                    + (" (pooled fallback: no dev cases in this bucket)" if pooled else "")
+                ),
+            )
+        )
+        rows.append(
+            {
+                "bucket": bucket.value,
+                "n": len(subset),
+                "alpha": alpha,
+                "q_hat": round(quantile.q_hat, 6),
+                "rank": quantile.rank,
+                "feasible": quantile.feasible,
+                "pooled_fallback": pooled,
+                "coverage_lower_bound": round(min(1.0, 1.0 - alpha), 6),
+            }
+        )
+    conformal = ConformalSet(certificates=certificates)
+    costs = settings.policy.costs
+    cost_set = CostSet(
+        c_wrong=costs.c_wrong,
+        c_abstain=costs.c_abstain,
+        c_delay=costs.c_delay,
+        provenance=CostProvenance(
+            source="configs/default.yaml policy.costs",
+            owner="answerdesk",
+            date="2026-10-21",
+            note="documented assumptions; no live handoff-cost measurement exists (Q4)",
+        ),
+    )
+    table = build_threshold_table(
+        conformal_set=conformal,
+        cost_set=cost_set,
+        alpha_by_bucket=alpha_by_bucket,
+        calibration_hash="dev-" + state.corpus.version[:12],
+    )
+    engine = DecisionEngine(
+        thresholds=table,
+        conformal=conformal,
+        cost_set=cost_set,
+        guards=GuardConfig(),
+        artifact_hash=hashlib.sha256(
+            f"{state.corpus.version}:"
+            f"{'|'.join(row['bucket'] + str(row['q_hat']) for row in rows)}".encode()
+        ).hexdigest()[:16],
+        corpus_version=state.corpus.version,
+    )
+    payload = {
+        "corpus_version": state.corpus.version,
+        "split": "dev",
+        "n": len(dev_turns),
+        "buckets": rows,
+        "alpha_by_bucket": {bucket.value: alpha for bucket, alpha in alpha_by_bucket.items()},
+        "costs": {
+            "c_wrong": cost_set.c_wrong,
+            "c_abstain": cost_set.c_abstain,
+            "c_delay": cost_set.c_delay,
+        },
+        "note": (
+            "split-conformal thresholds fitted on the dev split; the test split is never "
+            "used for fitting (INV-09)"
+        ),
+    }
+    _write_json(out_dir / "calibration" / "dev-fit.json", payload)
+    return engine, payload
+
+
+__all__ += ["calibrate_engine_from_dev"]
+# --------------------------------------------------------------------------------------
+# Chunking ablation: structure-first vs naive fixed-window
+# --------------------------------------------------------------------------------------
+
+
+def _naive_chunks(
+    corpus: Corpus, *, window: int = 900, overlap: int = 150
+) -> tuple[list[Any], dict[str, list[tuple[str, int, int]]]]:
+    """Fixed-window chunks over each document's *text*, ignoring every structural cue.
+
+    The document text is rebuilt by concatenating its structure chunks in reading order (the
+    corpus stores no separate document text), and the map from structure chunk id to
+    ``[start, end)`` in that concatenation is returned so gold evidence can be mapped onto the
+    naive chunking by overlap. Windows of 900 characters with 150 overlap approximate a
+    "split every N characters" baseline.
+    """
+    from answerdesk.contracts import Chunk
+
+    chunks: list[Chunk] = []
+    offsets: dict[str, list[tuple[str, int, int]]] = {}
+    step = max(1, window - overlap)
+    for doc_id in corpus.document_ids:
+        originals = corpus.doc_chunks(doc_id)
+        if not originals:
+            continue
+        parts: list[str] = []
+        cursor = 0
+        spans: list[tuple[str, int, int]] = []
+        for chunk in originals:
+            if parts:
+                parts.append("\n\n")
+                cursor += 2
+            parts.append(chunk.text)
+            spans.append((chunk.chunk_id, cursor, cursor + len(chunk.text)))
+            cursor += len(chunk.text)
+        text = "".join(parts)
+        offsets[doc_id] = spans
+        position = 0
+        ordinal = 0
+        while position < len(text):
+            end = min(len(text), position + window)
+            piece = text[position:end]
+            if piece.strip():
+                chunks.append(
+                    Chunk(
+                        chunk_id=f"{doc_id}::n{ordinal:04d}",
+                        doc_id=doc_id,
+                        text=piece,
+                        heading_path=[],
+                        breadcrumb="",
+                        start_char=position,
+                        end_char=end,
+                        token_count=max(1, len(piece.split())),
+                        language=originals[0].language,
+                        metadata={"chunker": "naive-fixed-window", "window": window},
+                    )
+                )
+                ordinal += 1
+            position += step
+    return chunks, offsets
+
+
+def run_chunking_ablation(
+    state: BenchState,
+    *,
+    out_dir: Path,
+    cases: Sequence[EvalCase],
+    limit: int = 240,
+) -> dict[str, Any]:
+    """Structure-first chunking vs a naive fixed window, same embedder and same gold spans."""
+    from answerdesk.eval.arms import BM25Arm, DenseHashArm
+    from answerdesk.eval.corpus import Corpus, CorpusQuery
+
+    selected = _subset(cases, locales=state.config.locales, limit=limit, seed=state.config.seed)
+    naive, naive_offsets = _naive_chunks(state.corpus)
+    naive_corpus = Corpus(
+        root=state.corpus.root,
+        chunks=naive,
+        queries=[
+            CorpusQuery(
+                query_id=query.query_id,
+                locale=query.locale,
+                doc_id=query.doc_id,
+                intent=query.intent,
+                category=query.category,
+                text=query.text,
+                base_text=query.base_text,
+                operator_reply=query.operator_reply,
+            )
+            for query in state.corpus.queries
+        ],
+        manifest=state.corpus.manifest,
+        chunks_hash=f"naive-{len(naive)}",
+    )
+    embedder = state.embedder
+    arms: dict[str, Any] = {
+        "naive-bm25": BM25Arm(naive_corpus),
+    }
+    with contextlib.suppress(Exception):
+        arms["naive-dense"] = DenseHashArm(naive_corpus, embedder=embedder)
+    structure: dict[str, Any] = {
+        "structure-bm25": BM25Arm(state.corpus),
+    }
+    with contextlib.suppress(Exception):
+        structure["structure-dense"] = DenseHashArm(state.corpus, embedder=embedder)
+    rows: list[dict[str, Any]] = []
+    for name, arm in {**structure, **arms}.items():
+        corpus = state.corpus if name.startswith("structure") else naive_corpus
+        hits10 = hits20 = 0
+        total = 0
+        for case in selected:
+            if not case.gold_chunk_ids:
+                continue
+            gold = (
+                _gold_ids_on(corpus, state.corpus, case.gold_chunk_ids)
+                if name.startswith("structure")
+                else _gold_ids_on_naive(naive, naive_offsets, case.gold_chunk_ids)
+            )
+            if not gold:
+                continue
+            ranked = [passage.chunk.chunk_id for passage in arm.search(case.question, 20)]
+            total += 1
+            hits10 += 1 if set(ranked[:10]) & gold else 0
+            hits20 += 1 if set(ranked[:20]) & gold else 0
+        interval10 = wilson_interval(hits10, total) if total else None
+        interval20 = wilson_interval(hits20, total) if total else None
+        rows.append(
+            {
+                "arm": name,
+                "n": total,
+                "recall_any@10": round(interval10.value, 6) if interval10 else None,
+                "recall_any@10_ci": (
+                    f"[{interval10.low:.3f},{interval10.high:.3f}]" if interval10 else "n/a"
+                ),
+                "recall_any@20": round(interval20.value, 6) if interval20 else None,
+                "recall_any@20_ci": (
+                    f"[{interval20.low:.3f},{interval20.high:.3f}]" if interval20 else "n/a"
+                ),
+                "chunks": len(corpus.chunks),
+            }
+        )
+    payload = {
+        "cases": len(selected),
+        "naive_window": 900,
+        "naive_overlap": 150,
+        "rows": rows,
+        "note": (
+            "gold spans are carried over by character overlap, so both chunkings are scored "
+            "against the same evidence; the naive arm ignores headings, tables and FAQ pairs"
+        ),
+    }
+    _write_json(out_dir / "chunking" / "results.json", payload)
+    _write_rows(out_dir / "chunking" / "results.csv", rows)
+    return payload
+
+
+def _gold_ids_on_naive(
+    naive: Sequence[Any],
+    offsets: Mapping[str, list[tuple[str, int, int]]],
+    gold_ids: Sequence[str],
+) -> set[str]:
+    """Map structure gold ids onto naive chunks through the concatenation offsets."""
+    spans: list[tuple[str, int, int]] = []
+    for chunk_id in gold_ids:
+        doc_id = chunk_id.split("::", 1)[0]
+        for original_id, start, end in offsets.get(doc_id, []):
+            if original_id == chunk_id:
+                spans.append((doc_id, start, end))
+    result: set[str] = set()
+    for chunk in naive:
+        for doc_id, start, end in spans:
+            if chunk.doc_id == doc_id and chunk.end_char > start and chunk.start_char < end:
+                result.add(chunk.chunk_id)
+    return result
+
+
+def _gold_ids_on(target: Corpus, source: Corpus, gold_ids: Sequence[str]) -> set[str]:
+    """Map gold chunk ids from the structure corpus onto the target chunking by span overlap."""
+    spans: list[tuple[str, int, int]] = []
+    for chunk_id in gold_ids:
+        chunk = source.by_id.get(chunk_id)
+        if chunk is None:
+            continue
+        spans.append((chunk.doc_id, chunk.start_char, chunk.end_char))
+    result: set[str] = set()
+    for doc_id, start, end in spans:
+        for chunk in target.doc_chunks(doc_id):
+            if chunk.end_char > start and chunk.start_char < end:
+                result.add(chunk.chunk_id)
+    return result
+
+
+__all__ += ["run_chunking_ablation"]

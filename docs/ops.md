@@ -231,6 +231,39 @@ names are in `tests/integration/service/test_failure_modes.py` unless stated oth
 | 6 | **calibration missing** | runtime starts degraded; the service refuses to answer as if calibrated | `503 calibration_missing` | `test_calibration_missing_is_a_503`, `test_calibration_missing_is_a_503_even_with_an_index` | run `answerdesk calibrate --synthetic` (machinery) or calibrate on real data and point `ANSWERDESK_SERVICE_CALIBRATION_ARTIFACT` at the sealed artifact |
 | 7 | **corpus version mismatch** | the engine is stale (`STALE_CALIBRATION`), health is `degraded`, every turn escalates | `200` (escalation) + `degraded` health | `test_corpus_version_mismatch_escalates_and_degrades_health` | re-calibrate on the current corpus, or restore the corpus the artifact was fitted on; `answerdesk calibrate` refuses dev/test leakage (INV-09) |
 
+### 4.1 Error envelope: what the caller may see (F-5, closed)
+
+The envelope is a contract with two audiences, and t35 made the split explicit:
+
+| Field | Caller (HTTP/SSE) | Operator (trace + log) |
+| --- | --- | --- |
+| `code` | taxonomy code, stable | same |
+| `retryable` / `retry_after_s` | from the taxonomy row | same |
+| `message` | ours, or a **generic** per-code message for provider-family failures | — |
+| `detail` | validation: field path + pydantic type slug (`body.locale: string_type`); provider: an HTTP status hint (`HTTP 429`) at most | full upstream text, redacted |
+| `trace_id` | always | `trace_id` on the JSONL line |
+| diagnostic | **never** | `ServiceError.diagnostic` → `service error diagnostic` log record and the trace `error` field |
+
+Two guarantees are enforced in code, not by convention:
+
+1. `ServiceError.__init__`/`envelope` run every caller-facing string through
+   `telemetry.redaction.redact_str` and cap it at 240 characters, so even a message assembled
+   elsewhere cannot carry an e-mail, card, phone or credential-shaped value;
+2. provider-family errors (`provider_error`, `provider_timeout`, `provider_unreachable`,
+   `provider_bad_response`, `provider_circuit_open`) never copy the upstream text into the
+   envelope: the message is a fixed sentence and the only upstream fact exposed is the HTTP
+   status. Validation errors expose `loc` + `type` only — never the offending value or the
+   pydantic message.
+
+**Logs.** The service does not log `exc_info` for an arbitrary exception: the JSON formatter
+masks secret-named keys but not free text, so a traceback could copy an upstream message (and
+any PII it quotes) into the log stream. Unhandled failures log the redacted diagnostic and the
+exception type instead (limitation L-10 in `docs/robustness.md`).
+
+The trace still records `"{ExcType}: {message} ({detail})"` (redacted by the trace writer), so
+debugging an upstream failure is unchanged; `tests/property/test_error_redaction.py` covers the
+4xx, 5xx, rate-limit, timeout and connection paths plus two validation payloads.
+
 Adjacent failures that are also tested:
 
 | Failure | Behaviour | Test |

@@ -51,6 +51,7 @@ from answerdesk.service.errors import (
     PayloadTooLarge,
     RateLimited,
     ServiceError,
+    ValidationFailed,
     to_service_error,
 )
 from answerdesk.service.ratelimit import RateLimiter
@@ -422,10 +423,23 @@ def _install_health_routes(app: FastAPI) -> None:
 
 
 def _install_error_handlers(app: FastAPI) -> None:
+    def _log_diagnostic(error: ServiceError, trace_id: str) -> None:
+        """Keep the upstream wording for the operator, redacted, outside the response (F-5)."""
+        if error.diagnostic:
+            _LOGGER.warning(
+                "service error diagnostic",
+                extra={
+                    "trace_id": trace_id,
+                    "code": error.code,
+                    "diagnostic": error.diagnostic,
+                },
+            )
+
     @app.exception_handler(ServiceError)
     async def handle_service_error(request: Request, exc: ServiceError) -> JSONResponse:
         trace_id = getattr(request.state, "trace_id", None) or new_trace_id()
         _observe(app, exc.code)
+        _log_diagnostic(exc, trace_id)
         return JSONResponse(
             {"error": exc.envelope(trace_id)},
             status_code=exc.http_status,
@@ -435,22 +449,19 @@ def _install_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(RequestValidationError)
     async def handle_validation(request: Request, exc: RequestValidationError) -> JSONResponse:
         trace_id = getattr(request.state, "trace_id", None) or new_trace_id()
+        # Field paths and pydantic error *types* only: the message and the offending input
+        # are deliberately excluded, because both can quote the value the customer sent
+        # (finding F-5, docs/robustness.md).
         details = "; ".join(
-            f"{'.'.join(str(part) for part in error.get('loc', []))}: {error.get('msg', '')}"
+            f"{'.'.join(str(part) for part in error.get('loc', [])) or 'body'}: "
+            f"{error.get('type', 'invalid')}"
             for error in exc.errors()[:5]
         )
-        _observe(app, "validation_error")
+        error = ValidationFailed("request validation failed", detail=details)
+        _observe(app, error.code)
         return JSONResponse(
-            {
-                "error": {
-                    "code": "validation_error",
-                    "message": "request validation failed",
-                    "trace_id": trace_id,
-                    "retryable": False,
-                    "detail": details,
-                }
-            },
-            status_code=422,
+            {"error": error.envelope(trace_id)},
+            status_code=error.http_status,
             headers={"X-Trace-Id": trace_id},
         )
 
@@ -460,6 +471,7 @@ def _install_error_handlers(app: FastAPI) -> None:
         trace_id = getattr(request.state, "trace_id", None) or new_trace_id()
         error = to_service_error(exc)
         _observe(app, error.code)
+        _log_diagnostic(error, trace_id)
         return JSONResponse(
             {"error": error.envelope(trace_id)},
             status_code=error.http_status,
@@ -472,6 +484,8 @@ def _install_error_handlers(app: FastAPI) -> None:
         code = {404: "not_found", 405: "method_not_allowed", 401: "unauthorized"}.get(
             exc.status_code, "bad_request"
         )
+        # The framework detail is our own routing text ("Not Found"); the envelope still
+        # redacts and bounds it.
         error = ServiceError(code, str(exc.detail or "request failed"))
         _observe(app, code)
         return JSONResponse(
@@ -483,9 +497,13 @@ def _install_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(Exception)
     async def handle_unexpected(request: Request, exc: Exception) -> JSONResponse:
         trace_id = getattr(request.state, "trace_id", None) or new_trace_id()
-        _LOGGER.exception("unhandled service error", extra={"trace_id": trace_id})
         error = to_service_error(exc)
         _observe(app, error.code)
+        # Deliberately no ``_LOGGER.exception``: the JSON formatter masks secret-named keys
+        # but not free text, so a traceback would copy an upstream message (and any PII it
+        # quotes) into the log stream. The redacted diagnostic carries the same information
+        # to an operator without the payload (docs/robustness.md L-10).
+        _log_diagnostic(error, trace_id)
         return JSONResponse(
             {"error": error.envelope(trace_id)},
             status_code=error.http_status,

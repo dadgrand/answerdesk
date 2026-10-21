@@ -25,7 +25,7 @@ from __future__ import annotations
 import hashlib
 import json
 import time
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -36,14 +36,13 @@ from answerdesk.contracts import (
     Action,
     Answer,
     CacheInfo,
+    CacheStatus,
     ChatProvider,
-    Chunk,
-    Claim,
     Citation,
+    Claim,
     Confidence,
     Decision,
     IntentBucket,
-    ProviderConfig,
     ReasonCode,
     Usage,
 )
@@ -51,8 +50,7 @@ from answerdesk.eval.corpus import Corpus
 from answerdesk.index.embedders import api_embedder_from_settings
 from answerdesk.index.store import ChunkStore, IndexBundle
 from answerdesk.rerank import api_reranker_from_settings
-from answerdesk.retrieval.pipeline import build_pipeline
-from answerdesk.retrieval.fusion import FusionParams
+from answerdesk.retrieval.fusion import FusionParams, Normalization
 
 #: Embedding cache file name (inside the git-ignored index directory).
 CACHE_FILE = "bench-embeddings.npz"
@@ -69,6 +67,7 @@ class EmbeddingCache:
         self.path = Path(path)
         self._vectors: dict[str, np.ndarray] = {}
         self.dirty = False
+        self.flushes = 0
         if self.path.is_file():
             try:
                 with np.load(self.path, allow_pickle=False) as payload:
@@ -87,11 +86,13 @@ class EmbeddingCache:
         self._vectors[_text_key(text)] = np.asarray(list(vector), dtype=np.float32)
         self.dirty = True
 
-    def flush(self) -> None:
-        if not self.dirty:
+    def flush(self, *, force: bool = False) -> None:
+        """Persist the cache; compression is expensive, so callers batch the flushes."""
+        self.flushes += 1
+        if not self.dirty or (not force and self.flushes % 8 != 0):
             return
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        np.savez_compressed(self.path, **self._vectors)
+        np.savez_compressed(self.path, **self._vectors)  # type: ignore[arg-type]
         self.dirty = False
 
 
@@ -105,7 +106,7 @@ class CachedApiEmbedder:
         *,
         batch_size: int = 32,
         min_interval_s: float = 0.0,
-        max_retries: int = 5,
+        max_retries: int = 10,
     ) -> None:
         self.inner = inner
         self.cache = cache
@@ -115,14 +116,8 @@ class CachedApiEmbedder:
         self._last_call = 0.0
         self.calls = 0
         self.cache_hits = 0
-
-    @property
-    def name(self) -> str:
-        return str(self.inner.name)
-
-    @property
-    def dimension(self) -> int:
-        return int(self.inner.dimension)
+        self.name: str = str(inner.name)
+        self.dimension: int = int(inner.dimension)
 
     def _pace(self) -> None:
         if self.min_interval_s <= 0:
@@ -137,13 +132,20 @@ class CachedApiEmbedder:
             try:
                 self._pace()
                 self.calls += 1
-                return self.inner.embed_documents(list(texts))
-            except Exception as exc:  # noqa: BLE001 - provider errors are retried, then surfaced
+                return [list(vector) for vector in self.inner.embed_documents(list(texts))]
+            except Exception as exc:
                 status = getattr(exc, "status_code", None)
-                transient = status in (429, 500, 502, 503, 504) or "429" in str(exc)
+                text = str(exc)
+                transient = status in (429, 500, 502, 503, 504) or "429" in text
                 if attempt == self.max_retries - 1 or not transient:
                     raise
-                time.sleep(min(30.0, 1.5 * (2**attempt)))
+                # The hosted free tariff caps *concurrent* embedding calls (four), so a
+                # 429 means "queue is full", not "slow down forever": wait it out and
+                # retry the same batch. Concurrency stays at one on our side.
+                delay = min(30.0, 3.0 * (2**attempt))
+                if "429" in text:
+                    delay = max(delay, 6.0)
+                time.sleep(delay)
         raise RuntimeError("unreachable")  # pragma: no cover
 
     def embed_documents(self, texts: Sequence[str]) -> list[list[float]]:
@@ -167,7 +169,7 @@ class CachedApiEmbedder:
             return cached
         vector = list(self._embed([text])[0])
         self.cache.put(text, vector)
-        self.cache.flush()
+        self.cache.flush(force=True)
         return vector
 
 
@@ -199,10 +201,23 @@ def build_index(
     directory = Path(index_dir)
     skip = directory / ".ok"
     if not force and skip.is_file():
+        # Reuse only when the stored index belongs to *this* corpus and embedder: a corpus
+        # rebuild changes chunk ids, and ranking against a stale chunk set would silently
+        # invalidate every retrieval number.
         try:
-            return IndexBundle.load(directory, embedder)
-        except Exception:  # noqa: BLE001 - a stale/incompatible directory is rebuilt
-            pass
+            meta = json.loads(skip.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            meta = {}
+        fresh = (
+            meta.get("corpus_version") == corpus.version
+            and meta.get("embedder") == embedder.name
+            and meta.get("chunks") == len(corpus.chunks)
+        )
+        if fresh:
+            try:
+                return IndexBundle.load(directory, embedder)
+            except Exception:
+                pass
     store = ChunkStore.from_chunks(list(corpus.chunks), corpus_version=corpus.version)
     started = time.perf_counter()
     bundle = IndexBundle.build(store, embedder)
@@ -224,10 +239,52 @@ def build_index(
     return bundle
 
 
+class RetryingReranker:
+    """Paced, retrying wrapper around the hosted reranker (implements ``Reranker``).
+
+    The free tariff caps *concurrent* rerank calls, so a 429 means "queue full": back off
+    and retry instead of failing the case. After the last attempt the error is surfaced —
+    the benchmark records the failure rather than silently downgrading the arm.
+    """
+
+    def __init__(self, inner: Any, *, min_interval_s: float = 0.0, max_retries: int = 8) -> None:
+        self.inner = inner
+        self.min_interval_s = max(0.0, min_interval_s)
+        self.max_retries = max(1, max_retries)
+        self._last = 0.0
+        self.calls = 0
+        self.retries = 0
+
+    @property
+    def name(self) -> str:
+        return f"retrying-{getattr(self.inner, 'name', 'reranker')}"
+
+    def rerank(self, query: str, passages: Sequence[Any], top_n: int) -> list[Any]:
+        for attempt in range(self.max_retries):
+            wait = self.min_interval_s - (time.monotonic() - self._last)
+            if wait > 0:
+                time.sleep(wait)
+            self._last = time.monotonic()
+            try:
+                self.calls += 1
+                return list(self.inner.rerank(query, passages, top_n))
+            except Exception as exc:  # queue-full errors are retried, then surfaced
+                text = str(exc)
+                transient = "429" in text or "503" in text or "502" in text
+                if attempt == self.max_retries - 1 or not transient:
+                    raise
+                self.retries += 1
+                time.sleep(min(30.0, max(6.0, 3.0 * (2**attempt))))
+        raise RuntimeError("unreachable")  # pragma: no cover
+
+
 def build_reranker(settings: Settings) -> Any:
     if settings.retrieval.rerank.backend != "api":
         raise ValueError("the evidence run needs the hosted reranker (rerank.backend=api)")
-    return api_reranker_from_settings(settings)
+    return RetryingReranker(
+        api_reranker_from_settings(settings),
+        min_interval_s=settings.eval.min_call_interval_s,
+    )
 
 
 def retrieval_variants(
@@ -245,10 +302,15 @@ def retrieval_variants(
     """
     from answerdesk.retrieval.pipeline import PipelineConfig, RetrievalPipeline
 
+    # Ablation ranking is measured at k=20 (the RT-1 gate), while generation only ever sees
+    # the packed context (8-12). Packing 20 here keeps recall_any@20 measurable instead of
+    # silently truncating the ranking at the context cap.
     base = PipelineConfig(
         top_k=settings.retrieval.top_k,
-        gate_k=settings.retrieval.gate_k,
-        final_k=settings.generate.context_k_max,
+        gate_k=max(settings.retrieval.gate_k, 20),
+        final_k=20,
+        rerank_top_out=20,
+        rerank_top_in=max(settings.retrieval.rerank.top_in, 50),
         dedupe_cosine=settings.retrieval.dedupe_cosine,
     )
     arms: dict[str, Any] = {}
@@ -269,13 +331,13 @@ def retrieval_variants(
     for alpha in alphas:
         arms[f"cc@{alpha}"] = RetrievalPipeline.from_index(
             index,
-            params=FusionParams(fuser="cc", alpha=alpha, normalization="minmax"),
+            params=FusionParams(fuser="cc", alpha=alpha, normalization=Normalization.MINMAX),
             config=base,
         )
     if reranker is not None:
         arms["cc@0.75+rerank"] = RetrievalPipeline.from_index(
             index,
-            params=FusionParams(fuser="cc", alpha=0.75, normalization="minmax"),
+            params=FusionParams(fuser="cc", alpha=0.75, normalization=Normalization.MINMAX),
             reranker=reranker,
             config=base,
         )
@@ -353,7 +415,7 @@ def answer_from_result(
         citations=citations,
         decision=decision,
         confidence=Confidence(p_correct=p_correct, calibrator_version="bench-cache"),
-        cache=CacheInfo(status="miss"),
+        cache=CacheInfo(status=CacheStatus.MISS),
         usage=Usage(
             input_tokens=result.usage.input_tokens,
             output_tokens=result.usage.output_tokens,
@@ -399,3 +461,41 @@ __all__ = [
     "judge_provider",
     "retrieval_variants",
 ]
+
+
+class SchemaFallbackProvider:
+    """A ``ChatProvider`` that survives endpoints which reject ``response_format``.
+
+    deepseek-flash answers ``json_object`` but rejects ``json_schema`` with HTTP 400
+    ("This response_format type is unavailable now"). The generation pipeline always sends a
+    schema, so the secondary arm needs one retry **without** the structured-output hint: the
+    prompt still asks for the same JSON contract and the pipeline parses it from the text
+    (``_parse_answer`` is tolerant by design). Nothing else about the request changes.
+    """
+
+    def __init__(self, inner: Any) -> None:
+        self.inner = inner
+        self.config = inner.config
+        self.name: str = f"schema-fallback-{getattr(inner, 'name', 'provider')}"
+        self.fallbacks = 0
+
+    def complete(
+        self, messages: Sequence[Any], *, response_schema: Mapping[str, Any] | None = None
+    ) -> Any:
+        try:
+            return self.inner.complete(messages, response_schema=response_schema)
+        except Exception as exc:
+            text = str(exc)
+            schema_rejected = response_schema is not None and (
+                "400" in text or "response_format" in text
+            )
+            if not schema_rejected:
+                raise
+            self.fallbacks += 1
+            return self.inner.complete(messages, response_schema=None)
+
+    def stream(self, messages: Sequence[Any]) -> Any:
+        return self.inner.stream(messages)
+
+
+__all__ += ["SchemaFallbackProvider"]
