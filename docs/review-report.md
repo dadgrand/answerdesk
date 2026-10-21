@@ -5,19 +5,23 @@ documentation accuracy).
 **Auditor:** reviewer (independent of the implementation tasks).
 **Audited tree:** `answerdesk/` at HEAD `fdb137a` (round 1), re-verified at `2dfb713` / `2c0c9dc` /
 `795c73f` (rounds 2–3), `2e639ba` (round 4), `65ae988` (round 5), `c685504` (round 6), `f78bc6e`
-(round 7) and at **`d07454a9b40490db019d48cf0a87a60272c14255`** (round 8 — the release candidate).
-The final bytes are `d07454a`.
-**Status:** **formal verdict: FAIL (needs_revision) — one high finding (R-43).** On a clean
-`git archive` of `d07454a`: ruff/format 0 findings (375 files), mypy 193 files clean, traceability
-121/121 + 154 paths, numbers 1,861, licences 57, full suite **1,642 passed / 2 skipped / 0 failed**,
-and the official CI checks pass. **But the documented risk-v3 reproducibility gate is red**:
-`python scripts/risk-v3.py --check` exits 1 with "artefact drift in ['populations']" because the
-fixed 200-level certificate grid in `certificate.py` changed the recomputed certificate while
-`reports/risk-v3/*` and `docs/results.md` were not regenerated (the published threshold is still
-0.978643; the shipped code recomputes 1.0). Regenerating the v3 artifacts in a scratch copy fixes
-`--check` but makes `docs/results.md` stale — so the release must regenerate both and re-run the
-gate. R-34 (risk-v2) remains fixed and proven on this archive. Remaining open findings: R-43 (high),
-R-08/R-39/R-40 (medium) and lows R-19, R-20, R-22, R-32, R-35, R-41. See §8.
+(round 7), `d07454a` (round 8) and at **`f030c9a926186f14212803ecfc6febe557d2261a`** (round 9 — the
+release candidate). The final bytes are `f030c9a`.
+**Status:** **verdict from the round-9 audit: PASS (no blocker/high open).** On a clean `git archive`
+of `f030c9a`: ruff/format 0 findings (375 files), mypy 193 files clean, traceability 121/121 + 154
+paths, numbers 1,861, licences 57, full suite **1,642 passed / 2 skipped / 0 failed**, coverage
+**76.46%** aggregate (gate 70%; per-package eval 68 — R-39, medium by agreement), smoke 59/59, unit
+1,116, load PASS, `risk-v2 --check` **and** `risk-v3 --check` **exit 0**, `build-results --check`
+clean, all other evidence checks green, all quickstart commands exit 0, web 66/66 + build, and live
+PII/injection probes clean. R-43 is fixed (v3 artefacts regenerated: threshold 1.0, certificate
+absent; AUROC 0.828645 / coverage@risk 0.012579 unchanged) and R-40 is fixed (risk-v3 `--check` wired
+into the fast CI job, `ci-offline.ps1` and the workflow smoke test). The only material open item is
+R-39 (medium): the enforced coverage gate is the aggregate over the four packages; a per-package
+reading puts `eval` at 68% against the 70% wording of NFR-QUAL-02, to be fixed with tests or an
+explicit aggregate amendment. Lows R-19/R-20/R-22/R-32/R-35/R-41 remain documented; R-08 is the
+networked `pip-audit` release step. **Formal task verdict not yet recorded**: t54 is terminal and no
+t55/t56 exists in the task list (the team loop is escalated), so this report records the audit result
+pending a task assignment.
 
 ---
 
@@ -166,6 +170,28 @@ R-43 details: `reports/risk-v3/summary.json` still carries the old data-dependen
 `risk-v3 --check` exit 0 and leaves AUROC 0.828645 / coverage@risk 0.012579 unchanged, but then
 `build-results.py --check` reports `docs/results.md` is out of date — i.e. both the v3 artifacts and
 the results doc must be regenerated (and the certificate line re-read) before the gate is green.
+
+Round 9 (final audit, `f030c9a`) — same clean-archive method, isolated runs (no concurrent jobs in
+the archive):
+
+| Check | Command | Result |
+|---|---|---|
+| Lint / format / types | ruff check/format · mypy | **0 findings**, 375 files, 193 files typed |
+| risk-v2 | `scripts/risk-v2.py --check` | exit 0 |
+| **risk-v3** | `scripts/risk-v3.py --check` | **exit 0** (threshold 1.0, certificate absent, AUROC 0.828645 / coverage@risk 0.012579) |
+| Provenance | `build-results --check` · `build-external --check` · `build-consistency --check` · `build_bench --verify` · latency · judge | all exit 0 |
+| Traceability / numbers / licences | the three checkers | 121/121 + 154 paths; 1,861 quantities; 57 distributions |
+| Full suite | `pytest -q` (`ANSWERDESK_REQUIRE_API=1`) | **1,642 passed, 2 skipped, 0 failed** |
+| Coverage | `pytest --cov=… --cov-fail-under=70` | **76.46%** aggregate; per package 90/89/84/**68** (R-39) |
+| Smoke / unit / load | `-m smoke` · `tests/unit` · `load.py --smoke` | 59 passed · 1,116 passed / 1 skipped · LOAD PASS |
+| Quickstart | ask · demo --smoke · eval --synthetic · `--profile` · external --list-suites · serve --healthcheck | all exit 0 |
+| Console | `npm run test` · `npm run build` | 66/66, build OK |
+| Security | live PII + injection on the archive service; raw-PII grep | `PII_DETECTED` / `INJECTION_SUSPECTED`, 0 provider calls, no raw PII in traces |
+| CI wiring | `ci.yml` fast job · `ci-offline.ps1` · `test_ci_workflow.py` | risk-v3 `--check` present in all three |
+
+Note for reproducibility of the audit itself: running `demo --smoke`/`eval` concurrently with the
+full suite in the same archive rewrites `data/corpus` and produces spurious test failures. The
+round-9 results above were produced with isolated runs; the first concurrent attempt was discarded.
 
 ---
 
@@ -424,10 +450,10 @@ defer with an owner), low (cleanup).
 | R-37 | low | `docs/requirements.md` marked CMD-U / `demo --smoke` as PENDING; **resolved in `efb549a`** (delivered, 11.2 s measured, exit 0 on the archive) | `docs/requirements.md:1327,1344-1345` |
 | R-38 | low | The intermediate t53 commit `e3ad7dc` failed the repo-wide lint gate with one E501 + one unformatted file (`tests/unit/eval/test_risk_v2_digest.py:54`), so CI would have been red. **Resolved in `65ae988`**: the file is wrapped/formatted and `ruff check .` / `ruff format --check .` are clean on the archive. The final bytes pass | `tests/unit/eval/test_risk_v2_digest.py:54` |
 | R-39 | medium | NFR-QUAL-02 says coverage ≥70% for `{retrieval,policy,cache,eval}`. The enforced CI gate is the **aggregate** over the four packages (76.45%, passes), but a per-package reading fails for `eval`: **68.0%** (risk-v3 added `bench_answers.py` 0%, `selfconsistency.py` 0%, `benchpop.py` 20.8%, `features.py` 50% to the package). Requirements CC-2026-10-21-d still quotes the historical per-package 73.6%. No gate can catch this because the threshold is aggregate-only | `docs/requirements.md:417,1406`, `.github/workflows/ci.yml:113` |
-| R-40 | medium | The new risk-v3 evidence arm is not wired into CI or `scripts/ci-offline.ps1`: `scripts/risk-v3.py --check` is documented in `docs/risk-control.md:199` but no job runs it, unlike risk-v2 after R-34. This is why R-43 can pass CI while the documented gate is red — the wiring gap is no longer theoretical | `scripts/risk-v3.py`, `.github/workflows/ci.yml` |
+| R-40 | medium | The risk-v3 evidence arm was not wired into CI or `scripts/ci-offline.ps1`, which is why R-43 could pass CI while the documented gate was red. **Resolved in `f030c9a`**: `scripts/risk-v3.py --check` is in the fast CI job, `ci-offline.ps1`, and asserted in `tests/smoke/test_ci_workflow.py` | `.github/workflows/ci.yml:63`, `scripts/ci-offline.ps1:54`, `tests/smoke/test_ci_workflow.py:83` |
 | R-41 | low | The risk-v2 `--check` now compares refitted artefacts with a rel/abs **1e-3 tolerance** to absorb cross-BLAS drift (`runner.py:_same`), but `docs/risk-control.md:38` still describes the gate as re-deriving "every artefact" and failing "on artefact drift" without stating the tolerance. The reproducibility claim should name it | `src/answerdesk/eval/risk/runner.py`, `docs/risk-control.md:38` |
 | R-42 | low | The intermediate `1a51516` failed the CI type gate: `mypy` reported `Returning Any from function declared to return "bool"` at `runner.py:528` (`_same` returned `left == right`). **Resolved in `f78bc6e`** with `return bool(left == right)`; mypy is clean over 193 files on the final archive | `src/answerdesk/eval/risk/runner.py:528` |
-| R-43 | high | `scripts/risk-v3.py --check` (documented in `docs/risk-control.md:199`) fails on the `d07454a` clean archive: "artefact drift in ['populations']". The fixed 200-level certificate grid changed the recomputed certificate, but `reports/risk-v3/*` were not regenerated: the committed summary still has the 313-level data-dependent grid and threshold 0.978643, while the shipped code recomputes threshold 1.0. `docs/results.md` therefore quotes a stale certificate. Regenerating the v3 artefacts in a scratch copy fixes `--check` but makes `build-results.py --check` stale, so both must be regenerated together | `src/answerdesk/eval/risk/certificate.py:115`, `reports/risk-v3/summary.json`, `docs/results.md` |
+| R-43 | high | `scripts/risk-v3.py --check` (documented in `docs/risk-control.md:199`) failed on the `d07454a` clean archive: "artefact drift in ['populations']". The fixed 200-level certificate grid changed the recomputed certificate, but `reports/risk-v3/*` were not regenerated: the committed summary still had the 313-level data-dependent grid and threshold 0.978643, while the shipped code recomputes threshold 1.0. **Resolved in `f030c9a`**: v3 artefacts and `docs/results.md` regenerated (threshold 1.0, certificate absent, AUROC 0.828645 / coverage@risk 0.012579 unchanged); both `risk-v3 --check` and `build-results --check` exit 0 on the final archive | `src/answerdesk/eval/risk/certificate.py:115`, `reports/risk-v3/summary.json`, `docs/results.md` |
 
 ### 6.2 Round-2 status (post-fix verification, HEAD `2dfb713`)
 
@@ -475,10 +501,10 @@ defer with an owner), low (cleanup).
 | R-37 CMD-U wording | **resolved** | CMD-U is "delivered (t14/t50), 11.2 s", no PENDING markers |
 | R-38 lint on `e3ad7dc` | **resolved** | `65ae988` formats the regression test; ruff clean on the final archive |
 | R-39 eval coverage | **open — medium** | aggregate gate ~76% passes; per-package `eval` is 68.0%, below the 70% wording of NFR-QUAL-02; threshold is aggregate-only so no gate catches it |
-| R-40 risk-v3 gate wiring | **open — medium** | `scripts/risk-v3.py --check` is not in CI/`ci-offline.ps1`; this is exactly why R-43 can pass CI while the documented gate is red |
+| R-40 risk-v3 gate wiring | **resolved in `f030c9a`** | `scripts/risk-v3.py --check` is in the fast CI job, `ci-offline.ps1` and `tests/smoke/test_ci_workflow.py` |
 | R-41 tolerance documentation | **open — low** | the 1e-3 rel/abs comparison tolerance is not stated in `docs/risk-control.md` |
 | R-42 mypy on `1a51516` | **resolved** | `f78bc6e` returns `bool(left == right)`; mypy clean over 193 files |
-| R-43 risk-v3 artefacts stale | **OPEN — HIGH** | `risk-v3 --check` fails on the `d07454a` archive; committed v3 grid/threshold predate the fixed-grid code; results.md quotes the stale threshold; regenerating both fixes it (see §0 round 8) |
+| R-43 risk-v3 artefacts stale | **resolved in `f030c9a`** | v3 artefacts regenerated on the fixed grid (threshold 1.0, certificate absent, AUROC 0.828645 / coverage@risk 0.012579 unchanged); `risk-v3 --check` and `build-results --check` both exit 0 on the final archive |
 
 
 ### R-01 — the traceability gate does not exist (high)
@@ -1024,35 +1050,28 @@ update the §17.3 sequence accordingly.
   citation recall, disabled rewriter, digit-only numeric guard) even where this audit found
   inaccuracies.
 
-The one thing that does **not** hold at `d07454a` is the risk-v3 evidence chain: the fixed-grid
-change shipped without regenerating that arm's artefacts (R-43).
+The risk-v3 evidence chain, which did **not** hold at `d07454a`, now holds at `f030c9a`: the v3
+artefacts were regenerated on the fixed grid and the gate is wired into CI (R-43/R-40 closed).
 
 ---
 
 ## 8. Required actions before the verdict can be `pass`
 
 **Closed and verified:** R-01…R-07, R-09…R-12, R-14…R-16, R-28, R-29, R-33, R-34, R-36…R-38,
-R-42; R-30/R-31 are documented; R-08 is partial by explicit, documented design.
+R-40, R-42, R-43; R-30/R-31 are documented; R-08 is partial by explicit, documented design.
 
-**Still required:**
+**No blocker or high finding is open.** Post-release actions (none block the verdict):
 
-1. **R-43 (high):** regenerate `reports/risk-v3/*` with the fixed-grid `certify`
-   (`scripts/risk-v3.py --evaluate`), regenerate `docs/results.md`, and prove both
-   `scripts/risk-v3.py --check` and `scripts/build-results.py --check` exit 0 on a clean
-   `git archive` copy. This is the only open high finding.
-2. **R-40 (medium):** wire `scripts/risk-v3.py --check` into the fast CI job and
-   `scripts/ci-offline.ps1` (and assert it in `tests/smoke/test_ci_workflow.py`), so the R-43 class
-   cannot pass CI again.
-3. **R-39 (medium):** either lift `src/answerdesk/eval` coverage back to ≥70% (the new
+1. **R-39 (medium, agreed):** either lift `src/answerdesk/eval` coverage back to ≥70% (the new
    `bench_answers.py`, `selfconsistency.py`, `benchpop.py` are the drag), or amend NFR-QUAL-02 to
    state the aggregate interpretation explicitly and stop quoting per-package figures as threshold
-   evidence.
-4. **R-41 (low):** state the 1e-3 rel/abs tolerance in `docs/risk-control.md`.
-5. **R-35 (low):** update the residual "What would change the verdict" sentence in the LAT-01
+   evidence. The captain chose to document the aggregate reading for this release.
+2. **R-41 (low):** state the 1e-3 rel/abs tolerance in `docs/risk-control.md`.
+3. **R-35 (low):** update the residual "What would change the verdict" sentence in the LAT-01
    section.
-6. **R-08 (partial):** run the networked `pip-audit` at release time and record the result.
-7. R-19, R-20, R-22, R-32 (low): documentation cleanups (§10.7 verbatim, citation note, local path,
-   the 17 out-of-matrix markers). They do not block a verdict on their own.
+4. **R-08 (partial):** run the networked `pip-audit` at release time and record the result.
+5. R-19, R-20, R-22, R-32 (low): documentation cleanups (§10.7 verbatim, citation note, local path,
+   the 17 out-of-matrix markers).
 
 ---
 
@@ -1181,6 +1200,26 @@ The R-43 diagnosis was confirmed in a scratch copy: `python scripts/risk-v3.py -
 `risk-v3.py --check` exits 0 (AUROC 0.828645, coverage@risk 0.012579 unchanged, certificate
 threshold becomes 1.0), but `build-results.py --check` then reports `docs/results.md` out of date.
 Both artefacts must be regenerated in the release commit.
+
+Round-9 verification of `f030c9a` (same method, isolated runs):
+
+```powershell
+python -m ruff check . ; ruff format --check . ; mypy src/answerdesk    # clean (375 / 193 files)
+python scripts/risk-v2.py --check                                       # exit 0
+python scripts/risk-v3.py --check                                       # exit 0 (R-43 fixed)
+python scripts/build-results.py --run reports/bench --out docs/results.md --check   # exit 0
+python scripts/build-external.py --check ; build-consistency.py --check ; build_bench.py --verify  # exit 0
+python scripts/check-traceability.py ; check-numbers.py ; check-licenses.py --quiet  # exit 0
+python -m pytest -q                                                     # 1,642 passed, 2 skipped
+python -m pytest -q --cov=... --cov-fail-under=70                       # 76.46% aggregate (eval 68 -> R-39)
+python -m pytest -q -m smoke ; pytest -q tests/unit ; load.py --smoke   # 59 / 1,116 / LOAD PASS
+python -m answerdesk.cli ask --fake ... ; demo --smoke ; eval --synthetic ; --profile local config check ; eval external --list-suites ; serve --healthcheck   # all 0
+cd web && npm run test && npm run build                                 # 66/66, build ok
+```
+
+One process note: running `demo --smoke`/`eval` concurrently with the full suite in the same archive
+rewrites `data/corpus` and produces spurious test failures (observed and discarded). All results
+above are from isolated runs.
 
 ### Audit limitations
 
