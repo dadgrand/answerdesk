@@ -3,15 +3,17 @@
 **Audit type:** independent release-candidate review (honesty, tests, security, reproducibility,
 documentation accuracy).
 **Auditor:** reviewer (independent of the implementation tasks).
-**Audited tree:** `answerdesk/` at HEAD `fdb137a` (round 1), re-verified against HEAD `2dfb713`
-(round-2 core fixes) and HEAD `2c0c9dc` (after t44's locale-retrieval landing). The working tree
-still carries uncommitted edits (`scripts/ci-offline.ps1`, `src/answerdesk/service/app.py`), so the
-final bytes are not frozen yet.
-**Status:** static audit complete, round-2 fix verification complete; **provisional verdict remains
-FAIL (needs_revision)** pending the captain's final full-gate run on the post-t44 bytes. R-01, R-02,
-R-03, R-04, R-05 and R-06 are verified fixed; the open high finding is the clean-checkout suite
-failure caused by tests that depend on untracked artefacts (R-28). No finding in this report
-touches the in-flight files.
+**Audited tree:** `answerdesk/` at HEAD `fdb137a` (round 1), re-verified at HEAD `2dfb713`
+(round-2 core fixes), `2c0c9dc` (after t44) and `795c73f` (final pushed HEAD, with this report
+committed). The final bytes are `795c73f`.
+**Status:** **formal verdict: FAIL (needs_revision).** The working-tree offline gate is green
+(`pwsh -File scripts/ci-offline.ps1` → "offline gate: OK", 1,555 passed / 1 skipped, coverage 78.40%,
+all checkers green — reproducing the captain's claim), but the pushed HEAD is **not green on a clean
+checkout**: full suite = **1 failed, 1,547 passed, 2 skipped, 6 errors** (R-28). That is the one open
+high finding; R-01, R-02, R-03, R-04, R-05 and R-06 are verified fixed. The fix is small and
+test-only (one wrong skip guard plus one missing corpus guard), but it must land before the release
+can be reported as green — GitHub Actions checks out the repository without the git-ignored corpus,
+so its `pytest` steps fail exactly as reproduced below.
 
 ---
 
@@ -49,9 +51,10 @@ than to the committed content:
 In round 1, a clean LF checkout of HEAD (`fdb137a`) with no proxy environment variables was
 `ruff` / `format` / `mypy` clean and **1,453 passed, 2 skipped, 0 failed** (the two documented skips
 in §2.2). On a clean `git archive` copy of HEAD `2dfb713` the same run is **2 failed, 1,526 passed,
-2 skipped**; after t44 landed (`2c0c9dc`) it is **2 failed, 1,546 passed, 2 skipped, 6 errors**. All
-failures/errors are tests that read artefacts present only in a developer working tree (R-28), not
-the round-1 findings.
+2 skipped**; after t44 landed (`2c0c9dc`) it is **2 failed, 1,546 passed, 2 skipped, 6 errors**; at
+the final pushed HEAD `795c73f` (with this report committed) it is **1 failed, 1,547 passed,
+2 skipped, 6 errors**. All failures/errors are tests that read a corpus that only a developer working
+tree has (R-28), not the round-1 findings.
 
 Round 2 (post-fix verification, HEAD `2dfb713`) additionally exercised:
 
@@ -64,6 +67,14 @@ Round 2 (post-fix verification, HEAD `2dfb713`) additionally exercised:
 | Numeric guard | mutation M6 re-run on a clean `git archive` copy of `2dfb713` | baseline 69 passed; mutated **19 failed** → R-04 closed |
 | Scale evidence | `reports/scale/last-run.{json,md}` (committed) | 3,000 docs / 26,068 chunks; index 7.7 s; retrieval p95 11.8 ms; peak RSS 0.487 GB; 3 runs |
 | Provenance | `build-results.py --check` and `build-external.py --check` on a clean LF `git archive` copy of `2dfb713` | exit 0 on both (R-03 closed) |
+
+Round 3 (final HEAD `795c73f`): the working-tree offline gate was re-run end-to-end
+(`pwsh -File scripts/ci-offline.ps1`, no proxy env) and the clean-checkout suite was re-run from a
+`git archive` copy. Working tree: **offline gate: OK** — ruff/format/mypy clean, traceability
+121/121, numbers green, licences 57/57, coverage **78.40%** (gate 70%), full suite **1,555 passed,
+1 skipped** (the loopback-only socket test). Clean checkout: **1 failed, 1,547 passed, 2 skipped,
+6 errors** (R-28). The second result is the one that matters for delivery, because
+`.github/workflows/ci.yml` runs on a fresh clone with no `data/corpus/chunks.jsonl`.
 
 ---
 
@@ -152,9 +163,10 @@ verifier at its enforcement point; `test_numeric_guard.py` tests `numeric_violat
   the 1.6 GB bench-cache test). `ANSWERDESK_REQUIRE_API=1` turns missing API-extras into failures.
 * Clean-checkout run of HEAD without proxy env: round 1 (`fdb137a`) **1,453 passed, 2 skipped,
   0 failed**; round 2 (`2dfb713`) **2 failed, 1,526 passed, 2 skipped**; after t44 (`2c0c9dc`)
-  **2 failed, 1,546 passed, 2 skipped, 6 errors** — all from tests that read untracked artefacts
-  (R-28). With `NO_PROXY='*'`: 3 proxy tests fail (R-16). Audit-time working tree round 1 (HEAD + t25
-  in flight + `NO_PROXY='*'`): 4 failed, 1,462 passed, 1 skipped.
+  **2 failed, 1,546 passed, 2 skipped, 6 errors**; final `795c73f` **1 failed, 1,547 passed,
+  2 skipped, 6 errors** — the remaining tests read a corpus that only a developer tree has (R-28).
+  With `NO_PROXY='*'`: 3 proxy tests fail (R-16). Audit-time working tree round 1 (HEAD + t25 in
+  flight + `NO_PROXY='*'`): 4 failed, 1,462 passed, 1 skipped.
 
 ### 2.3 Coverage (NFR-QUAL-02)
 
@@ -309,11 +321,12 @@ defer with an owner), low (cleanup).
 | R-25 | low | Dead public method `uncited_claim_indexes` (never called, not tested) | `src/answerdesk/generate/citations.py:92` |
 | R-26 | low | NFR-DET-03 asks for two workflows with recorded durations; there is one workflow with two jobs and no durations | `docs/requirements.md:407` |
 | R-27 | low | `/healthz` and traces expose absolute host paths (no secrets, but host layout) | `src/answerdesk/service/runtime.py:377` |
-| R-28 | high | Tests fail on a clean checkout/CI because they read untracked artefacts: the consistency test needs `data/corpus/chunks.jsonl`, the locale-purity suite's guard checks the wrong file, and the mutation-audit test needs `docs/review-report.md` | `tests/unit/eval/test_consistency.py:305`, `tests/integration/retrieval/test_locale_purity.py:35`, `tests/smoke/test_requirements_evidence.py` |
+| R-28 | high | Tests fail on a clean checkout/CI because they read untracked artefacts: the consistency test needs `data/corpus/chunks.jsonl`, the locale-purity suite's guard checks the wrong file, and the mutation-audit test needs `docs/review-report.md` (fixed by `795c73f`) | `tests/unit/eval/test_consistency.py:305`, `tests/integration/retrieval/test_locale_purity.py:34`, `tests/smoke/test_requirements_evidence.py` |
 | R-29 | medium | The new gates (traceability, numbers, licences, coverage) run in `scripts/ci-offline.ps1` but **not** in `.github/workflows/ci.yml`, so GitHub Actions does not enforce them | `.github/workflows/ci.yml` |
 | R-30 | medium | Residual limitation: spelled-out numbers ("сто двадцать") are invisible to the digit guard; only digit-bearing claims are checked | `src/answerdesk/generate/numeric.py` (behaviour), documented from this audit |
 | R-31 | low | Residual limitation: a numeric-guard rejection is reported to the operator as `CITATION_FAILED`; the numeric detail only lives in `numeric_violations_pre_repair` on the trace | `src/answerdesk/generate/pipeline.py:337-339` |
 | R-32 | low | 11 acceptance-test markers (`AT-CNS-01…04`, `AT-GEN-13…19`) exist in the tree but have no §16 row; the checker reports them as a note, not a failure | `docs/requirements.md` §16 / CC-2026-10-21-c note |
+| R-33 | low | `pytest -q -m smoke` (the CI fast-gate command) fails when the `api` extra is installed: `test_base_install_does_not_import_heavy_dependencies` asserts on process-global `sys.modules`, which an earlier-collected service conftest pollutes with `fastapi` | `tests/smoke/test_package.py:60` |
 
 ### 6.2 Round-2 status (post-fix verification, HEAD `2dfb713`)
 
@@ -329,8 +342,8 @@ defer with an owner), low (cleanup).
 | R-08 dependency/licence | **partially resolved** | `scripts/check-licenses.py` exits 0 over 57 installed distributions (licence half); the networked `pip-audit` vulnerability half is explicitly a release step, not a CI claim (requirements NFR-SEC-05 honesty note, docs/decisions.md CC-e) |
 | R-09/R-10 XSS/a11y | **open** | No XSS DOM test and no axe/pa11y run were added; `test_ui_traceability.py` only asserts that the vitest cases exist. Both remain medium |
 | R-11…R-27 | **open** | Not addressed in this round (see §8) |
-| R-28 clean-checkout suite | **new — high** | Clean `git archive` of `2dfb713`: 2 failed / 1,526 passed / 2 skipped; of `2c0c9dc` (post-t44): **2 failed / 1,546 passed / 2 skipped / 6 errors**. Failures: the consistency replay test (missing `data/corpus/chunks.jsonl`) and the mutation-audit test (missing `docs/review-report.md`); errors: all six `test_locale_purity` tests, whose `_require_inputs()` guards on `manifest.json` but not on the git-ignored `chunks.jsonl`. All pass in the working tree |
-| R-29 CI wiring | **new — medium** | `.github/workflows/ci.yml` has no step for the checkers or coverage |
+| R-28 clean-checkout suite | **open — high at final HEAD** | Clean `git archive` of `2dfb713`: 2 failed / 1,526 passed / 2 skipped; `2c0c9dc`: 2 failed / 1,546 passed / 2 skipped / 6 errors; **final `795c73f`: 1 failed / 1,547 passed / 2 skipped / 6 errors**. Committing this report removed the mutation-audit failure; the remaining failure is the consistency replay test (missing git-ignored `data/corpus/chunks.jsonl`) and the six `test_locale_purity` errors, whose `_require_inputs()` guards on `manifest.json` instead of `chunks.jsonl`. All pass in the working tree |
+| R-29 CI wiring | **open — medium** | `.github/workflows/ci.yml` still has no step for the checkers or coverage (verified at `795c73f`); only `scripts/ci-offline.ps1` runs them |
 | R-30/R-31 residual numeric limitations | **new — medium/low** | Confirmed by probe/code read; must stay in the report even after R-04 is closed |
 
 
@@ -671,12 +684,13 @@ a public-facing deployment would reveal host layout.
 **Required fix.** Return repo-relative paths or basenames in the health payload (keep the full path
 in logs if needed).
 
-### R-28 — the suite is not green on a clean checkout (high, new in round 2)
+### R-28 — the suite is not green on a clean checkout (high, still open at final HEAD)
 
 **Problem.** A full run on a clean `git archive` checkout with no proxy env is **2 failed, 1,526
-passed, 2 skipped** at `2dfb713`, and **2 failed, 1,546 passed, 2 skipped, 6 errors** at `2c0c9dc`
-(after t44). Every one of those failures/errors is a test that reads artefacts which exist only in a
-developer working tree:
+passed, 2 skipped** at `2dfb713`, **2 failed, 1,546 passed, 2 skipped, 6 errors** at `2c0c9dc`
+(after t44), and **1 failed, 1,547 passed, 2 skipped, 6 errors** at the final pushed HEAD `795c73f`.
+Committing this report (`795c73f`) fixed the third bullet below; the other two causes remain. They
+all read artefacts which exist only in a developer working tree:
 
 * `tests/unit/eval/test_consistency.py::test_runner_replay_is_offline_and_writes_artefacts`
   ends in `CorpusUnavailableError: corpus artifacts are missing: …/data/corpus/chunks.jsonl`.
@@ -685,22 +699,22 @@ developer working tree:
   "without either it skips rather than failing", but `_require_inputs()` checks
   `CORPUS / "manifest.json"` (committed) instead of `CORPUS / "chunks.jsonl"` (not committed). The
   module fixture then raises `CorpusMissingError: no chunks at …/chunks.jsonl`.
-* `tests/smoke/test_requirements_evidence.py::test_qual_03_mutation_audit_is_recorded` does
-  `(REPO_ROOT / "docs" / "review-report.md").read_text()`; that file is the untracked deliverable of
-  this audit, so a fresh clone (and GitHub Actions) raises `FileNotFoundError`.
+* ~~`tests/smoke/test_requirements_evidence.py::test_qual_03_mutation_audit_is_recorded` reads
+  `docs/review-report.md`; it failed while the report was untracked.~~ **Fixed by `795c73f`** (the
+  report is committed), though the test would still fail on any clone that strips documentation —
+  a `pytest.skip` when the file is absent is still advisable.
 
 All of them pass in the working tree (verified: 7 passed for locale-purity, 2 passed for the other
 two in the repo), so a gate run there misses the problem. `scripts/ci-offline.ps1` runs `pytest -q`
 before anything builds the corpus, so the local gate fails on a clean clone too; GitHub Actions
-certainly does.
+certainly does (its `pytest -q` step has no ingest step before it).
 
 **Required fix.** (a) make the consistency test build its corpus fixture or `pytest.skip` with the
 standard "checked-in corpus not built in this tree" reason; (b) fix `_require_inputs()` in the
 locale-purity test to check `chunks.jsonl` (and catch `CorpusMissingError` for the fixture), so it
-skips on a clean clone; (c) either commit `docs/review-report.md` in the release commit *and* make
-the mutation-audit test skip when it is absent, or move the mutation evidence into a committed audit
-artefact independent of the review report. Re-run the full suite on a clean clone afterwards — that
-is the only way this class of bug stays fixed.
+skips on a clean clone; (c) optionally make the mutation-audit test skip when the review report is
+absent. Re-run the full suite on a clean clone afterwards — that is the only way this class of bug
+stays fixed.
 
 ### R-29 — the new gates are not in the GitHub Actions workflow (medium, new in round 2)
 
@@ -763,6 +777,27 @@ rather than hidden — but the matrix is no longer a complete map of the reposit
 mark the suites explicitly as experimental without requirement IDs. Make the checker fail when a
 marker is outside the matrix once the rows exist.
 
+### R-33 — the smoke subset is order-dependent (low, new in round 3)
+
+**Problem.** `.github/workflows/ci.yml`'s fast job runs `uv run pytest -q -m smoke` with the dev extra.
+With the `api` extra installed (the documented setup for the service), the same command fails:
+
+```text
+FAILED tests/smoke/test_package.py::test_base_install_does_not_import_heavy_dependencies
+E  Left contains one more item: 'fastapi'
+```
+
+`test_base_install_does_not_import_heavy_dependencies` inspects the process-global `sys.modules`, and
+collecting the service tests imports `fastapi` via `tests/integration/service/conftest.py`
+(`pytest.importorskip`). The test therefore passes only when the service tests are not collected in
+the same process (CI's dev-only fast job) and fails for a developer who followed the README's
+`uv sync --extra api` step. It is not the cause of R-28 (the full suite happens to pass), but it is
+the same class of environment-dependent gate.
+
+**Required fix.** Run the base-install check in a subprocess (`python -c "import answerdesk; …"`)
+instead of inspecting the pytest process's module table, or mark it to run in its own process, so the
+result does not depend on what else was collected.
+
 ---
 
 ## 7. What held up (worth keeping)
@@ -794,25 +829,28 @@ marker is outside the matrix once the rows exist.
 
 ## 8. Required actions before the verdict can be `pass`
 
-**Closed in round 2 (verified at `2dfb713`):** R-01, R-02, R-03, R-04, R-05, R-06.
+**Closed and verified (R-01, R-02, R-03, R-04, R-05, R-06).** The review report itself was committed
+in `795c73f`, which removed one of the three R-28 failures.
 
 **Still required:**
 
 1. **R-28 (high):** make the full suite green on a clean checkout — fix the locale-purity
-   `_require_inputs()` guard, skip/build the consistency test's missing corpus, and commit the
-   review report (or make the mutation-audit test skip when it is absent). This is the only open
-   high finding.
+   `_require_inputs()` guard to test `chunks.jsonl`, and make the consistency replay test skip or
+   build the missing corpus. This is the only open high finding and the only thing between this
+   revision and a `pass`.
 2. **R-29 (medium):** put `check-traceability.py`, `check-numbers.py`, `check-licenses.py` and the
    coverage step into `.github/workflows/ci.yml`; a local PowerShell script is not a CI gate.
 3. **R-30 / R-31 (residual limitations):** document spelled-out numbers as outside the digit guard
    and state that numeric rejections surface as `CITATION_FAILED` with the count on the trace (or add
-   a dedicated reason code).
-4. R-09/R-10: add the XSS DOM test and an automated a11y check (still open).
-5. R-11: wire `demo --smoke` (t14) or mark CMD-U pending in §17.3.
-6. R-12/R-13/R-14/R-15/R-17: regenerate/repair the documentation and the committed replay artifact.
-7. R-16: make the proxy tests environment-independent.
-8. R-18: commit the clean-checkout transcript.
-9. R-32: register (or explicitly exclude) the 11 out-of-matrix markers.
+   a dedicated reason code). They are recorded in this report, not yet in `docs/`.
+4. **R-33 (low):** make the base-install check run in a subprocess so `pytest -m smoke` is
+   order-independent with the `api` extra installed.
+5. R-09/R-10: add the XSS DOM test and an automated a11y check (still open).
+6. R-11: wire `demo --smoke` (t14) or mark CMD-U pending in §17.3.
+7. R-12/R-13/R-14/R-15/R-17: regenerate/repair the documentation and the committed replay artifact.
+8. R-16: make the proxy tests environment-independent.
+9. R-18: commit the clean-checkout transcript.
+10. R-32: register (or explicitly exclude) the 11 out-of-matrix markers.
 
 Low findings R-19…R-27 may be fixed in the same pass or explicitly deferred with an owner; they do
 not on their own block a verdict.
@@ -847,6 +885,23 @@ uv run ruff check . ; uv run ruff format --check . ; uv run mypy src/answerdesk
 cd web ; npm run test ; npm run build
 ```
 
+Round-3 verification at the final pushed HEAD `795c73f` (LF `git archive` copy, no proxy env):
+
+```powershell
+# from the copy, with PYTHONPATH=<copy>/src, ANSWERDESK_REQUIRE_API=1
+python -m pytest -q          # 1 failed, 1547 passed, 2 skipped, 6 errors   -> R-28
+python -m pytest -q tests/unit   # 1 failed, 1046 passed, 1 skipped         -> the CI fast gate fails too
+```
+
+```powershell
+# in the repository working tree (has data/corpus/chunks.jsonl), no proxy env
+pwsh -File scripts/ci-offline.ps1
+# ==> uv sync --extra dev --extra api ... ==> pytest -q
+# offline gate: OK
+# 1555 passed, 1 skipped in 262.54s
+# Required test coverage of 70% reached. Total coverage: 78.40%
+```
+
 Round-2 verification on clean `git archive` copies of HEAD `2dfb713` and `2c0c9dc` (LF, no proxy env):
 
 ```powershell
@@ -858,13 +913,12 @@ python -m pytest -q                                      # 2dfb713: 2 failed, 15
                                                           # 2c0c9dc: 2 failed, 1546 passed, 2 skipped, 6 errors -> R-28
 ```
 
-The failures are
+The final-HEAD failure is
 `tests/unit/eval/test_consistency.py::test_runner_replay_is_offline_and_writes_artefacts`
-(missing git-ignored `data/corpus/chunks.jsonl`) and
-`tests/smoke/test_requirements_evidence.py::test_qual_03_mutation_audit_is_recorded`
-(missing untracked `docs/review-report.md`); the six errors are all of
+(missing git-ignored `data/corpus/chunks.jsonl`); the six errors are all of
 `tests/integration/retrieval/test_locale_purity.py`, whose skip guard checks `manifest.json` instead
-of `chunks.jsonl`. All of them pass in the working tree.
+of `chunks.jsonl`. The mutation-audit failure from the earlier rounds disappeared when this report
+was committed in `795c73f`. All of them pass in the working tree.
 
 Recomputations and probes were run as throwaway scripts under the session's `_tmp/t13/` (not
 committed): AT-marker scan, provenance-hash comparison, Wilson intervals, per-language metric
@@ -880,7 +934,5 @@ those copies.
 * No dependency-vulnerability scan (network blocked). The licence half now runs
   (`scripts/check-licenses.py`, 57 distributions, all permissive); the vulnerability half is
   documented as a networked release step (see R-08 and docs/decisions.md CC-2026-10-21-e).
-* The final lint/type/test gate was not run on the final bytes; this report covers HEAD `2c0c9dc`
-  plus the working tree observed during round 2 (which still had uncommitted edits to
-  `scripts/ci-offline.ps1` and `src/answerdesk/service/app.py`) and must be re-confirmed after those
-  land.
+* The working-tree gate was run on the final HEAD `795c73f`; the clean-checkout suite was run on a
+  `git archive` copy of the same commit. No further commit landed between the two runs.
