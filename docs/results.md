@@ -31,12 +31,12 @@ Every table below is generated from those artefacts by this script; the document
 corpus_version      corpus-77d7d081813738a6
 corpus_hash         ae30066e61e1dc1402b4a51a12f4c4f66335d72c207073b496ef5cd9e5378a36
 corpus_manifest     da33968a0d0087ecc0c4e8d966c1cdc47d40699dec139a00694818c0e583af69
-golden_manifest     01e95c997f02210a58958b1c04af0ca1e74e89ba7f850e847eb3bd7f8f98a33c
-split_manifest      2342e1fbbbb7b9c5b5abde050a18648924e0037a184e32cb6d30e130382c4973
+golden_manifest     2fd9eb4ca0cdb0dbd5c45081e342dc9342697e1fff61c94f04e20bd09af7dff5
+split_manifest      643a28c89c36abf8be343103caa70a06a8c5174414f29f7ebedcf0e8f3fc29ea
 answerdesk_bench    65de8498b494b653b82be70bc854c7cb24f543fd911cfeda61705b522d356671
-pricing_table       a341c5c223c9b86f0bb5a03f96349d16acc7ac880c5c08d88f13ac72c7354b09
+pricing_table       30c26f1f95551ba5d9043255a89ffe1ee881f45f37318bffc5c0eae1321e14f2
 run_id              bench
-summary_json        fce1ae0ddf8b99d4f2bc3abdfb7ee13dffa8ec9e7204f10b49844cc13caac8f3
+summary_json        fe547d78a894d90ea5ccd6f37f7941ad29a65cb989df6ce6987fa1ab3cbf466f
 ```
 
 Every hash above is of a committed file; changing any input without re-running invalidates the chain and `scripts/build-results.py --check` fails on a stale document.

@@ -164,12 +164,24 @@ def _relative(path: Path) -> str:
         return str(path)
 
 
+def _canonical_sha256(path: Path) -> str:
+    """Digest of one provenance input over canonical LF bytes (line-ending independent).
+
+    Raw-byte hashing made the published digests differ between this Windows working tree
+    (CRLF) and a clean LF checkout, which falsified the reproducibility claim. Every hash in
+    the provenance block goes through this function; ``answerdesk.eval.provenance`` is the
+    single implementation and a unit test pins a CRLF file to its LF twin's digest.
+    """
+    from answerdesk.eval.provenance import canonical_sha256
+
+    return canonical_sha256(path)
+
+
 def _provenance_block(summary: Mapping[str, Any]) -> list[str]:
     """One auditable block: corpus, golden, split, benchmark manifest, pricing, run."""
-    import hashlib
 
     def sha(path: Path) -> str:
-        return hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else "missing"
+        return _canonical_sha256(path)
 
     corpus_manifest = REPO_ROOT / "data" / "corpus" / "manifest.json"
     golden_manifest = REPO_ROOT / "evals" / "golden" / "v1" / "manifest.json"
