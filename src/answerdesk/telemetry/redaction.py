@@ -23,7 +23,6 @@ that a field was redacted (`<EMAIL>`) without being able to recover it.
 
 from __future__ import annotations
 
-import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any
@@ -31,14 +30,45 @@ from typing import Any
 from answerdesk.contracts import Message
 from answerdesk.policy.pii import PIIFinding, RedactionResult, detect, redact
 
-#: Mapping keys whose *values* are secrets and must never be serialised (INV-05, §13.5).
-SECRET_KEY_PATTERN = re.compile(
-    r"(api[_-]?key|secret|token|password|passwd|authorization|bearer|credential)",
-    re.IGNORECASE,
+#: Key names whose *values* are secrets and must never be serialised (INV-05, §13.5).
+#: Matching is by name, not by substring: ``input_tokens`` is an observability number, while
+#: ``admin_token`` is a credential. A naive ``token`` substring rule redacts the former and
+#: silently destroys the cost trace (NFR-COST-03).
+_SECRET_NAMES = frozenset(
+    {
+        "token",
+        "secret",
+        "password",
+        "passwd",
+        "authorization",
+        "bearer",
+        "credential",
+        "credentials",
+        "api_key",
+        "apikey",
+        "private_key",
+        "secret_key",
+        "client_secret",
+        "access_key",
+    }
 )
+
+#: Key suffixes that make a key secret-bearing (``admin_token``, ``client_secret``).
+_SECRET_SUFFIXES = ("_token", "_secret", "_password", "_passwd", "_credential", "_api_key")
 
 #: The placeholder written instead of a secret value — never the length, never a prefix.
 SECRET_PLACEHOLDER = "***"
+
+
+def is_secret_key(name: str) -> bool:
+    """Whether a mapping key names a credential (used by the trace and log writers)."""
+    lowered = name.strip().lower().replace("-", "_")
+    if lowered in _SECRET_NAMES:
+        return True
+    if any(lowered.endswith(suffix) for suffix in _SECRET_SUFFIXES):
+        return True
+    return "authorization" in lowered or lowered.endswith("bearer")
+
 
 #: Upper bound on redaction work per string; a 10 MB document is not a log line.
 MAX_REDACT_CHARS = 100_000
@@ -80,10 +110,7 @@ def redact_text(text: str) -> Redacted:
     result: RedactionResult = redact(body)
     kinds = tuple(sorted(result.kinds))
     count = result.redacted_count
-    if len(text) > MAX_REDACT_CHARS:
-        body = result.text + text[MAX_REDACT_CHARS:]
-    else:
-        body = result.text
+    body = result.text + text[MAX_REDACT_CHARS:] if len(text) > MAX_REDACT_CHARS else result.text
     return Redacted(text=body, kinds=kinds, count=count)
 
 
@@ -125,7 +152,7 @@ def redact_value(value: Any, *, key: str = "") -> tuple[Any, RedactionSummary]:
         fields: list[str] = []
         for raw_key, item in value.items():
             name = str(raw_key)
-            if SECRET_KEY_PATTERN.search(name):
+            if is_secret_key(name):
                 clean[name] = SECRET_PLACEHOLDER
                 continue
             child, summary = redact_value(item, key=name)
@@ -140,13 +167,15 @@ def redact_value(value: Any, *, key: str = "") -> tuple[Any, RedactionSummary]:
     if isinstance(value, (list, tuple)):
         items: list[Any] = []
         counts = 0
-        kinds: set[str] = set()
+        list_kinds: set[str] = set()
         for item in value:
             child, summary = redact_value(item, key=key)
             items.append(child)
             counts += summary.count
-            kinds.update(summary.kinds)
-        return items, RedactionSummary(count=counts, kinds=tuple(sorted(kinds)), fields=(key,) if counts else ())
+            list_kinds.update(summary.kinds)
+        return items, RedactionSummary(
+            count=counts, kinds=tuple(sorted(list_kinds)), fields=(key,) if counts else ()
+        )
     if isinstance(value, str):
         redacted = redact_text(value)
         if redacted.changed:
@@ -165,12 +194,12 @@ def redact_payload(value: Any) -> Any:
 
 __all__ = [
     "MAX_REDACT_CHARS",
-    "SECRET_KEY_PATTERN",
     "SECRET_PLACEHOLDER",
     "Redacted",
     "RedactionSummary",
     "contains_pii",
     "find_pii",
+    "is_secret_key",
     "redact_messages",
     "redact_payload",
     "redact_str",

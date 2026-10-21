@@ -33,6 +33,7 @@ logs/
 reports/_tmp/
 reports/*/tmp/
 data/index/
+data/service/
 data/external/
 data/corpus/*.jsonl
 data/corpus/.cache/

@@ -14,7 +14,7 @@ The metric set is the one requirements §8.6/§9.5 and NFR-OBS-01 name: request,
 error, cache hit/miss/bypass/wrong-hit, escalation, refusal, plus the cost/latency
 attribution NFR-COST-03 needs (``answerdesk_stage_duration_seconds``, tokens, USD).
 
-    # AT-OBS-01  # AT-COST-03  # AT-CAC-08  # AT-ESC-10
+    # AT-OBS-01  # AT-OBS-02  # AT-COST-03  # AT-CAC-08  # AT-ESC-10  # AT-LAT-01
 """
 
 from __future__ import annotations
@@ -23,6 +23,7 @@ import math
 import threading
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
+from typing import Any
 
 #: Prometheus' conventional HTTP latency buckets, plus a 10 s overflow bucket.
 DEFAULT_BUCKETS: tuple[float, ...] = (
@@ -75,7 +76,9 @@ def _format_number(value: float) -> str:
 def _labels(names: Sequence[str], values: Sequence[str]) -> str:
     if not names:
         return ""
-    pairs = ",".join(f'{name}="{_escape_label(value)}"' for name, value in zip(names, values, strict=True))
+    pairs = ",".join(
+        f'{name}="{_escape_label(value)}"' for name, value in zip(names, values, strict=True)
+    )
     return "{" + pairs + "}"
 
 
@@ -125,7 +128,9 @@ class Counter(_Family):
     def render(self) -> list[str]:
         lines = [f"# HELP {self.name} {_escape_help(self.help)}", f"# TYPE {self.name} counter"]
         for key in sorted(self._values):
-            lines.append(f"{self.name}{_labels(self.label_names, key)} {_format_number(self._values[key])}")
+            lines.append(
+                f"{self.name}{_labels(self.label_names, key)} {_format_number(self._values[key])}"
+            )
         return lines
 
 
@@ -154,7 +159,9 @@ class Gauge(_Family):
     def render(self) -> list[str]:
         lines = [f"# HELP {self.name} {_escape_help(self.help)}", f"# TYPE {self.name} gauge"]
         for key in sorted(self._values):
-            lines.append(f"{self.name}{_labels(self.label_names, key)} {_format_number(self._values[key])}")
+            lines.append(
+                f"{self.name}{_labels(self.label_names, key)} {_format_number(self._values[key])}"
+            )
         return lines
 
 
@@ -216,7 +223,8 @@ class Histogram(_Family):
             labels_inf = (*key, "+Inf")
             names_inf = (*self.label_names, "le")
             lines.append(f"{self.name}_bucket{_labels(names_inf, labels_inf)} {observation.count}")
-            lines.append(f"{self.name}_sum{_labels(self.label_names, key)} {_format_number(observation.total)}")
+            total = _format_number(observation.total)
+            lines.append(f"{self.name}_sum{_labels(self.label_names, key)} {total}")
             lines.append(f"{self.name}_count{_labels(self.label_names, key)} {observation.count}")
         return lines
 
@@ -383,7 +391,9 @@ class Metrics:
             elif status == "bypassed":
                 self.cache_bypasses.inc(1.0)
 
-    def observe_usage(self, *, input_tokens: int, output_tokens: int, usd: float, model: str) -> None:
+    def observe_usage(
+        self, *, input_tokens: int, output_tokens: int, usd: float, model: str
+    ) -> None:
         with self._lock:
             if input_tokens:
                 self.model_tokens.inc(float(input_tokens), "input")
@@ -400,10 +410,10 @@ class Metrics:
         with self._lock:
             self.cache_entries.set(float(count))
 
-    def refresh_cache_stats(self, stats: Mapping[str, object]) -> None:
+    def refresh_cache_stats(self, stats: Mapping[str, Any]) -> None:
         """Mirror the cache's own counters into the exposed families (idempotent)."""
         with self._lock:
-            self.cache_entries.set(float(int(stats.get("entries", 0))))
+            self.cache_entries.set(float(stats.get("entries", 0) or 0))
             self.cache_wrong_hits.inc(0.0)  # materialise the family with its HELP line
             self.cache_hits.inc(0.0, "exact")
             self.cache_hits.inc(0.0, "semantic")
@@ -423,16 +433,24 @@ class Metrics:
         """Debug/diagnostic view (never scraped; used by tests and /metrics?format=json)."""
         with self._lock:
             return {
-                "http_requests": {str(key): value for key, value in self.http_requests.samples().items()},
-                "http_errors": {str(key): value for key, value in self.http_errors.samples().items()},
+                "http_requests": {
+                    str(key): value for key, value in self.http_requests.samples().items()
+                },
+                "http_errors": {
+                    str(key): value for key, value in self.http_errors.samples().items()
+                },
                 "decisions": {str(key): value for key, value in self.decisions.samples().items()},
-                "escalations": {str(key): value for key, value in self.escalations.samples().items()},
+                "escalations": {
+                    str(key): value for key, value in self.escalations.samples().items()
+                },
                 "refusals": {str(key): value for key, value in self.refusals.samples().items()},
                 "cache_hits": {str(key): value for key, value in self.cache_hits.samples().items()},
                 "cache_misses": self.cache_misses.value(),
                 "cache_bypasses": self.cache_bypasses.value(),
                 "cache_wrong_hits": self.cache_wrong_hits.value(),
-                "model_tokens": {str(key): value for key, value in self.model_tokens.samples().items()},
+                "model_tokens": {
+                    str(key): value for key, value in self.model_tokens.samples().items()
+                },
                 "model_cost_usd": {
                     str(key): value for key, value in self.model_cost.samples().items()
                 },
@@ -467,15 +485,15 @@ def parse_exposition(text: str) -> dict[str, list[tuple[dict[str, str], float]]]
             name, _, raw_labels = head.partition("{")
             raw_labels = raw_labels.rstrip("}")
             for pair in _split_labels(raw_labels):
-                key, _, value = pair.partition("=")
-                labels[key] = value.strip('"').replace('\\"', '"').replace("\\n", "\n")
+                label_key, _, label_value = pair.partition("=")
+                labels[label_key] = label_value.strip('"').replace('\\"', '"').replace("\\n", "\n")
         else:
             name = head
         try:
-            value = float(raw_value)
+            sample_value = float(raw_value)
         except ValueError:  # pragma: no cover - malformed input
             continue
-        samples.setdefault(name, []).append((labels, value))
+        samples.setdefault(name, []).append((labels, sample_value))
     return samples
 
 

@@ -27,6 +27,7 @@ state into ``503`` for a load balancer that only understands status codes.
 
 from __future__ import annotations
 
+import contextlib
 import json
 import logging
 import time
@@ -43,6 +44,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from answerdesk.config import Settings, load_settings
+from answerdesk.errors import AnswerdeskError
 from answerdesk.service.config import ServiceSettings
 from answerdesk.service.errors import (
     PayloadTooLarge,
@@ -55,8 +57,6 @@ from answerdesk.service.routes import router
 from answerdesk.service.runtime import SERVICE_VERSION, ServiceRuntime
 from answerdesk.service.schemas import HealthResponse
 from answerdesk.service.turn import new_trace_id
-from answerdesk.telemetry.metrics import CONTENT_TYPE
-
 from answerdesk.telemetry.metrics import CONTENT_TYPE, Metrics
 
 _LOGGER = logging.getLogger("answerdesk.service")
@@ -72,6 +72,14 @@ class MetricsRef:
 
     def __init__(self, registry: Metrics | None = None) -> None:
         self.registry: Metrics = registry or Metrics()
+
+
+class TraceRef:
+    """The same indirection for the JSONL writer (used by the HTTP audit line)."""
+
+    def __init__(self, writer: Any = None) -> None:
+        self.writer = writer
+
 
 #: Paths that are never rate-limited or counted as customer requests.
 EXEMPT_PATHS = frozenset(
@@ -107,9 +115,10 @@ OPENAPI_TAGS = [
 class RequestContextMiddleware:
     """Trace id, wall-clock timing, request/latency metrics and the ``X-Trace-Id`` echo."""
 
-    def __init__(self, app: ASGIApp, *, metrics: MetricsRef) -> None:
+    def __init__(self, app: ASGIApp, *, metrics: MetricsRef, trace: TraceRef | None = None) -> None:
         self.app = app
         self.metrics = metrics
+        self.trace = trace
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] != "http":
@@ -127,7 +136,7 @@ class RequestContextMiddleware:
 
         async def send_wrapper(message: Message) -> None:
             if message["type"] == "http.response.start":
-                status["code"] = int(message["status"])
+                status["code"] = message["status"]
                 raw_headers = list(message.get("headers", []))
                 if not any(key.lower() == b"x-trace-id" for key, _value in raw_headers):
                     # An idempotent replay answers with the *stored* trace id; only a fresh
@@ -147,6 +156,47 @@ class RequestContextMiddleware:
                 route=template,
                 status=status["code"],
                 duration_s=duration,
+            )
+            self._audit(
+                trace_id=trace_id,
+                method=scope.get("method", "GET"),
+                route=template,
+                path=scope.get("path", ""),
+                status=status["code"],
+                duration=duration,
+            )
+
+    def _audit(
+        self,
+        *,
+        trace_id: str,
+        method: str,
+        route: str,
+        path: str,
+        status: int,
+        duration: float,
+    ) -> None:
+        """One ``kind=http`` JSONL line per request (FR-SVC-08's audit trail).
+
+        The chat turn writes its own, richer line (``kind=turn``); this line is what makes
+        "every request has a trace" true for sessions, feedback, tickets and admin calls.
+        It never contains a query, a body or a header — only routing and timing facts.
+        """
+        if self.trace is None or self.trace.writer is None:
+            return
+        if path in EXEMPT_PATHS:
+            return
+        with contextlib.suppress(Exception):  # tracing must never break a response
+            self.trace.writer.write(
+                {
+                    "kind": "http",
+                    "trace_id": trace_id,
+                    "method": method,
+                    "route": route,
+                    "status": status,
+                    "duration_ms": round(duration * 1000.0, 3),
+                    "created_at": utc_now(),
+                }
             )
 
 
@@ -218,11 +268,16 @@ async def _json_error(scope: Scope, send: Send, error: ServiceError) -> None:
         (b"x-trace-id", trace_id.encode("latin-1")),
     ]
     if error.retry_after_s is not None:
-        headers.append(
-            (b"retry-after", str(max(1, int(round(error.retry_after_s)))).encode("ascii"))
-        )
+        retry_after = str(max(1, round(error.retry_after_s))).encode("ascii")
+        headers.append((b"retry-after", retry_after))
     await send({"type": "http.response.start", "status": error.http_status, "headers": headers})
     await send({"type": "http.response.body", "body": body, "more_body": False})
+
+
+def utc_now() -> str:
+    from datetime import UTC, datetime
+
+    return datetime.now(UTC).isoformat(timespec="milliseconds")
 
 
 # -- application -----------------------------------------------------------------------
@@ -237,6 +292,7 @@ def create_app(
     core = settings or load_settings()
     service = service_settings or ServiceSettings()
     metrics_ref = MetricsRef(runtime.metrics if runtime is not None else None)
+    trace_ref = TraceRef(runtime.tracer if runtime is not None else None)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -248,6 +304,7 @@ def create_app(
                 active = ServiceRuntime.create(core, service, metrics=metrics_ref.registry)
         app.state.runtime = active
         metrics_ref.registry = active.metrics
+        trace_ref.writer = active.tracer
         app.state.metrics = active.metrics
         _LOGGER.info(
             "answerdesk service ready",
@@ -274,13 +331,17 @@ def create_app(
         redoc_url="/redoc" if service.docs_enabled else None,
         openapi_url="/openapi.json" if service.docs_enabled else None,
         lifespan=lifespan,
-        contact={"name": "answerdesk contributors", "url": "https://github.com/answerdesk/answerdesk"},
+        contact={
+            "name": "answerdesk contributors",
+            "url": "https://github.com/answerdesk/answerdesk",
+        },
         license_info={"name": "MIT"},
     )
 
     # The metrics handle exists before the middleware does; the lifespan points it at the
     # runtime's registry so middleware and routes share one registry.
     app.state.metrics_handle = metrics_ref
+    app.state.trace_handle = trace_ref
     app.state.metrics = metrics_ref.registry
     app.state.limiter = RateLimiter(
         limit_per_minute=service.rate_limit_per_minute, burst=service.burst
@@ -288,7 +349,7 @@ def create_app(
 
     app.add_middleware(RateLimitMiddleware, limiter=app.state.limiter, metrics=metrics_ref)
     app.add_middleware(BodyLimitMiddleware, max_bytes=service.max_body_bytes)
-    app.add_middleware(RequestContextMiddleware, metrics=metrics_ref)
+    app.add_middleware(RequestContextMiddleware, metrics=metrics_ref, trace=trace_ref)
     if service.cors_origin_list:
         app.add_middleware(
             CORSMiddleware,
@@ -371,7 +432,6 @@ def _install_error_handlers(app: FastAPI) -> None:
             f"{'.'.join(str(part) for part in error.get('loc', []))}: {error.get('msg', '')}"
             for error in exc.errors()[:5]
         )
-        error = to_service_error(exc)
         _observe(app, "validation_error")
         return JSONResponse(
             {
@@ -385,6 +445,18 @@ def _install_error_handlers(app: FastAPI) -> None:
             },
             status_code=422,
             headers={"X-Trace-Id": trace_id},
+        )
+
+    @app.exception_handler(AnswerdeskError)
+    async def handle_module_error(request: Request, exc: AnswerdeskError) -> JSONResponse:
+        """Module errors (index/calibration/provider/…) map through the taxonomy."""
+        trace_id = getattr(request.state, "trace_id", None) or new_trace_id()
+        error = to_service_error(exc)
+        _observe(app, error.code)
+        return JSONResponse(
+            {"error": error.envelope(trace_id)},
+            status_code=error.http_status,
+            headers=error.response_headers(trace_id),
         )
 
     @app.exception_handler(StarletteHTTPException)
@@ -431,6 +503,11 @@ def openapi_schema(
     return app.openapi()
 
 
+def app_factory() -> FastAPI:
+    """ASGI factory for ``uvicorn answerdesk.service.app:app_factory --factory``."""
+    return create_app()
+
+
 def export_openapi(
     path: str | Path,
     *,
@@ -455,6 +532,7 @@ __all__ = [
     "BodyLimitMiddleware",
     "RateLimitMiddleware",
     "RequestContextMiddleware",
+    "app_factory",
     "create_app",
     "export_openapi",
     "openapi_schema",

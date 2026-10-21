@@ -26,6 +26,7 @@ API key, no corpus build — which is what INV-08 asks of a CI path.
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import time
 from collections.abc import Sequence
@@ -36,24 +37,23 @@ from typing import Any
 from answerdesk import PACKAGE_VERSION
 from answerdesk.cache import (
     SemanticCache,
-    ThresholdTable as CacheThresholdTable,
     chunk_map,
+)
+from answerdesk.cache import (
+    ThresholdTable as CacheThresholdTable,
 )
 from answerdesk.cache.keys import VersionTuple
 from answerdesk.config import Settings, load_settings
 from answerdesk.contracts import (
+    SCHEMA_VERSION,
     ChatProvider,
     Chunk,
-    Message,
-    ProviderConfig,
-    SCHEMA_VERSION,
     Usage,
 )
 from answerdesk.errors import (
     CalibrationMissingError,
     CorpusMissingError,
     IndexMissingError,
-    ProviderError,
 )
 from answerdesk.generate import ANSWER_PROMPT_ID, AnswerPipeline, PromptRegistry
 from answerdesk.generate.demo import demo_corpus, demo_responses
@@ -224,9 +224,7 @@ class ServiceRuntime:
         answerer = AnswerPipeline.from_settings(wrapped, settings)
 
         resolved_guards = guards or load_guard_config()
-        calibration, resolved_engine = _load_engine(
-            settings, svc, resolved_guards, engine=engine
-        )
+        calibration, resolved_engine = _load_engine(settings, svc, resolved_guards, engine=engine)
         if resolved_engine is None and calibration.error:
             degraded["calibration"] = calibration.error
 
@@ -238,7 +236,9 @@ class ServiceRuntime:
             model_id=wrapped.config.model,
             policy_artifact_hash=calibration.artifact_hash,
         )
-        cache, cache_label = _build_cache(settings, svc, resolved_embedder, versions, resolved_index)
+        cache, cache_label = _build_cache(
+            settings, svc, resolved_embedder, versions, resolved_index
+        )
         if cache is None:
             degraded["cache"] = cache_label
 
@@ -299,7 +299,7 @@ class ServiceRuntime:
             )
 
     @property
-    def chunk_lookup(self):
+    def chunk_lookup(self) -> Any:
         return self._chunk_lookup
 
     def usage_from_answer(self, usage: Usage) -> None:
@@ -315,7 +315,11 @@ class ServiceRuntime:
     def health(self) -> dict[str, Any]:
         """The ``/healthz`` payload: dependency status, never a secret (FR-SVC-07)."""
         checks: dict[str, dict[str, Any]] = {}
-        checks["service"] = {"status": "ok", "version": SERVICE_VERSION, "detail": self.info.profile}
+        checks["service"] = {
+            "status": "ok",
+            "version": SERVICE_VERSION,
+            "detail": self.info.profile,
+        }
 
         db_state = "ok" if self.store is not None else "error"
         db_detail = ""
@@ -435,7 +439,7 @@ class ServiceRuntime:
         invalidated = 0
         if self.cache is not None:
             try:
-                invalidated = self.cache.invalidate(index.store.corpus_version)
+                invalidated = self.cache.invalidate(corpus_version=index.store.corpus_version)
             except Exception:  # pragma: no cover - cache invalidation is best effort
                 invalidated = 0
         self.index = index
@@ -475,17 +479,17 @@ class ServiceRuntime:
         try:
             self.tracer.close()
         finally:
-            try:
+            with contextlib.suppress(Exception):  # already closed
                 self.store.close()
-            except Exception:  # pragma: no cover - already closed
-                pass
 
 
 # -- helpers ---------------------------------------------------------------------------
 def _demo_index(embedder: Any) -> IndexBundle:
     chunks: Sequence[Chunk] = demo_corpus()
     digest = hashlib.sha256("|".join(chunk.chunk_id for chunk in chunks).encode("utf-8"))
-    store = ChunkStore.from_chunks(chunks, corpus_version=DEMO_CORPUS_PREFIX + digest.hexdigest()[:12])
+    store = ChunkStore.from_chunks(
+        chunks, corpus_version=DEMO_CORPUS_PREFIX + digest.hexdigest()[:12]
+    )
     return IndexBundle.build(store, embedder)
 
 
@@ -511,6 +515,7 @@ def _load_engine(
                 threshold_ref=engine.threshold_ref(),
                 artifact_hash=engine.artifact_hash,
                 artifact_corpus_version=engine.corpus_version,
+                stale=engine.stale,
             ),
             engine,
         )
@@ -528,11 +533,15 @@ def _load_engine(
     else:
         path = settings.resolve_path(DEFAULT_CALIBRATION_ARTIFACT)
         if not path.is_file():
-            return CalibrationState(source="unavailable", error="no calibration artifact found"), None
+            return CalibrationState(
+                source="unavailable", error="no calibration artifact found"
+            ), None
     try:
         artifact = CalibrationArtifact.load(path)
     except Exception as exc:
-        return CalibrationState(source=str(path), error=f"cannot load calibration artifact: {exc}"), None
+        return CalibrationState(
+            source=str(path), error=f"cannot load calibration artifact: {exc}"
+        ), None
     try:
         resolved = DecisionEngine.from_artifact(
             artifact,
@@ -541,7 +550,9 @@ def _load_engine(
             max_age_days=svc.calibration_max_age_days,
         )
     except Exception as exc:
-        return CalibrationState(source=str(path), error=f"invalid calibration artifact: {exc}"), None
+        return CalibrationState(
+            source=str(path), error=f"invalid calibration artifact: {exc}"
+        ), None
     return (
         CalibrationState(
             source=str(path),

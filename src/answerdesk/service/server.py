@@ -110,7 +110,7 @@ def _probe(server: Any, *, url: str) -> int:
                     break
                 try:
                     response = client.get(f"{url}/healthz")
-                except Exception as exc:  # noqa: BLE001 - not up yet
+                except Exception as exc:
                     error = f"{type(exc).__name__}: {exc}"
                     time.sleep(HEALTHCHECK_INTERVAL_S)
                     continue

@@ -1,6 +1,6 @@
 """FR-SVC-04: the admin endpoints are bearer-token guarded and disabled by default.
 
-    # AT-SVC-04  # AT-OPS-07
+# AT-SVC-04  # AT-OPS-07
 """
 
 from __future__ import annotations
@@ -8,8 +8,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import httpx
-
-from support import ADMIN_TOKEN, ANSWERABLE_QUESTION, lifespan_client, run
+from service_support import ADMIN_TOKEN, ANSWERABLE_QUESTION, lifespan_client, run
 
 from answerdesk.config import load_settings
 from answerdesk.service.app import create_app
@@ -88,7 +87,7 @@ def test_admin_ingest_reports_manifest_stats_and_refresh_invalidates_cache(
                 "before": before.json(),
                 "ingested": ingested,
                 "after": after,
-                "trace": runtime.tracer.read(after.json()["trace_id"]),
+                "trace": runtime.tracer.read(after.json()["trace_id"], kind="turn"),
             }
 
     try:

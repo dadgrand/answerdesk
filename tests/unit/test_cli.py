@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
 import pytest
@@ -16,6 +17,21 @@ from answerdesk.cli import app
 from answerdesk.contracts import SCHEMA_VERSION
 
 runner = CliRunner()
+
+
+@pytest.fixture(autouse=True)
+def _leave_the_base_import_graph_clean():
+    """The ``serve`` test imports the API stack; restore ``sys.modules`` afterwards.
+
+    ``tests/smoke/test_package.py`` asserts the base install never imports FastAPI, which
+    it observes through the process-global module table. This file is one of the two places
+    that legitimately imports the ``api`` extra, so it leaves the table as it found it.
+    """
+    yield
+    for name in list(sys.modules):
+        if name.split(".")[0] in {"fastapi", "starlette", "sse_starlette"}:
+            sys.modules.pop(name, None)
+
 
 DOCUMENTED_COMMANDS = (
     "version",

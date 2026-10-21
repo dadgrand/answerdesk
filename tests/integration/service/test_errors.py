@@ -84,7 +84,7 @@ def test_unknown_route_is_404_and_wrong_method_is_405(make_client) -> None:
 
 
 def test_oversized_body_is_413(core_settings, service_settings) -> None:
-    from support import lifespan_client, run
+    from service_support import lifespan_client, run
 
     from answerdesk.service.app import create_app
     from answerdesk.service.config import ServiceSettings
@@ -113,7 +113,7 @@ def test_oversized_body_is_413(core_settings, service_settings) -> None:
 
 
 def test_rate_limited_response_carries_a_retry_hint(core_settings, service_settings) -> None:
-    from support import lifespan_client, run
+    from service_support import lifespan_client, run
 
     from answerdesk.service.app import create_app
     from answerdesk.service.config import ServiceSettings

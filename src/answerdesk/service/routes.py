@@ -25,10 +25,11 @@ status code. A provider failure *inside* the stream becomes an ``error`` event f
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import time
 from collections.abc import AsyncIterator
 from pathlib import Path
-from typing import Any
+from typing import Annotated, Any, cast
 
 from fastapi import APIRouter, Depends, Header, Query, Request, Response
 from fastapi.responses import JSONResponse, StreamingResponse
@@ -47,6 +48,7 @@ from answerdesk.service.errors import (
 )
 from answerdesk.service.runtime import ServiceRuntime
 from answerdesk.service.schemas import (
+    ERROR_RESPONSES,
     AnswerPayload,
     CacheSummary,
     ChatRequest,
@@ -88,7 +90,7 @@ def get_runtime(request: Request) -> ServiceRuntime:
     runtime = getattr(request.app.state, "runtime", None)
     if runtime is None:  # pragma: no cover - lifespan always sets it
         raise ServiceError("service_unavailable", "the service runtime is not initialised")
-    return runtime
+    return cast(ServiceRuntime, runtime)
 
 
 def get_trace_id(request: Request) -> str:
@@ -99,24 +101,31 @@ def get_trace_id(request: Request) -> str:
     return trace_id
 
 
-def get_runner(runtime: ServiceRuntime = Depends(get_runtime)) -> TurnRunner:
+#: FastAPI dependencies as ``Annotated`` aliases (no function call in a default argument).
+RuntimeDep = Annotated[ServiceRuntime, Depends(get_runtime)]
+TraceDep = Annotated[str, Depends(get_trace_id)]
+AuthorizationHeader = Annotated[str | None, Header(alias="Authorization")]
+
+
+def get_runner(runtime: RuntimeDep) -> TurnRunner:
     return TurnRunner(runtime)
 
 
 async def require_admin(
-    runtime: ServiceRuntime = Depends(get_runtime),
-    authorization: str | None = Header(default=None, alias="Authorization"),
+    runtime: RuntimeDep,
+    authorization: AuthorizationHeader = None,
 ) -> None:
     """Bearer-token gate: 401 without a header, 403 when disabled or wrong (FR-SVC-04)."""
     service = runtime.service
-    if not service.admin_enabled:
+    token = service.admin_token
+    if not service.admin_enabled or token is None:
         raise AdminDisabled()
     if not authorization:
         raise Unauthorized("admin endpoints require an Authorization: Bearer <token> header")
     scheme, _, presented = authorization.partition(" ")
     if scheme.lower() != "bearer" or not presented:
         raise Unauthorized("Authorization must use the Bearer scheme")
-    if not constant_time_equals(presented.strip(), service.admin_token.get_secret_value()):
+    if not constant_time_equals(presented.strip(), token.get_secret_value()):
         raise Forbidden("the bearer token is not accepted")
 
 
@@ -134,19 +143,20 @@ def _wants_stream(payload: ChatRequest, request: Request) -> bool:
     summary="Answer one customer turn (SSE by default)",
     response_model=None,
     responses={
+        **ERROR_RESPONSES,
         200: {
             "description": (
                 "text/event-stream with retrieval → tokens* → citations → decision → done, "
                 "or a ChatResponse JSON object when stream=false"
             )
-        }
+        },
     },
 )
 async def chat(
     payload: ChatRequest,
     request: Request,
-    runtime: ServiceRuntime = Depends(get_runtime),
-    trace_id: str = Depends(get_trace_id),
+    runtime: RuntimeDep,
+    trace_id: TraceDep,
     idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
 ) -> Response:
     runtime.require_answer_path()
@@ -239,11 +249,14 @@ async def _stream_turns(
     started = time.perf_counter()
     try:
         result = await asyncio.to_thread(runner.run, turn_request, trace_id=trace_id)
-    except BaseException as exc:  # noqa: BLE001 - the stream must always terminate cleanly
+    except BaseException as exc:
         error = to_service_error(exc)
         runtime.metrics.observe_error(error.code)
         payload = error.envelope(trace_id)
-        yield sse_event("error", ErrorEvent(trace_id=trace_id, error=ErrorEnvelope(**payload)).model_dump(mode="json"))
+        yield sse_event(
+            "error",
+            ErrorEvent(trace_id=trace_id, error=ErrorEnvelope(**payload)).model_dump(mode="json"),
+        )
         yield sse_event(
             "done",
             {
@@ -264,9 +277,12 @@ async def _stream_turns(
         return
 
     yield sse_event("retrieval", _retrieval_event(result).model_dump(mode="json"))
-    for index, delta in enumerate(token_chunks(result.answer.text, runtime.service.sse_token_chars)):
+    for index, delta in enumerate(
+        token_chunks(result.answer.text, runtime.service.sse_token_chars)
+    ):
         yield sse_event(
-            "tokens", TokenEvent(trace_id=trace_id, delta=delta, index=index).model_dump(mode="json")
+            "tokens",
+            TokenEvent(trace_id=trace_id, delta=delta, index=index).model_dump(mode="json"),
         )
     yield sse_event("citations", _citations_event(result).model_dump(mode="json"))
     yield sse_event("decision", _decision_event(result).model_dump(mode="json"))
@@ -292,8 +308,8 @@ async def _stream_turns(
 @router.post("/v1/sessions", tags=["sessions"], summary="Create an empty conversation")
 async def create_session(
     request: Request,
+    runtime: RuntimeDep,
     locale: str | None = Query(default=None, max_length=8),
-    runtime: ServiceRuntime = Depends(get_runtime),
 ) -> JSONResponse:
     session = runtime.store.create_session(locale=locale)
     runtime.metrics.sessions_created.inc()
@@ -316,12 +332,13 @@ async def create_session(
     tags=["sessions"],
     summary="Read a conversation and its turns",
     response_model=SessionResponse,
+    responses=ERROR_RESPONSES,
 )
 async def get_session(
     session_id: str,
     request: Request,
+    runtime: RuntimeDep,
     limit: int = Query(default=50, ge=1, le=500),
-    runtime: ServiceRuntime = Depends(get_runtime),
 ) -> SessionResponse:
     session = runtime.store.get_session(session_id)
     if session is None:
@@ -356,11 +373,12 @@ async def get_session(
     tags=["feedback"],
     summary="Attach a customer/operator verdict to a trace",
     response_model=FeedbackResponse,
+    responses=ERROR_RESPONSES,
     status_code=201,
 )
 async def create_feedback(
     payload: FeedbackRequest,
-    runtime: ServiceRuntime = Depends(get_runtime),
+    runtime: RuntimeDep,
 ) -> FeedbackResponse:
     turn = runtime.store.turn_by_trace(payload.trace_id)
     if turn is None:
@@ -385,7 +403,7 @@ async def create_feedback(
 def _record_cache_wrong_hit(runtime: ServiceRuntime, trace_id: str) -> None:
     """A down-vote on a cache hit is the live signal for the cache error budget (§9.5)."""
     try:
-        line = runtime.tracer.read(trace_id)
+        line = runtime.tracer.read(trace_id, kind="turn")
     except Exception:  # pragma: no cover - tracing must not block feedback
         return
     if not line:
@@ -396,10 +414,8 @@ def _record_cache_wrong_hit(runtime: ServiceRuntime, trace_id: str) -> None:
     runtime.metrics.cache_wrong_hits.inc()
     entry_id = cache.get("entry_id")
     if entry_id and runtime.cache is not None:
-        try:
+        with contextlib.suppress(Exception):  # an eviction race must not fail feedback
             runtime.cache.record_wrong_hit(entry_id)
-        except Exception:  # pragma: no cover - eviction race
-            pass
 
 
 # -- escalation tickets ----------------------------------------------------------------
@@ -408,11 +424,12 @@ def _record_cache_wrong_hit(runtime: ServiceRuntime, trace_id: str) -> None:
     tags=["escalations"],
     summary="Open an escalation ticket against a trace",
     response_model=TicketResponse,
+    responses=ERROR_RESPONSES,
     status_code=201,
 )
 async def create_escalation(
     payload: EscalationTicketRequest,
-    runtime: ServiceRuntime = Depends(get_runtime),
+    runtime: RuntimeDep,
 ) -> TicketResponse:
     turn = runtime.store.turn_by_trace(payload.trace_id)
     if turn is None:
@@ -433,8 +450,9 @@ async def create_escalation(
     tags=["escalations"],
     summary="Read one escalation ticket",
     response_model=TicketResponse,
+    responses=ERROR_RESPONSES,
 )
-async def get_escalation(ticket_id: str, runtime: ServiceRuntime = Depends(get_runtime)) -> TicketResponse:
+async def get_escalation(ticket_id: str, runtime: RuntimeDep) -> TicketResponse:
     ticket = runtime.store.get_ticket(ticket_id)
     if ticket is None:
         raise NotFound(f"ticket {ticket_id!r}")
@@ -447,9 +465,9 @@ async def get_escalation(ticket_id: str, runtime: ServiceRuntime = Depends(get_r
     summary="List escalation tickets (newest first)",
 )
 async def list_escalations(
+    runtime: RuntimeDep,
     status: str | None = Query(default=None, max_length=32),
     limit: int = Query(default=50, ge=1, le=200),
-    runtime: ServiceRuntime = Depends(get_runtime),
 ) -> dict[str, Any]:
     rows = runtime.store.list_tickets(status=status, limit=limit)
     return {"tickets": [_ticket_response(row).model_dump(mode="json") for row in rows]}
@@ -461,9 +479,10 @@ async def list_escalations(
     tags=["traces"],
     summary="Read the redacted JSONL trace line for a turn",
     response_model=TraceResponse,
+    responses=ERROR_RESPONSES,
 )
-async def get_trace(trace_id: str, runtime: ServiceRuntime = Depends(get_runtime)) -> TraceResponse:
-    line = runtime.tracer.read(trace_id)
+async def get_trace(trace_id: str, runtime: RuntimeDep) -> TraceResponse:
+    line = runtime.tracer.read(trace_id, kind="turn")
     if line is None:
         raise NotFound(f"trace {trace_id!r}")
     return TraceResponse(trace_id=trace_id, trace=line)
@@ -475,11 +494,12 @@ async def get_trace(trace_id: str, runtime: ServiceRuntime = Depends(get_runtime
     tags=["admin"],
     summary="Ingest a source (or the demo corpus) and rebuild the index",
     response_model=IngestResponse,
+    responses=ERROR_RESPONSES,
     dependencies=[Depends(require_admin)],
 )
 async def admin_ingest(
     payload: IngestRequest,
-    runtime: ServiceRuntime = Depends(get_runtime),
+    runtime: RuntimeDep,
 ) -> IngestResponse:
     return await _ingest(runtime, payload)
 
@@ -489,10 +509,11 @@ async def admin_ingest(
     tags=["admin"],
     summary="Rebuild/reload the index and invalidate the answer cache",
     response_model=IngestResponse,
+    responses=ERROR_RESPONSES,
     dependencies=[Depends(require_admin)],
 )
 async def admin_refresh(
-    runtime: ServiceRuntime = Depends(get_runtime),
+    runtime: RuntimeDep,
     force: bool = Query(default=True, description="Rebuild even when the fingerprint matches."),
 ) -> IngestResponse:
     return await _ingest(runtime, IngestRequest(demo=True, force=force))
@@ -519,10 +540,12 @@ async def _ingest(runtime: ServiceRuntime, payload: IngestRequest) -> IngestResp
                 )
             except IngestError as exc:
                 raise BadRequest(exc.message, detail=exc.detail) from exc
-        result = await asyncio.to_thread(runtime.refresh_index, demo=payload.demo, force=payload.force)
+        result = await asyncio.to_thread(
+            runtime.refresh_index, demo=payload.demo, force=payload.force
+        )
     except BadRequest:
         raise
-    except Exception as exc:  # noqa: BLE001 - map every operator failure to the taxonomy
+    except Exception as exc:
         raise to_service_error(exc) from exc
     runtime.metrics.observe_stage("admin_ingest", time.perf_counter() - started)
     return IngestResponse(

@@ -29,7 +29,7 @@ Writers are synchronous and append-only. A test can pass an :class:`InMemoryTrac
 production uses :class:`JsonlTraceWriter`, which rotates by size and never overwrites a
 previous line.
 
-    # AT-SVC-08  # AT-OBS-01  # AT-COST-03
+    # AT-SVC-08  # AT-OBS-01  # AT-OBS-02  # AT-COST-03  # AT-LAT-01
 """
 
 from __future__ import annotations
@@ -61,7 +61,7 @@ class TraceWriter(Protocol):
 
     def write(self, line: Mapping[str, Any]) -> None: ...
 
-    def read(self, trace_id: str) -> dict[str, Any] | None: ...
+    def read(self, trace_id: str, *, kind: str | None = None) -> dict[str, Any] | None: ...
 
     def close(self) -> None: ...
 
@@ -109,12 +109,16 @@ class InMemoryTraceWriter:
         with self._lock:
             self.lines.append(payload)
 
-    def read(self, trace_id: str) -> dict[str, Any] | None:
+    def read(self, trace_id: str, *, kind: str | None = None) -> dict[str, Any] | None:
+        fallback: dict[str, Any] | None = None
         with self._lock:
             for line in reversed(self.lines):
-                if line.get("trace_id") == trace_id:
+                if line.get("trace_id") != trace_id:
+                    continue
+                if kind is None or line.get("kind") == kind:
                     return line
-        return None
+                fallback = fallback or line
+        return fallback
 
     def close(self) -> None:  # pragma: no cover - nothing to flush
         return None
@@ -146,7 +150,7 @@ class JsonlTraceWriter:
         self.backups = max(0, backups)
         self.redact = redact
         self._lock = threading.Lock()
-        self._handle = None
+        self._handle: Any = None
 
     # -- protocol ------------------------------------------------------------------
     def write(self, line: Mapping[str, Any]) -> None:
@@ -159,8 +163,9 @@ class JsonlTraceWriter:
             handle.flush()
             os.fsync(handle.fileno())
 
-    def read(self, trace_id: str) -> dict[str, Any] | None:
-        """Scan newest-first for a trace id (the console's trace lookup)."""
+    def read(self, trace_id: str, *, kind: str | None = None) -> dict[str, Any] | None:
+        """Scan newest-first for a trace id, preferring ``kind`` when one is given."""
+        fallback: dict[str, Any] | None = None
         for path in self._files_newest_first():
             try:
                 lines = path.read_text(encoding="utf-8").splitlines()
@@ -171,9 +176,12 @@ class JsonlTraceWriter:
                     payload = json.loads(raw)
                 except json.JSONDecodeError:  # pragma: no cover - corrupt line
                     continue
-                if isinstance(payload, dict) and payload.get("trace_id") == trace_id:
+                if not isinstance(payload, dict) or payload.get("trace_id") != trace_id:
+                    continue
+                if kind is None or payload.get("kind") == kind:
                     return payload
-        return None
+                fallback = fallback or payload
+        return fallback
 
     def close(self) -> None:
         with self._lock:
@@ -182,7 +190,7 @@ class JsonlTraceWriter:
                 self._handle = None
 
     # -- internals -----------------------------------------------------------------
-    def _open(self):
+    def _open(self) -> Any:
         if self._handle is None:
             self._handle = self.path.open("a", encoding="utf-8", newline="\n")
         return self._handle

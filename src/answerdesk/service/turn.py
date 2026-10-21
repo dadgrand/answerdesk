@@ -29,9 +29,9 @@ console need. Nothing in the route mutates pipeline state.
 
 from __future__ import annotations
 
+import contextlib
 import time
 import uuid
-from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -47,7 +47,6 @@ from answerdesk.contracts import (
     Provenance,
     ReasonCode,
     RetrievalTrace,
-    RetrievedPassage,
     TraceRecord,
     Usage,
 )
@@ -189,7 +188,11 @@ class TurnRunner:
                 timings["policy"] = _ms(anchor)
             else:
                 # 3. cache lookup (guarded, and re-guarded against this query)
-                if runtime.cache is not None and runtime.cache.enabled:
+                if runtime.cache is None or not runtime.cache.enabled:
+                    cache_status = CacheStatus.BYPASSED
+                    cache_reason = "cache disabled (kill switch)"
+                    runtime.metrics.observe_cache_status(CacheStatus.BYPASSED.value)
+                else:
                     anchor = time.perf_counter()
                     lookup = runtime.cache.get(
                         query=replay.query,
@@ -233,9 +236,7 @@ class TurnRunner:
                 if answer is None and decision is None:
                     # 4. retrieval
                     anchor = time.perf_counter()
-                    retrieval, stage_timings = runtime.retriever.retrieve_with_timings(
-                        replay.query
-                    )
+                    retrieval, stage_timings = runtime.retriever.retrieve_with_timings(replay.query)
                     timings["retrieval"] = _ms(anchor)
                     if "rerank_ms" in stage_timings:
                         timings["rerank"] = float(stage_timings["rerank_ms"])
@@ -410,6 +411,7 @@ class TurnRunner:
             error=error,
         )
         extra = {
+            "kind": "turn",
             "service": {
                 "version": runtime.info.profile,
                 "profile": runtime.info.profile,
@@ -465,7 +467,10 @@ class TurnRunner:
                 else None
             ),
             "provider_redactions": getattr(runtime.provider, "redactions", 0),
-            "query_pii": {"redacted": getattr(query, "count", 0), "kinds": list(getattr(query, "kinds", ()))},
+            "query_pii": {
+                "redacted": getattr(query, "count", 0),
+                "kinds": list(getattr(query, "kinds", ())),
+            },
         }
         line, _summary = trace_line(record, extra=extra)
         runtime.tracer.write(line)
@@ -518,13 +523,17 @@ class TurnRunner:
         )
         line, _summary = trace_line(
             record,
-            extra={"service": {"profile": runtime.info.profile, "fake": runtime.info.fake}},
+            extra={
+                "kind": "turn",
+                "service": {"profile": runtime.info.profile, "fake": runtime.info.fake},
+            },
         )
         try:
             runtime.tracer.write(line)
             runtime.metrics.observe_trace(outcome="error")
         except Exception:  # pragma: no cover - tracing must never mask the real error
             pass
+
 
 # -- assembly helpers ------------------------------------------------------------------
 def _language(hint: str | None, text: str) -> str:
@@ -555,7 +564,9 @@ def _assemble(
     return Answer(
         answer_id=f"ans-{uuid.uuid4().hex[:16]}",
         trace_id=identifiers,
-        language=generation.language if generation is not None and generation.language else language,
+        language=generation.language
+        if generation is not None and generation.language
+        else language,
         text=text,
         claims=claims,
         citations=citations,
@@ -573,7 +584,9 @@ def _assemble(
         provenance=Provenance(
             corpus_version=runtime.info.corpus_version,
             index_version=runtime.info.index_version,
-            prompt_version=generation.prompt_version if generation is not None else runtime.info.prompt_version,
+            prompt_version=generation.prompt_version
+            if generation is not None
+            else runtime.info.prompt_version,
             verifier_version=generation.verifier_version if generation is not None else "",
             scorer_version=runtime.scorer.version,
         ),
@@ -632,9 +645,7 @@ def _display_problems(generation: GenerationResult | None) -> list[str]:
             problems.append(f"citation {citation.citation_id} has an empty quote")
     for claim in generation.claims:
         quoted = [
-            by_id[citation_id].quote
-            for citation_id in claim.citation_ids
-            if citation_id in by_id
+            by_id[citation_id].quote for citation_id in claim.citation_ids if citation_id in by_id
         ]
         problems.extend(f"numeric guard: {item}" for item in numeric_violations(claim.text, quoted))
     return problems
@@ -654,7 +665,7 @@ def _cache_put(
             "chunk_ids": [passage.chunk.chunk_id for passage in retrieval.packed],
             "scores": [round(passage.score, 6) for passage in retrieval.packed],
         }
-    try:
+    with contextlib.suppress(Exception):  # a cache write must never fail a turn
         runtime.cache.put(
             query=replay.query,
             locale=request.locale or language,
@@ -662,8 +673,6 @@ def _cache_put(
             answer=answer,
             retrieval_fingerprint=fingerprint,
         )
-    except Exception:  # pragma: no cover - a cache write must never fail a turn
-        pass
 
 
 def _scores(retrieval: RetrievalTrace | None) -> list[dict[str, Any]]:

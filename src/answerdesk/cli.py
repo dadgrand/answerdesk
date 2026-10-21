@@ -231,6 +231,9 @@ def eval(  # the command is named `eval` on purpose (requirements §17.2)
     answer_limit: int | None = typer.Option(
         None, "--answer-limit", help="Generation arms: evaluate N cases (stratified by locale)."
     ),
+    retrieval_limit: int | None = typer.Option(
+        None, "--retrieval-limit", help="Retrieval ablation: evaluate N cases (stratified)."
+    ),
     calibration: Path | None = typer.Option(
         None, "--calibration", help="Sealed policy calibration artifact (t8) for the bench."
     ),
@@ -271,6 +274,7 @@ def eval(  # the command is named `eval` on purpose (requirements §17.2)
             limit=limit,
             split=split,
             answer_limit=answer_limit,
+            retrieval_limit=retrieval_limit,
             calibration=calibration,
             force_index=force_index,
             replay=replay,

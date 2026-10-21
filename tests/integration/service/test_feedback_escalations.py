@@ -1,22 +1,19 @@
 """FR-SVC-05: feedback and escalation tickets persist and link to their trace.
 
-    # AT-SVC-05  # AT-CAC-08
+# AT-SVC-05  # AT-CAC-08
 """
 
 from __future__ import annotations
 
 import httpx
-
-from support import ANSWERABLE_QUESTION, parse_sse
+from service_support import ANSWERABLE_QUESTION, parse_sse
 
 CHAT = "/v1/chat"
 
 
 def test_feedback_round_trip_and_trace_linkage(make_client) -> None:
     async def scenario(client: httpx.AsyncClient, runtime) -> dict:
-        answer = await client.post(
-            CHAT, json={"message": ANSWERABLE_QUESTION, "stream": False}
-        )
+        answer = await client.post(CHAT, json={"message": ANSWERABLE_QUESTION, "stream": False})
         trace_id = answer.json()["trace_id"]
         created = await client.post(
             "/v1/feedback",
@@ -68,7 +65,7 @@ def test_escalation_ticket_round_trip(make_client) -> None:
             "created": created,
             "fetched": fetched,
             "listed": listed.json(),
-            "trace": runtime.tracer.read(trace_id),
+            "trace": runtime.tracer.read(trace_id, kind="turn"),
         }
 
     outcome = make_client(scenario)
@@ -96,13 +93,11 @@ def test_auto_escalation_creates_a_ticket(make_client) -> None:
     async def scenario(client: httpx.AsyncClient, runtime) -> dict:
         frames = parse_sse(
             (
-                await client.post(
-                    CHAT, json={"message": "Какие часы работы у офиса в Антарктиде?"}
-                )
+                await client.post(CHAT, json={"message": "Какие часы работы у офиса в Антарктиде?"})
             ).text
         )
         done = frames[-1].data
-        return {"done": done, "trace": runtime.tracer.read(done["trace_id"])}
+        return {"done": done, "trace": runtime.tracer.read(done["trace_id"], kind="turn")}
 
     outcome = make_client(scenario)
     done = outcome["done"]
@@ -113,12 +108,8 @@ def test_auto_escalation_creates_a_ticket(make_client) -> None:
 
 def test_down_vote_on_a_cache_hit_counts_as_a_wrong_hit(make_client, runtime) -> None:
     async def scenario(client: httpx.AsyncClient, runtime) -> dict:
-        first = await client.post(
-            CHAT, json={"message": ANSWERABLE_QUESTION, "stream": False}
-        )
-        second = await client.post(
-            CHAT, json={"message": ANSWERABLE_QUESTION, "stream": False}
-        )
+        await client.post(CHAT, json={"message": ANSWERABLE_QUESTION, "stream": False})
+        second = await client.post(CHAT, json={"message": ANSWERABLE_QUESTION, "stream": False})
         payload = second.json()
         response = await client.post(
             "/v1/feedback", json={"trace_id": payload["trace_id"], "rating": "down"}

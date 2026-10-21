@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from support import ADMIN_TOKEN, lifespan_client, run
+from service_support import ADMIN_TOKEN, lifespan_client, run
 
 from answerdesk.config import Settings, load_settings
 from answerdesk.generate.demo import demo_responses
@@ -30,6 +30,37 @@ from answerdesk.service.runtime import ServiceRuntime
 from answerdesk.testing.doubles import FakeProvider
 
 pytestmark = pytest.mark.integration
+
+#: Modules the ``api`` extra installs. The service suite is their only consumer.
+_SERVICE_ONLY_MODULES = ("fastapi", "starlette", "sse_starlette")
+
+#: The CI gate installs the ``dev`` extra only, so the API stack may legitimately be absent.
+pytest.importorskip(
+    "fastapi",
+    reason=(
+        "the service tests need the `api` extra: uv sync --extra api --extra dev "
+        "(CI installs dev only and skips this directory)"
+    ),
+)
+
+
+@pytest.fixture(autouse=True)
+def _leave_the_base_import_graph_clean() -> Iterator[None]:
+    """Restore ``sys.modules`` after each service test.
+
+    ``tests/smoke/test_package.py::test_base_install_does_not_import_heavy_dependencies``
+    asserts that the *base* install never imports FastAPI. That assertion is about the
+    package graph, but it observes a process-global: this directory is the one place that
+    legitimately imports the ``api`` extra, so it leaves ``sys.modules`` as it found it.
+    The service modules themselves are imported once per session and keep their references,
+    so this only removes the module cache entries, not any live object.
+    """
+    yield
+    import sys
+
+    for name in list(sys.modules):
+        if name.split(".")[0] in _SERVICE_ONLY_MODULES:
+            sys.modules.pop(name, None)
 
 
 @pytest.fixture(autouse=True)

@@ -108,7 +108,10 @@ def normalise_passages(passages: Sequence[RetrievedPassage]) -> list[RetrievedPa
     best = max(passage.score for passage in passages)
     if best <= 0:
         return [passage.model_copy(update={"score": 0.0}) for passage in passages]
-    return [passage.model_copy(update={"score": round(passage.score / best, 10)}) for passage in passages]
+    return [
+        passage.model_copy(update={"score": round(passage.score / best, 10)})
+        for passage in passages
+    ]
 
 
 def replay_history(

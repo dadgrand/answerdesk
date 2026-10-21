@@ -1,13 +1,12 @@
 """FR-SVC-02: an ``Idempotency-Key`` replay costs no model call and returns the same body.
 
-    # AT-SVC-02
+# AT-SVC-02
 """
 
 from __future__ import annotations
 
 import httpx
-
-from support import ANSWERABLE_QUESTION, parse_sse
+from service_support import ANSWERABLE_QUESTION, parse_sse
 
 CHAT = "/v1/chat"
 
@@ -60,8 +59,12 @@ def test_streamed_then_replayed_request_returns_json(make_client, fake_provider)
         streamed = await client.post(CHAT, json=body, headers=headers)
         calls = len(fake_provider.calls)
         replay = await client.post(CHAT, json=body, headers=headers)
-        return {"streamed": streamed, "replay": replay, "calls": calls,
-                "calls_after": len(fake_provider.calls)}
+        return {
+            "streamed": streamed,
+            "replay": replay,
+            "calls": calls,
+            "calls_after": len(fake_provider.calls),
+        }
 
     outcome = make_client(scenario)
     assert outcome["streamed"].headers["content-type"].startswith("text/event-stream")
@@ -74,7 +77,7 @@ def test_streamed_then_replayed_request_returns_json(make_client, fake_provider)
 
 def test_different_keys_are_different_turns(core_settings, service_settings, fake_provider) -> None:
     """Two keys must produce two turns; the cache is disabled so the model call is visible."""
-    from support import run, lifespan_client
+    from service_support import lifespan_client, run
 
     from answerdesk.service.app import create_app
     from answerdesk.service.runtime import ServiceRuntime

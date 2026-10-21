@@ -12,14 +12,14 @@ from __future__ import annotations
 import json
 
 import httpx
-
-from answerdesk.contracts import Action
-from support import (
+from service_support import (
     ANSWERABLE_QUESTION,
     UNANSWERABLE_QUESTION,
     events_text,
     parse_sse,
 )
+
+from answerdesk.contracts import Action
 
 CHAT = "/v1/chat"
 ORDER = ["retrieval", "citations", "decision", "done"]
@@ -168,9 +168,7 @@ def test_citations_event_is_json_serialisable_per_locale(make_client) -> None:
     """The framing must survive non-ASCII text without breaking the frame (Cyrillic/CJK)."""
 
     async def scenario(client: httpx.AsyncClient, runtime) -> list:
-        response = await client.post(
-            CHAT, json={"message": "обслуживание карты", "locale": "ru"}
-        )
+        response = await client.post(CHAT, json={"message": "обслуживание карты", "locale": "ru"})
         return parse_sse(response.text)
 
     frames = make_client(scenario)
@@ -178,3 +176,27 @@ def test_citations_event_is_json_serialisable_per_locale(make_client) -> None:
         json.dumps(frame.data, ensure_ascii=False)
     retrieval = next(frame for frame in frames if frame.event == "retrieval").data
     assert retrieval["language"].startswith("ru")
+
+
+def test_offline_turn_latency_is_within_the_ci_budget(make_client) -> None:
+    """NFR-LAT-03: the deterministic offline path is fast enough to guard CI regressions.
+
+    The budget is 1 500 ms p95 for one fixture query with doubles (no network, no
+    reranker). Ten turns are measured server-side (``timings_ms.total``), which is the same
+    number the trace records — so a regression here also shows up in production traces.
+    """
+
+    async def scenario(client: httpx.AsyncClient, runtime) -> list[float]:
+        latencies: list[float] = []
+        for _ in range(10):
+            response = await client.post(
+                CHAT, json={"message": ANSWERABLE_QUESTION, "stream": False}
+            )
+            assert response.status_code == 200, response.text
+            latencies.append(float(response.json()["timings_ms"]["total"]))
+        return latencies
+
+    latencies = sorted(make_client(scenario))
+    p95 = latencies[round(0.95 * (len(latencies) - 1))]
+    assert p95 <= 1500.0, f"offline p95 {p95:.1f} ms exceeds NFR-LAT-03"
+    assert latencies[0] >= 0.0

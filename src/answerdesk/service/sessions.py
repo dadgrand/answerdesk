@@ -38,7 +38,7 @@ import json
 import sqlite3
 import threading
 import uuid
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -363,7 +363,9 @@ class SQLiteSessionStore:
                 "created_at) VALUES (?, ?, ?, ?, ?, ?)",
                 (feedback_id, trace_id, session_id, rating, redact_str(comment or ""), created),
             )
-        return FeedbackRow(feedback_id, trace_id, session_id, rating, redact_str(comment or ""), created)
+        return FeedbackRow(
+            feedback_id, trace_id, session_id, rating, redact_str(comment or ""), created
+        )
 
     def feedback_for(self, trace_id: str) -> list[FeedbackRow]:
         with self._lock:
@@ -519,7 +521,9 @@ class SQLiteSessionStore:
     def purge_idempotent(self, *, ttl_s: int) -> int:
         cutoff = datetime.now(UTC).timestamp() - ttl_s
         with self._lock, self._conn:
-            rows = self._conn.execute("SELECT key, endpoint, created_at FROM idempotency").fetchall()
+            rows = self._conn.execute(
+                "SELECT key, endpoint, created_at FROM idempotency"
+            ).fetchall()
             stale = [
                 (row["key"], row["endpoint"])
                 for row in rows

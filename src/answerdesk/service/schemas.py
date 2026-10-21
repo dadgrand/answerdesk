@@ -247,7 +247,7 @@ class ErrorEvent(Wire):
 
     event: Literal["error"] = "error"
     trace_id: str
-    error: "ErrorEnvelope"
+    error: ErrorEnvelope
 
 
 class ErrorEnvelope(Wire):

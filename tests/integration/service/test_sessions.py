@@ -1,13 +1,12 @@
 """FR-SVC-02: sessions and turns persist, survive a restart, and replay into the pipeline.
 
-    # AT-SVC-02  # AT-SVC-05  # AT-SEC-02
+# AT-SVC-02  # AT-SVC-05  # AT-SEC-02
 """
 
 from __future__ import annotations
 
 import httpx
-
-from support import ANSWERABLE_QUESTION, parse_sse
+from service_support import ANSWERABLE_QUESTION, parse_sse
 
 from answerdesk.service.app import create_app
 from answerdesk.service.runtime import ServiceRuntime
@@ -57,7 +56,7 @@ def test_turns_survive_a_process_restart(core_settings, service_settings, tmp_pa
     first = ServiceRuntime.create(core_settings, service_settings, fake=True)
     app_one = create_app(settings=core_settings, service_settings=service_settings, runtime=first)
     try:
-        from support import lifespan_client, run
+        from service_support import lifespan_client, run
 
         async def write() -> str:
             async with lifespan_client(app_one) as client:
@@ -74,7 +73,7 @@ def test_turns_survive_a_process_restart(core_settings, service_settings, tmp_pa
     second = ServiceRuntime.create(core_settings, service_settings, fake=True)
     app_two = create_app(settings=core_settings, service_settings=service_settings, runtime=second)
     try:
-        from support import lifespan_client, run
+        from service_support import lifespan_client, run
 
         async def read() -> dict:
             async with lifespan_client(app_two) as client:
@@ -109,7 +108,7 @@ def test_history_is_replayed_into_the_pipeline(make_client) -> None:
             "done": frames[-1].data,
             "retrieval": next(frame.data for frame in frames if frame.event == "retrieval"),
             "frames": [frame.event for frame in frames],
-            "trace": runtime.tracer.read(frames[-1].data["trace_id"]),
+            "trace": runtime.tracer.read(frames[-1].data["trace_id"], kind="turn"),
         }
 
     outcome = make_client(scenario)
@@ -146,7 +145,10 @@ def test_stored_messages_are_pii_redacted(make_client) -> None:
         )
         assert response.status_code == 200, response.text
         loaded = await client.get("/v1/sessions/s-pii")
-        return {"session": loaded.json(), "trace": runtime.tracer.read(response.json()["trace_id"])}
+        return {
+            "session": loaded.json(),
+            "trace": runtime.tracer.read(response.json()["trace_id"], kind="turn"),
+        }
 
     outcome = make_client(scenario)
     stored = outcome["session"]["turns"][0]["message"]

@@ -114,7 +114,7 @@ eval:
   judge_api_key: null
   judge_api_key_env: null
   judge_timeout_s: 180.0
-  judge_max_tokens: 512
+  judge_max_tokens: 2048
   judge_temperature: 0.0
   judge_family: null
   # Pacing for free-tier API quotas (seconds between live calls; 0 = as fast as allowed).

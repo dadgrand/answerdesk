@@ -29,7 +29,8 @@ code                             status  retryable
 ``provider_error`` / ``provider_unreachable`` / ``provider_bad_response``  502  yes
 ``provider_timeout``             504     yes
 ``provider_circuit_open`` / ``service_unavailable``  503  yes
-``corpus_missing`` / ``index_missing`` / ``calibration_missing`` / ``stale_calibration``  503  no (operator action)
+``corpus_missing`` / ``index_missing`` / ``calibration_missing`` / ``stale_calibration``
+                                 503     no (operator action)
 ``contract_violation`` / ``internal_error`` / ``stream_error``  500  no
 ===============================  ======  ==========================================
 
@@ -76,7 +77,9 @@ ERROR_TAXONOMY: Mapping[str, ErrorSpec] = {
     "provider_bad_response": ErrorSpec(502, True, "The provider returned an unusable payload."),
     "provider_timeout": ErrorSpec(504, True, "The provider exceeded the configured timeout."),
     "provider_circuit_open": ErrorSpec(503, True, "The provider circuit breaker is open."),
-    "provider_chain_exhausted": ErrorSpec(502, True, "Every provider in the fallback chain failed."),
+    "provider_chain_exhausted": ErrorSpec(
+        502, True, "Every provider in the fallback chain failed."
+    ),
     "corpus_missing": ErrorSpec(503, False, "The corpus (or its manifest) is missing."),
     "index_missing": ErrorSpec(503, False, "The index is missing or built for another corpus."),
     "calibration_missing": ErrorSpec(503, False, "No calibration artifact is available."),
@@ -120,7 +123,7 @@ class ServiceError(AnswerdeskError):
     def response_headers(self, trace_id: str) -> dict[str, str]:
         headers = {"X-Trace-Id": trace_id, **self.headers}
         if self.retry_after_s is not None:
-            headers["Retry-After"] = str(max(1, int(round(self.retry_after_s))))
+            headers["Retry-After"] = str(max(1, round(self.retry_after_s)))
         return headers
 
 
