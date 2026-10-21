@@ -525,7 +525,7 @@ def _same(left: Any, right: Any, *, rel: float = 1e-3, absolute: float = 1e-3) -
         return len(left) == len(right) and all(
             _same(a, b, rel=rel, absolute=absolute) for a, b in zip(left, right, strict=False)
         )
-    return left == right
+    return bool(left == right)
 
 
 def _mismatches(left: Any, right: Any, path: str = "", limit: int = 6) -> list[str]:
