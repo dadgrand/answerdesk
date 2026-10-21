@@ -507,8 +507,19 @@ def check(out_dir: Path = DEFAULT_OUT, *, alpha: float = ALPHA, delta: float = D
     return 0
 
 
+def _rounded(payload: Any) -> Any:
+    """Round floats before serialisation: Linux and Windows BLAS give last-digit drift."""
+    if isinstance(payload, float):
+        return round(payload, 6)
+    if isinstance(payload, dict):
+        return {key: _rounded(value) for key, value in payload.items()}
+    if isinstance(payload, (list, tuple)):
+        return [_rounded(value) for value in payload]
+    return payload
+
+
 def _canonical(payload: Any) -> str:
-    return json.dumps(payload, sort_keys=True, ensure_ascii=False)
+    return json.dumps(_rounded(payload), sort_keys=True, ensure_ascii=False)
 
 
 __all__ = [
