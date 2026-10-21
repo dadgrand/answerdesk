@@ -37,6 +37,8 @@ jobs:
           python-version: "3.12"
       - name: Install (dev extra only, no API key)
         run: uv sync --extra dev --frozen
+      - name: Build the offline corpus (deterministic, no network)
+        run: uv run answerdesk ingest --demo
       - name: Lint (whole repository, including scripts/)
         run: uv run ruff check .
       - name: Format check (whole repository)
@@ -77,6 +79,8 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install (dev + api extras, no key)
         run: uv sync --extra dev --extra api --frozen
+      - name: Build the offline corpus (deterministic, no network)
+        run: uv run answerdesk ingest --demo
       - name: Type check
         run: uv run mypy src/answerdesk
       - name: Tests (no network, no key; service suites must run, not skip)
