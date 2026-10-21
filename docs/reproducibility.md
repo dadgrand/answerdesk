@@ -88,6 +88,10 @@ Run from the repository root. `pwsh` on Windows; the Python commands are cross-p
 | External arm, list suites | `uv run answerdesk eval external --list-suites` | no | nothing |
 | External arm, run | `uv run answerdesk eval external --run --languages ru --answerer-model <model>` | **yes** (+ upstream download) | `reports/external-<run>/` |
 | Load / concurrency check | `uv run python scripts/load.py --smoke` (CI) or `--full` | no | `reports/load*` if `--json` given |
+| Traceability matrix (CMD-T) | `uv run python scripts/check-traceability.py` | no | nothing (exit 1 on a missing marker or stale path) |
+| Published numbers (CMD-NUM) | `uv run python scripts/check-numbers.py` | no | nothing (exit 1 on a quantity with no artifact) |
+| Licence audit (CMD-LIC) | `uv run python scripts/check-licenses.py` | no | nothing (exit 1 on a copyleft dependency) |
+| Coverage gate (NFR-QUAL-02) | coverage step of `scripts/ci-offline.ps1` (`--cov=src/answerdesk/{retrieval,policy,cache,eval} --cov-fail-under=70`) | no | `.coverage` |
 | Console install / test / build | `cd web && npm ci && npm run test && npm run build` | `npm ci` needs the registry (or a warm npm cache) | `web/node_modules/`, `web/dist/` |
 | Console screenshots | `cd web && npm run screenshots` | no (needs the Python service running) | `docs/assets/*.png` |
 
@@ -127,6 +131,8 @@ it). Otherwise `npm ci` needs the registry.
 **`index --demo` says the fingerprint is unchanged.** That is the content-addressed cache working; pass
 `--force` to rebuild (the live benchmark does).
 
+**`pip-audit` cannot run here.** The vulnerability audit needs the network, so the offline gate runs the licence half instead (`scripts/check-licenses.py`); the vulnerability half is a release step, not a CI claim. See `docs/decisions.md` CC-2026-10-21-e.
+
 **`build-results.py --check` fails.** `docs/results.md` no longer matches its artifacts: regenerate it
 from `reports/bench/`, do not edit the document.
 
@@ -141,6 +147,21 @@ what the secondary DeepSeek arm does). Do not compare such an arm to a strict-JS
 **Torch/CUDA on Windows.** Install CPU wheels with `uv sync --extra local`; for CUDA use
 `uv pip install torch --index-url https://download.pytorch.org/whl/cu124` (match your driver). Details
 in [`docs/architecture.md`](architecture.md) §11.
+
+## 6.1 Machine-checked bookkeeping
+
+Three checks keep the documents honest and run in the offline gate (`scripts/ci-offline.ps1`) and in CI
+through `pytest`:
+
+* `scripts/check-traceability.py` (CMD-T) — every `AT-` id in the §16 matrix has a marker, every matrix path
+  resolves; seeded failures are covered by `tests/smoke/test_traceability.py`.
+* `scripts/check-numbers.py` (CMD-NUM) — README quantities must appear in the generated docs or a committed
+  artifact, results quantities in `reports/`; the exception list prints on every run.
+* `scripts/check-licenses.py` (CMD-LIC) — installed distributions classified from metadata then from bundled
+  licence text; copyleft and non-commercial terms fail the gate.
+
+Decisions taken after the requirements freeze, and what each repair proved, are recorded in
+`docs/decisions.md`; their change-control ids (`CC-…`) are in `docs/requirements.md` §18.5.
 
 ## 7. What cannot be reproduced without keys
 

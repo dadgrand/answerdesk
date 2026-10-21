@@ -1,64 +1,86 @@
-"""Traceability markers for the requirements this skeleton owns.
+"""The traceability matrix is enforced by a real script, not by a promise (NFR-REP-03 / CMD-T).
 
-``docs/requirements.md`` §16 maps each requirement to an acceptance test id, and
-``scripts/check-traceability.py`` (t12) verifies that every ``AT-`` id appears as a marker
-in the repository. This test keeps the skeleton honest in the meantime: the requirements
-assigned to t3 must have a marker somewhere in ``src`` or ``tests``.
+This replaces the earlier 12-id subset: the checker itself is executed, and two seeded
+breakages prove that it actually fails when the matrix and the tree disagree.
 
     # AT-REP-03
 """
 
 from __future__ import annotations
 
-import re
+import json
+import shutil
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-
-OWNED_ATS = {
-    "AT-OPS-01",  # CLI surface exists with --help for every subcommand
-    "AT-OPS-03",  # provider presets are configuration
-    "AT-OPS-04",  # offline/api/local profiles
-    "AT-OPS-05",  # actionable config validation, secret redaction
-    "AT-DET-01",  # offline, keyless, network-blocked test gate
-    "AT-DET-03",  # fast gate + full gate
-    "AT-PORT-01",  # one provider seam, local servers need no key
-    "AT-PORT-02",  # Windows + Linux, no Docker
-    "AT-PORT-03",  # heavy dependencies behind extras only
-    "AT-SEC-03",  # no secrets in the repository
-    "AT-QUAL-01",  # ruff + typing configured and clean
-    "AT-DOC-01",  # documentation set exists and is accurate
-}
-
-MARKER = re.compile(r"#\s*(AT-[A-Z0-9]+-\d+)")
-
-
 pytestmark = pytest.mark.smoke
 
-
-def _collect_markers() -> set[str]:
-    markers: set[str] = set()
-    for directory in ("src", "tests", "scripts"):
-        root = REPO_ROOT / directory
-        if not root.exists():  # pragma: no cover - scripts arrive with t12/t14
-            continue
-        for path in root.rglob("*"):
-            if path.suffix not in {".py", ".ps1", ".yml", ".yaml", ".sh"} or not path.is_file():
-                continue
-            markers.update(MARKER.findall(path.read_text(encoding="utf-8", errors="ignore")))
-    return markers
+REPO_ROOT = Path(__file__).resolve().parents[2]
+CHECKER = REPO_ROOT / "scripts" / "check-traceability.py"
+REQUIREMENTS = REPO_ROOT / "docs" / "requirements.md"
 
 
-def test_every_owned_requirement_has_a_traceability_marker() -> None:
-    found = _collect_markers()
-    missing = sorted(OWNED_ATS - found)
-    assert not missing, f"evidence markers missing for {missing}"
+def run_checker(*args: str, cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [sys.executable, str(CHECKER), *args],
+        cwd=str(cwd or REPO_ROOT),
+        capture_output=True,
+        text=True,
+        timeout=120,
+    )
 
 
-def test_requirements_matrix_references_the_same_ids() -> None:
-    """The AT ids above must exist in docs/requirements.md §16 (no invented ids)."""
-    requirements = (REPO_ROOT / "docs" / "requirements.md").read_text(encoding="utf-8")
-    for at_id in OWNED_ATS:
-        assert at_id in requirements, f"{at_id} is not part of the frozen traceability matrix"
+def test_the_checker_exists_and_the_matrix_is_green() -> None:
+    """The release candidate must pass its own gate."""
+    assert CHECKER.is_file(), "scripts/check-traceability.py is missing (CMD-T)"
+    result = run_checker()
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "every matrix path resolves" in result.stdout
+    assert "121 rows" in result.stdout
+
+
+def test_every_at_id_in_the_matrix_has_a_marker() -> None:
+    """Parsed, not assumed: the JSON report enumerates the AT ids and their markers."""
+    result = run_checker("--json")
+    assert result.returncode == 0, result.stdout + result.stderr
+    payload = json.loads(result.stdout)
+    assert payload["rows"] == 121
+    assert payload["at_ids"] == payload["marked_at_ids"]
+    assert payload["missing_markers"] == []
+    assert payload["missing_paths"] == []
+
+
+def test_a_missing_marker_fails_the_gate(tmp_path: Path) -> None:
+    """Seed the failure the script exists to catch: an AT id with no test marker."""
+    (tmp_path / "docs").mkdir()
+    shutil.copy(REQUIREMENTS, tmp_path / "docs" / "requirements.md")
+    (tmp_path / "src").mkdir()
+    (tmp_path / "tests").mkdir()
+    result = run_checker("--root", str(tmp_path))
+    assert result.returncode == 1
+    assert "have no marker" in result.stdout
+    assert "AT-ING-01" in result.stdout
+
+
+def test_a_broken_matrix_path_fails_the_gate(tmp_path: Path) -> None:
+    """Seed the other failure: a matrix row pointing at a module that no longer exists."""
+    (tmp_path / "docs").mkdir()
+    text = REQUIREMENTS.read_text(encoding="utf-8")
+    fake_at = "AT-" + "ZZZ-01"  # assembled at runtime: a literal marker here would be scanned
+    seeded = f"| FR-ZZZ-01 | `policy/does_not_exist.py` | t0 | {fake_at} | CMD-A | G-CI |\n"
+    text = text.replace("## 16. Traceability matrix", "## 16. Traceability matrix\n\n" + seeded, 1)
+    (tmp_path / "docs" / "requirements.md").write_text(text, encoding="utf-8")
+    result = run_checker("--root", str(tmp_path))
+    assert result.returncode == 1
+    assert "policy/does_not_exist.py" in result.stdout
+    assert "do not exist" in result.stdout
+
+
+def test_the_checker_reports_its_verdict() -> None:
+    """A quiet gate must still be able to explain itself."""
+    result = run_checker("--quiet")
+    assert result.returncode == 0
+    assert "OK" in result.stdout

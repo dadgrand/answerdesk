@@ -753,6 +753,73 @@ def _ops_block(summary: Mapping[str, Any], run: Path) -> list[str]:
     return lines
 
 
+def _lat_requirement_block(summary: Mapping[str, Any]) -> list[str]:
+    """NFR-LAT-01 verdict: the target, the measurement, and the miss (review R-02).
+
+    The requirement is a MUST with a G-REL gate and is not amended here. The release rule in
+    docs/requirements.md §17.3 allows either a met threshold or a formally recorded miss, so the
+    verdict is printed next to the numbers it belongs to and cross-referenced to §18.5.
+    """
+    ops = summary.get("ops", {})
+    arm = "primary" if "primary" in ops else next(iter(ops), "")
+    payload = ops.get(arm, {})
+    by_stage = {row["stage"]: row for row in payload.get("latency", [])}
+    generation = by_stage.get("generation")
+    total = by_stage.get("total")
+    if generation is None:
+        return []
+
+    p50 = float(generation["p50_ms"])
+    p95 = float(generation["p95_ms"])
+    n = generation.get("n")
+    missed = p50 > 1500.0 or p95 > 4000.0
+    verdict = "**MISS**" if missed else "PASS"
+    lines = [
+        "## NFR-LAT-01 verdict — latency target",
+        "",
+        f"| requirement | target | measured (arm `{arm}`) | basis | verdict |",
+        "|---|---|---|---|---|",
+        "| NFR-LAT-01 | p50 ≤ 1,500 ms · p95 ≤ 4,000 ms | "
+        f"p50 {p50:.2f} ms · p95 {p95:.2f} ms (n={n}) "
+        "| generation stage, arrival → final byte, judge excluded | " + verdict + " |",
+    ]
+    if total is not None:
+        lines.append(
+            "| (context only) | — | "
+            f"p50 {float(total['p50_ms']):.2f} ms · p95 {float(total['p95_ms']):.2f} ms "
+            f"(n={total.get('n')}) | total including the offline judge; "
+            "the judge is the tail, not the answerer | not a gate |"
+        )
+    lines.append("")
+    if missed:
+        retrieval = by_stage.get("retrieval")
+        retrieval_note = (
+            f" The retrieval path in the same run is {float(retrieval['p50_ms']):.2f}/"
+            f"{float(retrieval['p95_ms']):.2f} ms p50/p95, "
+            "so the budget is consumed by generation, not by retrieval."
+            if retrieval is not None
+            else ""
+        )
+        lines.extend(
+            [
+                "The target is **not** amended: the requirement stays at p50 ≤ 1,500 ms / "
+                "p95 ≤ 4,000 ms and the release records the miss instead of hiding it "
+                "(change control CC-2026-10-21-b, `docs/requirements.md` §18.5).",
+                "",
+                "What the number measures: a hosted ~35B generator in strict-JSON mode producing "
+                "~500 output tokens per answered turn, without a streaming "
+                "time-to-first-token measurement." + retrieval_note,
+                "",
+                "What would change the verdict: a smaller or local model, streaming with TTFT as "
+                "the served-latency metric, and a shorter answer budget — each measurable with the "
+                "same harness (`answerdesk eval --all --provider ...`). Until one of those is "
+                "measured and committed, this requirement is reported as missed.",
+                "",
+            ]
+        )
+    return lines
+
+
 def _error_taxonomy(run: Path) -> list[str]:
     lines = ["## Error taxonomy", ""]
     rows: list[dict[str, str]] = []
@@ -1062,6 +1129,7 @@ def render(run: Path) -> str:
     blocks.extend(_noisy_block(summary, run))
     blocks.extend(_cache_block(summary))
     blocks.extend(_ops_block(summary, run))
+    blocks.extend(_lat_requirement_block(summary))
     blocks.extend(_error_taxonomy(run))
     blocks.extend(_external_block())
     blocks.extend(_limitations(summary))

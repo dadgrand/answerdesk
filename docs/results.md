@@ -446,6 +446,19 @@ Recorded token pricing (see `configs/pricing.yaml` for provenance):
 | qwen3.6-35b-a3b | 0.0 | 0.0 | 2026-10-21 | NeuralDeep free tariff at measurement — no per-token charge observed |
 | qwen3.6-35b-a3b-noreason | 0.0 | 0.0 | 2026-10-21 | NeuralDeep free tariff at measurement — no per-token charge observed |
 
+## NFR-LAT-01 verdict — latency target
+
+| requirement | target | measured (arm `primary`) | basis | verdict |
+|---|---|---|---|---|
+| NFR-LAT-01 | p50 ≤ 1,500 ms · p95 ≤ 4,000 ms | p50 2618.22 ms · p95 14116.76 ms (n=200) | generation stage, arrival → final byte, judge excluded | **MISS** |
+| (context only) | — | p50 7748.48 ms · p95 55107.46 ms (n=200) | total including the offline judge; the judge is the tail, not the answerer | not a gate |
+
+The target is **not** amended: the requirement stays at p50 ≤ 1,500 ms / p95 ≤ 4,000 ms and the release records the miss instead of hiding it (change control CC-2026-10-21-b, `docs/requirements.md` §18.5).
+
+What the number measures: a hosted ~35B generator in strict-JSON mode producing ~500 output tokens per answered turn, without a streaming time-to-first-token measurement. The retrieval path in the same run is 1.44/2.54 ms p50/p95, so the budget is consumed by generation, not by retrieval.
+
+What would change the verdict: a smaller or local model, streaming with TTFT as the served-latency metric, and a shorter answer budget — each measurable with the same harness (`answerdesk eval --all --provider ...`). Until one of those is measured and committed, this requirement is reported as missed.
+
 ## Error taxonomy
 
 | failure mode | count | examples (case ids) |

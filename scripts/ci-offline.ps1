@@ -30,9 +30,30 @@ try {
     uv run mypy src/answerdesk
     if ($LASTEXITCODE -ne 0) { throw "mypy failed" }
 
+    Write-Host "==> traceability matrix (CMD-T)" -ForegroundColor Cyan
+    uv run python scripts/check-traceability.py
+    if ($LASTEXITCODE -ne 0) { throw "traceability check failed" }
+
+    Write-Host "==> published numbers (CMD-NUM)" -ForegroundColor Cyan
+    uv run python scripts/check-numbers.py
+    if ($LASTEXITCODE -ne 0) { throw "number check failed" }
+
+    Write-Host "==> licence audit (CMD-LIC)" -ForegroundColor Cyan
+    uv run python scripts/check-licenses.py --quiet
+    if ($LASTEXITCODE -ne 0) { throw "licence audit failed" }
+
     Write-Host "==> pytest -q" -ForegroundColor Cyan
     uv run pytest -q
     if ($LASTEXITCODE -ne 0) { throw "pytest failed" }
+
+    # NFR-QUAL-02: line coverage >= 70% for the four math packages. Runs after the plain
+    # suite so a coverage failure is attributable to the threshold, not to a test failure.
+    Write-Host "==> coverage gate >= 70% (retrieval, policy, cache, eval)" -ForegroundColor Cyan
+    uv run pytest -q `
+        --cov=src/answerdesk/retrieval --cov=src/answerdesk/policy `
+        --cov=src/answerdesk/cache --cov=src/answerdesk/eval `
+        --cov-report=term --cov-fail-under=70
+    if ($LASTEXITCODE -ne 0) { throw "coverage gate failed" }
 
     Write-Host "==> contracts import smoke" -ForegroundColor Cyan
     uv run python -c "import answerdesk; from answerdesk.contracts import Answer; print('ok')"

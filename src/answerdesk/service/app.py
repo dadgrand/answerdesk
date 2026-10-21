@@ -35,7 +35,7 @@ import time
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -525,7 +525,7 @@ def openapi_schema(
 ) -> dict[str, Any]:
     """Build the schema without starting the service (no lifespan, no I/O)."""
     app = create_app(settings=settings, service_settings=service_settings)
-    return app.openapi()
+    return cast(dict[str, Any], app.openapi())
 
 
 def app_factory() -> FastAPI:

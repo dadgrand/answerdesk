@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import time
 from collections.abc import Callable
 from typing import Any
 
@@ -525,3 +526,38 @@ def test_cache_capacity_evicts_the_oldest(
             answer=make_answer(chunk=chunk, answer_id=f"answer-{index}"),
         )
     assert len(cache) == 2
+
+
+# --------------------------------------------------------------------------------------
+# Hit latency (NFR-LAT-04)
+# --------------------------------------------------------------------------------------
+
+
+def test_exact_hit_latency_stays_under_the_budget(
+    make_cache: Callable[..., SemanticCache],
+    make_chunk: Callable[..., Chunk],
+    make_answer: Callable[..., Answer],
+) -> None:
+    """# AT-LAT-04 — an exact hit is served in well under 150 ms (p95 over 50 lookups).
+
+    This is the CI-able half of NFR-LAT-04: the bench measured 0.0 ms on replay pairs (no
+    hits), so the latency budget is demonstrated here on a warm exact key instead of quoted
+    from a run that never exercised the path.
+    """
+    chunk = make_chunk()
+    cache = make_cache(chunks={chunk.chunk_id: chunk})
+    cache.put(
+        query=QUESTION,
+        locale="ru",
+        intent_bucket=IntentBucket.INFORMATIONAL,
+        answer=make_answer(chunk=chunk),
+    )
+    samples: list[float] = []
+    for _ in range(50):
+        start = time.perf_counter()
+        lookup = cache.get(query=QUESTION, locale="ru", intent_bucket=IntentBucket.INFORMATIONAL)
+        samples.append((time.perf_counter() - start) * 1000.0)
+        assert lookup.status is CacheStatus.HIT
+    samples.sort()
+    p95 = samples[round(0.95 * (len(samples) - 1))]
+    assert p95 < 150.0, f"exact-hit p95 was {p95:.2f} ms (budget 150 ms)"
