@@ -33,7 +33,7 @@ from pydantic import Field
 from answerdesk.contracts import Contract, Message, Role
 
 _EMAIL = re.compile(r"[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}")
-_DIGIT_RUN = re.compile(r"(?<![\w])\+?\d[\d\s().\-]{5,}\d(?![\w])")
+_DIGIT_RUN = re.compile(r"(?<![\w\-])\+?\d[\d\s().\-]{5,}\d(?![\w\-])")
 _IBAN = re.compile(r"(?<![\w])[A-Z]{2}\d{2}[A-Z0-9]{10,30}(?![\w])")
 _DATE_LIKE = re.compile(r"^\d{1,4}[./-]\d{1,2}[./-]\d{1,4}$")
 _THOUSANDS_LIKE = re.compile(r"^\d{1,3}(?:[ .,]\d{3})+$")
@@ -92,6 +92,11 @@ def _classify_digit_run(text: str, match: re.Match[str]) -> PIIKind | None:
     raw = match.group(0)
     if _DATE_LIKE.match(raw) or _THOUSANDS_LIKE.match(raw) or _TIME_LIKE.match(raw):
         return None
+    # A digit run glued to a letter prefix is a business identifier
+    # (ORD-2026-10314, TRX-2026-000123), not a phone or an account number.
+    prefix = text[max(0, match.start() - 12) : match.start()]
+    if re.search(r"[A-Za-z]{2,}[-_]\s*$", prefix):
+        return None
     digits = re.sub(r"\D", "", raw)
     if not 7 <= len(digits) <= 20:
         return None
@@ -99,7 +104,9 @@ def _classify_digit_run(text: str, match: re.Match[str]) -> PIIKind | None:
         return PIIKind.CARD
     has_prefix = raw.startswith("+")
     has_separator = bool(re.search(r"[\s().\-]", raw))
-    if 7 <= len(digits) <= 15 and (has_prefix or has_separator or len(digits) in (10, 11)):
+    if has_prefix and 7 <= len(digits) <= 15:
+        return PIIKind.PHONE
+    if (has_separator and 10 <= len(digits) <= 15) or len(digits) in (10, 11):
         return PIIKind.PHONE
     if 8 <= len(digits) <= 20:
         return PIIKind.ACCOUNT
