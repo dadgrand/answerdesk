@@ -888,6 +888,52 @@ def _error_taxonomy(run: Path) -> list[str]:
     return lines
 
 
+def _risk_block() -> list[str]:
+    """Risk-control v2 summary, read from its own artefact set (never hand-written)."""
+    path = REPO_ROOT / "reports" / "risk-v2" / "summary.json"
+    if not path.is_file():
+        return []
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    primary = payload.get("primary_population")
+    block = payload["populations"].get(primary, {})
+    test = block.get("test", {})
+    certificate = block.get("certificate", {})
+    required = payload.get("n_required", {})
+    lines = [
+        "## Risk control v2 (calibrated answerability, Learn-then-Test certificate)",
+        "",
+        f"Primary population `{primary}` ({block.get('dev')} dev / {block.get('test')} rows), "
+        f"full method in `docs/risk-control.md`.",
+        "",
+        _table(
+            ("metric", "value", "target"),
+            [
+                ["AUROC", test.get("auroc"), ">= 0.75"],
+                ["ECE (equal-mass)", test.get("ece_equal_mass"), "<= 0.08"],
+                [
+                    "coverage at realised risk <= 5%",
+                    test.get("coverage_at_risk", {}).get("coverage"),
+                    ">= 0.40",
+                ],
+                ["AURC", test.get("aurc"), "-"],
+            ],
+        ),
+        "",
+        f"Certificate at alpha {payload.get('alpha')}, delta {payload.get('delta')}: "
+        f"**{'feasible' if certificate.get('feasible') else 'ABSENT'}** "
+        f"(threshold {certificate.get('threshold')}, calibration risk "
+        f"{certificate.get('calibration_risk')}, UCB {certificate.get('calibration_ucb')}, "
+        f"n={certificate.get('n_calibration')}). Rows needed for a 5% certificate at zero "
+        f"observed risk: Bentkus ~{required.get('bentkus_rows_at_zero_risk')}, Hoeffding "
+        f"~{required.get('hoeffding_rows_at_zero_risk')}. The largest feasible level is "
+        f"alpha 0.25 (coverage "
+        f"{block.get('certificate_at_alpha_0_25', {}).get('calibration_coverage')}), reported "
+        "as the operational fallback with its own alpha — no 5% guarantee is claimed.",
+        "",
+    ]
+    return lines
+
+
 def _calibration_verdict_block(summary: Mapping[str, Any]) -> list[str]:
     verdict = summary.get("calibration_verdict")
     if not verdict:
@@ -1142,6 +1188,7 @@ def render(run: Path) -> str:
         blocks.append("")
     blocks.extend(_retrieval_block(summary, run))
     blocks.extend(_answer_block(summary, run))
+    blocks.extend(_risk_block())
     blocks.extend(_calibration_verdict_block(summary))
     blocks.extend(_scorer_block(summary))
     blocks.extend(_escalation_block(summary, run))
