@@ -13,10 +13,16 @@ command on a laptop — no Docker, no vector database, no API key required for t
 `Windows + Linux in CI; macOS expected but not a CI leg` ·
 `local-first, API-optional (OpenAI-compatible: vLLM, llama.cpp, Ollama)`
 
-> **Honest status (v0.1.0).** The pipeline, service, console and evaluation harness work
+> **v0.1.0 is released** (2026-10-21, annotated tag `v0.1.0` on the audited commit). The pipeline, service, console and evaluation harness work
 > end-to-end and offline. The first live study produced a **negative result on risk control**:
 > with the shipped overlap-based confidence signal, realised risk on answered turns was 22.3%
 > against a 5% target. That result is published in [`docs/results.md`](docs/results.md) and
+> Two follow-up risk-control studies (v2, v3) attempted a finite-sample certificate and also
+> failed their own gate: both certificates are **absent** at α = 0.05
+> ([`docs/risk-control.md`](docs/risk-control.md)). The release notes, the changelog and the
+> frozen inputs are in [`docs/release-notes-v0.1.0.md`](docs/release-notes-v0.1.0.md) and
+> [`CHANGELOG.md`](CHANGELOG.md).
+>
 > nothing in this repository claims otherwise. What *is* demonstrated: grounded answers with
 > verified citations, must-escalate recall of 1.00 (0 false negatives / 24 unsafe cases), a
 > reproducible measurement chain, and retrieval quality that improves comprehension on public
