@@ -86,6 +86,14 @@ uv run answerdesk ask --fake "Сколько стоит обслуживание
 uv run answerdesk eval --synthetic --provider fake --report reports/offline-smoke
 ```
 
+The last command **rewrites** `reports/offline-smoke/` (report.md, metrics.json, turns.jsonl,
+cells.csv and the four figures) in place: the directory is a build product of the synthetic
+study, not a hand-edited document, so a reviewer comparing two runs should diff it rather than
+assume the committed copy is frozen. Point `--report` somewhere else when both must be kept.
+
+```text
+```
+
 `ask` prints the answer with numbered citations, the decision and its reason code, and the token
 cost. With deterministic doubles it looks like this:
 

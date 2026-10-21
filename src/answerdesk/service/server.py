@@ -103,7 +103,11 @@ def _probe(server: Any, *, url: str) -> int:
     try:
         import httpx
 
-        with httpx.Client(timeout=2.0) as client:
+        # trust_env=False: the probe talks to 127.0.0.1, so an ambient proxy is never
+        # applicable — and on Windows `httpx` reads the system proxy, where an unusable
+        # `socks4://` entry made Client() raise before the first request (exit 1 with a
+        # traceback instead of a clean healthcheck).
+        with httpx.Client(timeout=2.0, trust_env=False) as client:
             while time.monotonic() < deadline:
                 if not thread.is_alive():
                     error = "the server thread exited before answering /healthz"

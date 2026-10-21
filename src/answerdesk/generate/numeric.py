@@ -26,6 +26,15 @@ A date emits both its full form and its day-month form, because a claim may legi
 omit the year that the chunk states ("until 5 March" vs "5 марта 2026"). Both sides are
 canonicalised by the same function, so equality is symmetric.
 
+**Limitation (R-30, stated not hidden).** The guard sees *digit-bearing* tokens only. A
+number written as words — "сто двадцать дней", "twenty days" — contains no token this
+module extracts, so a claim that spells the number out is not checked against its evidence
+by INV-04. Month *names* are understood (they are part of a date); numerals-as-words are not.
+Closing this needs a locale-aware numeral-word extractor (ru/uz/ky/tg/tr/zh) feeding the
+same canonicalisation seam; until then prompts ask for digits, and a reviewer should treat a
+spelled-out number as unchecked rather than as verified. The defect is recorded as R-30 in
+``docs/review-report.md``; the reason-code consequence is in ``docs/escalation.md`` §4.1.
+
     # AT-GEN-02  # AT-GEN-12
 """
 

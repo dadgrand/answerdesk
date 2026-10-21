@@ -8,12 +8,28 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from answerdesk.eval.consistency import agreement as metrics
 from answerdesk.eval.consistency.facts import build_groups, write_set
 from answerdesk.eval.consistency.logical import audit_corpus, audit_document
 from answerdesk.eval.consistency.runner import ConsistencyConfig, build_set, run_answers, run_audit
 from answerdesk.eval.consistency.values import extract, fidelity, language_discipline
 from answerdesk.eval.consistency.variants import variants_for
+
+#: The runner loads the *repository* corpus (``data/corpus/chunks.jsonl``), not the tmp
+#: corpus a test may build; a fresh checkout has no chunks until `answerdesk ingest --demo`.
+REPO_ROOT = Path(__file__).resolve().parents[3]
+CORPUS_CHUNKS = REPO_ROOT / "data" / "corpus" / "chunks.jsonl"
+
+
+def _require_built_corpus() -> None:
+    """Skip (never fail) when the corpus has not been built in this checkout (R-28)."""
+    if not CORPUS_CHUNKS.is_file():
+        pytest.skip(
+            f"no built corpus at {CORPUS_CHUNKS.parent}; "
+            "run `uv run answerdesk ingest --demo` first"
+        )
 
 
 def _doc(
@@ -248,6 +264,7 @@ def test_build_set_from_mini_corpus(tmp_path: Path) -> None:
 
 
 def test_runner_replay_is_offline_and_writes_artefacts(tmp_path: Path) -> None:
+    _require_built_corpus()
     root = tmp_path / "corpus"
     (root / "queries").mkdir(parents=True)
     rows = []

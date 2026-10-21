@@ -47,6 +47,14 @@ jobs:
         run: uv run pytest -q -m smoke
       - name: Unit tests
         run: uv run pytest -q tests/unit
+      # The three gates that used to live only in scripts/ci-offline.ps1 (R-29). They are
+      # plain Python scripts, so they run on Linux and Windows alike and need no extras.
+      - name: Traceability matrix (every AT/test in docs/requirements.md exists)
+        run: uv run python scripts/check-traceability.py
+      - name: Published numbers (every number in the docs traces to an artifact)
+        run: uv run python scripts/check-numbers.py
+      - name: Licence audit (offline allow-list)
+        run: uv run python scripts/check-licenses.py --quiet
       - name: Contracts import smoke
         run: uv run python -c "import answerdesk; from answerdesk.contracts import Answer; print('ok')"
 
@@ -83,7 +91,7 @@ jobs:
         run: uv run answerdesk ingest --demo
       - name: Type check
         run: uv run mypy src/answerdesk
-      - name: Tests (no network, no key; service suites must run, not skip)
+      - name: Tests + coverage gate (no network, no key; service suites must run, not skip)
         # Two skips are expected and documented in their own modules:
         #  * tests/integration/generation/test_local_http_server.py is loopback-only and
         #    needs ANSWERDESK_ALLOW_NETWORK=1 (deliberately not set here);
@@ -91,7 +99,13 @@ jobs:
         #    cache and builds its fixture instead.
         # Every other skip would mean an extra is missing — ANSWERDESK_REQUIRE_API=1 above
         # makes the api-dependent suites fail instead of skipping.
-        run: uv run pytest -q
+        # The coverage gate (NFR-QUAL-02, R-07/R-29) is part of this single run: the suite is
+        # not executed twice, and a threshold failure is attributable to coverage, not tests.
+        run: >
+          uv run pytest -q
+          --cov=src/answerdesk/retrieval --cov=src/answerdesk/policy
+          --cov=src/answerdesk/cache --cov=src/answerdesk/eval
+          --cov-report=term --cov-fail-under=70
       - name: Load smoke (real ASGI app, offline)
         run: uv run python scripts/load.py --smoke
       - name: Contracts import smoke

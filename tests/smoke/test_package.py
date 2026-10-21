@@ -9,6 +9,8 @@ those behind extras, and this test is what keeps that promise honest.
 from __future__ import annotations
 
 import importlib
+import json
+import subprocess
 import sys
 import tomllib
 from pathlib import Path
@@ -55,9 +57,47 @@ def test_every_module_boundary_is_importable_and_documented(module_name: str) ->
 
 
 def test_base_install_does_not_import_heavy_dependencies() -> None:
-    """NFR-PORT-03: torch/fastapi/qdrant only ever arrive through extras."""
-    loaded = [name for name in HEAVY_MODULES if name in sys.modules]
+    """NFR-PORT-03 / R-33: torch/fastapi/qdrant only ever arrive through extras.
+
+    The assertion runs in a **fresh interpreter**. ``sys.modules`` is process-global, so an
+    earlier-collected service/property conftest that imports ``fastapi`` (the api extra is
+    installed in CI) would make this test fail or pass depending on collection order. A
+    subprocess that imported nothing but the base package is the only order-independent
+    way to ask the question.
+    """
+    probe = (
+        "import json, sys\n"
+        "import answerdesk\n"
+        f"heavy = [name for name in {HEAVY_MODULES!r} if name in sys.modules]\n"
+        "print(json.dumps(heavy))\n"
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", probe],
+        capture_output=True,
+        text=True,
+        timeout=180,
+        check=True,
+        cwd=REPO_ROOT,
+    )
+    loaded = json.loads(result.stdout.strip().splitlines()[-1])
     assert loaded == [], f"heavy modules imported by the base install: {loaded}"
+
+
+def test_the_documented_global_profile_option_works() -> None:
+    """R-15: nswerdesk --profile local config check (README/architecture docs).
+
+    The flag is documented *before* the subcommand, so it must exist at app level as well as
+    on each command. Both spellings are asserted here because the docs use both.
+    """
+    from typer.testing import CliRunner
+
+    from answerdesk.cli import app as cli_app
+
+    runner = CliRunner()
+    before = runner.invoke(cli_app, ["--profile", "local", "config", "check"])
+    assert before.exit_code == 0, before.output
+    after = runner.invoke(cli_app, ["config", "check", "--profile", "local"])
+    assert after.exit_code == 0, after.output
 
 
 def test_no_globally_installed_optional_dependency_leaks_into_the_base_install() -> None:

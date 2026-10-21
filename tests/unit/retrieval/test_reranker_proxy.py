@@ -24,8 +24,17 @@ UNUSABLE_PROXY = "socks4://127.0.0.1:10808"
 
 
 def _break_ambient_proxy(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Make the ambient proxy unusable *regardless of the shell* (R-16).
+
+    Setting the proxy variables alone is not enough: a developer following the README's
+    ``NO_PROXY='*'`` workaround has that variable exported, and ``httpx`` then bypasses the
+    proxy, so the fallback under test never triggers. Clearing ``NO_PROXY`` makes the
+    scenario depend on what the test sets, not on the environment that ran it.
+    """
     for name in PROXY_ENV_VARS:
         monkeypatch.setenv(name, UNUSABLE_PROXY)
+    for name in ("NO_PROXY", "no_proxy"):
+        monkeypatch.delenv(name, raising=False)
 
 
 def _passage(chunk_id: str) -> RetrievedPassage:

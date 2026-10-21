@@ -42,9 +42,31 @@ config_app = typer.Typer(
 )
 app.add_typer(config_app, name="config")
 
+#: App-level ``--config`` / ``--profile`` (R-15). The README and two module docs show
+#: ``answerdesk --profile local config check``, so the flag has to exist at this level; a
+#: per-command option still wins when both are given.
+_GLOBAL_CONFIG: Path | None = None
+_GLOBAL_PROFILE: str | None = None
+
+
+@app.callback()
+def _global_options(
+    config: Path | None = typer.Option(
+        None, "--config", help="Path to a YAML config file (applies to every command)."
+    ),
+    profile: str | None = typer.Option(
+        None, "--profile", help="offline | api | local (applies to every command)."
+    ),
+) -> None:
+    """Global options: they may be given before the subcommand as well as after it."""
+    global _GLOBAL_CONFIG, _GLOBAL_PROFILE
+    _GLOBAL_CONFIG, _GLOBAL_PROFILE = config, profile
+
 
 def _settings(config: Path | None, profile: str | None) -> Settings:
     """Load settings and configure logging from them; maps errors to a clean exit."""
+    config = config if config is not None else _GLOBAL_CONFIG
+    profile = profile if profile is not None else _GLOBAL_PROFILE
     try:
         settings = load_settings(config_path=config, profile=profile)  # type: ignore[arg-type]
     except ConfigError as exc:

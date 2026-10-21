@@ -20,7 +20,7 @@ try {
 
     Write-Host "==> answerdesk ingest --demo (offline corpus)" -ForegroundColor Cyan
     uv run answerdesk ingest --demo
-    if ( -ne 0) { throw "corpus build failed" }
+    if ($LASTEXITCODE -ne 0) { throw "corpus build failed" }
 
     Write-Host "==> ruff check src tests" -ForegroundColor Cyan
     uv run ruff check src tests

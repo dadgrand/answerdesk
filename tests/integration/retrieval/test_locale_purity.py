@@ -15,6 +15,7 @@ from pathlib import Path
 
 import pytest
 
+from answerdesk.errors import CorpusMissingError
 from answerdesk.retrieval.locale_report import (
     DEFAULT_CONSISTENCY_RUN,
     INVARIANCE_TARGET,
@@ -31,8 +32,15 @@ pytestmark = pytest.mark.integration
 
 
 def _require_inputs() -> None:
-    if not (CORPUS / "manifest.json").is_file():
-        pytest.skip("no built corpus; run `answerdesk ingest --demo` first")
+    """Skip (never fail) without the built corpus or the committed consistency run.
+
+    The guard is on ``chunks.jsonl`` — the file ``run_measurement`` actually reads — so a
+    fresh checkout without ``answerdesk ingest --demo`` reports a skip with the command to
+    run instead of a ``CorpusMissingError`` from the module fixture. CI builds the corpus
+    before the suite, so the gate still runs it there.
+    """
+    if not (CORPUS / "chunks.jsonl").is_file():
+        pytest.skip(f"no built corpus at {CORPUS}; run `uv run answerdesk ingest --demo` first")
     if not (CONSISTENCY / "answers.jsonl").is_file():
         pytest.skip(f"no consistency run at {CONSISTENCY}")
 
@@ -40,7 +48,10 @@ def _require_inputs() -> None:
 @pytest.fixture(scope="module")
 def report() -> dict:
     _require_inputs()
-    return run_measurement(consistency_run=CONSISTENCY, corpus_dir=CORPUS, window=12)
+    try:
+        return run_measurement(consistency_run=CONSISTENCY, corpus_dir=CORPUS, window=12)
+    except CorpusMissingError as exc:  # a partially built corpus: skip, do not fail the suite
+        pytest.skip(f"corpus is incomplete ({exc}); run `uv run answerdesk ingest --demo`")
 
 
 def test_the_consistency_set_is_the_expected_size() -> None:

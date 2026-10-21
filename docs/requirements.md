@@ -1169,6 +1169,22 @@ Every functional and non-functional requirement maps to a module (§1.5), an own
 | FR-UI-10 | `web/src/` rendering, a11y | t10 | AT-UI-10 | CMD-N + CL-UI-01 | G-CI |
 | FR-UI-11 | `web/scripts/screenshots.mjs`, `docs/assets/` | t10 | AT-UI-11 | CMD-O + CL-UI-02 | G-CI |
 
+### 16.7a Gates verified by the web job, not by the offline Python matrix (R-06/R-09/R-10)
+
+Two NFRs have no row in 16.10 because the offline gate cannot exercise a browser. They are
+**not** waived: they are owned by the console task and verified by `CMD-N` (`cd web && npm ci &&
+npm run build && npm run test`), which runs in the release sequence (§17.3) and in the console's
+own CI job.
+
+| Req | Module | Owner | AT | Verify | Status |
+|---|---|---|---|---|---|
+| NFR-SEC-04 (no XSS through an answer) | `web/src/`, `web/src/test` | t10 | AT-SEC-04 | CMD-N (vitest DOM test) | open: React escapes by default, but no DOM test feeds a `<script>`/`onerror` payload through a mocked `/v1/chat` answer yet |
+| NFR-A11Y-01 (automated accessibility check) | `web/src/`, `web/scripts/` | t10 | AT-A11Y-01 | CMD-N (axe-core / vitest-axe) + committed report | open: no `axe` dependency and no committed accessibility report yet |
+
+The offline matrix in 16.10 therefore proves nothing about the two; a reader must not treat a
+green `scripts/ci-offline.ps1` as covering them. Both sit inside `answerdesk/web`, which is out of
+scope for the service/CLI repair round that added this note.
+
 ### 16.8 Evaluation harness (owner t7)
 
 | Req | Module | Owner | AT | Verify | Gate |
@@ -1308,7 +1324,7 @@ All commands run from `answerdesk/` unless stated.
 | CMD-R | `uv run answerdesk eval --all --report reports/bench` | Release evidence run (all G-REL metrics) |
 | CMD-S | `uv run ruff check src tests` (+ format check) | Lint/format gate |
 | CMD-T | `uv run python scripts/check-traceability.py` | Traceability matrix ↔ repo markers |
-| CMD-U | `uv run answerdesk demo --smoke` | One-command offline demo |
+| CMD-U | `uv run answerdesk demo --smoke` | One-command offline demo — **PENDING** (R-11: the command exits 2 with "not implemented; owner t14"; the release sequence below must not be called green until it is wired, or the FR-OPS-06 row must be amended) |
 | CMD-V | `git -C answerdesk log --oneline -1` and tag check | Release commit + `v0.1.0` tag |
 | CMD-W | `uv run pytest -q --cov=src/answerdesk --cov-report=term-missing` | Coverage thresholds |
 | CMD-X | `uv run answerdesk eval --all --report reports/bench` (drift arm) | Drift simulation (E-7) |
@@ -1325,7 +1341,8 @@ uv run pytest -q                       # CMD-A
 uv run ruff check src tests            # CMD-S
 uv run answerdesk ingest --demo        # CMD-C
 uv run answerdesk index --demo         # CMD-E
-uv run answerdesk demo --smoke         # CMD-U
+uv run answerdesk demo --smoke         # CMD-U (PENDING, R-11: exits 2 until t14 wires it)
+#   once CMD-U lands, re-run `scripts/ci-offline.ps1` as the offline gate.
 uv run answerdesk eval --synthetic --provider fake --report reports/offline-smoke   # CMD-Q
 uv run answerdesk eval --all --report reports/bench                                 # CMD-R (live or REPLAY-MODE)
 uv run python scripts/check-traceability.py                                          # CMD-T

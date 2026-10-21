@@ -164,6 +164,16 @@ signals pass through unchanged (`NO_EVIDENCE`, `VERIFIER_REJECT`, `CITATION_FAIL
 `PROVIDER_ERROR`). `contracts.Decision` rejects `ANSWERED` for non-answer actions, so a
 mislabelled decision cannot be constructed.
 
+A **numeric or date violation has no reason code of its own** (R-04/R-30). The numeric guard
+is part of the citation verifier, so a claim whose number is absent from the chunk it cites
+reaches the decision as `CITATION_FAILED` — the same code as an unattributed quote — and the
+count of rejected claims travels on the trace (`numeric_violations`,
+`numeric_violations_pre_repair`). Read the two together: `CITATION_FAILED` with
+`numeric_violations > 0` means the guard fired. The closed enum is deliberately unchanged —
+a new code would be a v1.0.0 contract change, and the trace already separates the cases
+(the verifier sets `CITATION_FAILED` only when a check is `numeric_ok` *or* `quote_ok`-false;
+a failed support check alone gives `VERIFIER_REJECT`).
+
 ---
 
 ## 5. Metrics and the release gates

@@ -64,6 +64,32 @@ def test_gate_runs_tests_lint_and_types_offline(workflow_text: str) -> None:
     assert "from answerdesk.contracts import Answer" in workflow_text
 
 
+def test_the_release_gates_run_in_github_actions_not_only_locally(workflow: dict[str, Any]) -> None:
+    """R-29: the traceability, numbers, licence and coverage gates must be enforced by CI.
+
+    They used to live only in ``scripts/ci-offline.ps1``, so a local pass was the only
+    evidence. They are asserted here by *job*, because a gate in the wrong job does not run.
+    """
+    jobs = workflow["jobs"]
+    fast_runs = " ".join(
+        str(step.get("run", "")) for step in jobs["fast"].get("steps", []) if isinstance(step, dict)
+    )
+    for script in ("scripts/check-traceability.py", "scripts/check-numbers.py"):
+        assert script in fast_runs, f"{script} is not a step in the fast gate"
+    assert "scripts/check-licenses.py" in fast_runs, "the licence audit is not in the fast gate"
+
+    test_runs = " ".join(
+        str(step.get("run", "")) for step in jobs["test"].get("steps", []) if isinstance(step, dict)
+    )
+    assert "--cov-fail-under=70" in test_runs, "the coverage threshold is not enforced in CI"
+    assert "--cov=src/answerdesk/retrieval" in test_runs
+    assert "--cov=src/answerdesk/policy" in test_runs
+    assert "--cov=src/answerdesk/cache" in test_runs
+    assert "--cov=src/answerdesk/eval" in test_runs
+    # one run, not two: the coverage invocation replaces the plain suite in the full gate
+    assert test_runs.count("uv run pytest") == 1, "the suite runs twice in the full gate"
+
+
 def test_no_api_key_or_secret_is_required(workflow_text: str) -> None:
     """NFR-DET-01 / NFR-SEC-03: CI must never need a key, and must never carry one."""
     assert "secrets." not in workflow_text
