@@ -18,6 +18,9 @@ code 2 and names the task that implements it, so the CLI never pretends to work.
 from __future__ import annotations
 
 import json
+import platform
+import time
+from collections.abc import Callable
 from pathlib import Path
 from typing import NoReturn
 
@@ -417,12 +420,154 @@ def eval(  # the command is named `eval` on purpose (requirements §17.2)
 @app.command()
 def demo(
     smoke: bool = typer.Option(False, "--smoke", help="One-command offline end-to-end demo."),
+    report: Path | None = typer.Option(
+        None, "--report", help="Directory for the demo artefacts (default: reports/demo)."
+    ),
     config: Path | None = typer.Option(None, "--config"),
     profile: str | None = typer.Option(None, "--profile"),
 ) -> None:
-    """Run the offline end-to-end demo (ingest → index → ask → decision → report, t14)."""
-    _settings(config, profile)
-    _not_yet("demo", "t14")
+    """Run the offline end-to-end demo: corpus → index → question → decision → service (t14).
+
+    AT-OPS-06 / CMD-U: one command, no API key, no network, no Docker. Every step runs against
+    the deterministic doubles, writes its duration and provenance into
+    ``<report>/summary.json`` and exits 0 only when all steps passed. The service step skips
+    (and says so) when the ``api`` extra is not installed, so the light ``--extra dev`` install
+    can still run the demo.
+    """
+    settings = _settings(config, profile)
+    from answerdesk.generate.ask import render_for_terminal, run_ask
+    from answerdesk.index.cli import index_command
+    from answerdesk.ingest.cli import ingest_command
+
+    target = report or (settings.resolve_path(settings.app.reports_dir) / "demo")
+    target.mkdir(parents=True, exist_ok=True)
+    question = "Сколько стоит обслуживание карты?"
+    steps: list[dict[str, object]] = []
+    summary: dict[str, object] = {
+        "kind": "answerdesk-demo",
+        "smoke": smoke,
+        "profile": settings.profile,
+        "report_dir": str(target),
+        "question": question,
+        "steps": steps,
+    }
+
+    def step(name: str, action: Callable[[], dict[str, object] | None]) -> dict[str, object] | None:
+        typer.secho(f"==> {name}", fg=typer.colors.CYAN)
+        started = time.perf_counter()
+        detail = action() or {}
+        record = {
+            "step": name,
+            "status": "ok",
+            "duration_s": round(time.perf_counter() - started, 3),
+        }
+        record.update(detail)
+        steps.append(record)
+        typer.echo(f"    ok in {record['duration_s']} s")
+        return detail
+
+    try:
+        step("ingest --demo", lambda: _demo_ingest(ingest_command, settings))
+        step("index --demo", lambda: _demo_index(index_command, settings))
+        result = step("ask --fake", lambda: _demo_ask(run_ask, settings, question))
+        step("calibrate --synthetic", lambda: _demo_calibrate(settings, target))
+        step("service healthz", lambda: _demo_service(settings))
+        if result is not None:
+            summary["answer"] = result
+        summary["status"] = "ok"
+        typer.secho("\ndemo: OK", fg=typer.colors.GREEN)
+        rendered = run_ask(question, settings=settings, fake=True)
+        typer.echo(render_for_terminal(rendered))
+    except Exception as exc:  # write the failed summary, then fail loudly
+        summary["status"] = "failed"
+        summary["error"] = f"{type(exc).__name__}: {exc}"
+        _write_summary(target, summary)
+        raise
+    _write_summary(target, summary)
+    typer.echo(f"artefacts: {target / 'summary.json'}")
+
+
+def _write_summary(target: Path, summary: dict[str, object]) -> None:
+    payload = {
+        "generated_at": _utc_now(),
+        "python": platform.python_version(),
+        **summary,
+    }
+    (target / "summary.json").write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+
+def _utc_now() -> str:
+    from datetime import UTC, datetime
+
+    return datetime.now(UTC).replace(microsecond=0).isoformat()
+
+
+def _demo_ingest(ingest_command: Callable[..., object], settings: Settings) -> dict[str, object]:
+    ingest_command(settings=settings, source=None, demo=True, echo=typer.echo)
+    return {"corpus_dir": str(settings.resolve_path(settings.app.corpus_dir))}
+
+
+def _demo_index(index_command: Callable[..., object], settings: Settings) -> dict[str, object]:
+    index_command(settings=settings, demo=True, force=True, echo=typer.echo)
+    return {"index_dir": str(settings.resolve_path(settings.app.index_dir))}
+
+
+def _demo_ask(
+    run_ask: Callable[..., object], settings: Settings, question: str
+) -> dict[str, object]:
+    result = run_ask(question, settings=settings, fake=True)
+    signal = result.signal  # type: ignore[attr-defined]
+    return {
+        "language": result.language,  # type: ignore[attr-defined]
+        "decision": _enum_value(getattr(signal, "action", None)),
+        "reason_code": _enum_value(getattr(signal, "reason_code", None)),
+        "evidence_score": getattr(signal, "evidence_score", None),
+        "answer_chars": len(result.text),  # type: ignore[attr-defined]
+        "citations": len(result.citations),  # type: ignore[attr-defined]
+        "input_tokens": result.usage.input_tokens,  # type: ignore[attr-defined]
+        "output_tokens": result.usage.output_tokens,  # type: ignore[attr-defined]
+    }
+
+
+def _enum_value(value: object) -> object:
+    """Enums serialise as their value, everything else passes through (JSON-safe summary)."""
+    return getattr(value, "value", value)
+
+
+def _demo_calibrate(settings: Settings, target: Path) -> dict[str, object]:
+    from answerdesk.policy.calibrate import main as calibrate_main
+
+    out = target / "policy"
+    code = calibrate_main(["--out", str(out), "--synthetic"])
+    if code not in (0, None):
+        raise typer.Exit(code=int(code))
+    return {"calibration_dir": str(out)}
+
+
+def _demo_service(settings: Settings) -> dict[str, object]:
+    """Probe the real ASGI service in-process; skip (explicitly) without the api extra."""
+    try:
+        from answerdesk.service.server import run_server
+    except ImportError:
+        typer.secho(
+            "    service step skipped: the api extra is not installed "
+            "(uv sync --extra api; `answerdesk serve` needs it)",
+            fg=typer.colors.YELLOW,
+        )
+        return {"service": "skipped", "reason": "api extra not installed"}
+
+    import socket
+
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
+        probe.bind(("127.0.0.1", 0))
+        port = int(probe.getsockname()[1])
+    code = run_server(settings=settings, fake=True, host="127.0.0.1", port=port, healthcheck=True)
+    if code != 0:
+        raise RuntimeError(f"service healthcheck failed with exit code {code}")
+    return {"service": "healthy", "url": f"http://127.0.0.1:{port}"}
 
 
 def main() -> None:

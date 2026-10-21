@@ -79,7 +79,19 @@ Nothing else: no Docker, no database server, no model weights for this path.
 
 ```bash
 git clone <your-fork> answerdesk && cd answerdesk
-uv sync --extra dev                       # base + test/lint tooling (light: no torch)
+uv sync --extra dev --extra api        # base + test tooling + the service extra
+uv run answerdesk demo --smoke         # whole offline loop in one command (~10 s)
+```
+
+`demo --smoke` is the shortest honest path: it builds the corpus, builds the index, answers a
+question with deterministic doubles, fits the calibration artifact, starts the service and
+probes `/healthz`, then writes `reports/demo/summary.json` with every step, its duration and the
+versions it ran against. It exits 0 only when all steps passed, needs no key and no network, and
+skips the service step (saying so) when the `api` extra is absent.
+
+The same steps one at a time, if you want to watch each one:
+
+```bash
 uv run answerdesk ingest --demo           # build the 6-locale synthetic corpus (~8 s)
 uv run answerdesk index --demo            # BM25 + exact dense index (~1 s)
 uv run answerdesk ask --fake "Сколько стоит обслуживание карты?"
@@ -109,16 +121,22 @@ Decision: answer (ANSWERED); language=ru; evidence_score=0.940; repaired=False; 
 Usage: model=fake-model input=314 output=45 usd=0.00000000 prompt=grounded-answer-1.0.0 verifier=lexical-verifier-1.0.0
 ```
 
-The one-command version of the whole offline loop (corpus → index → question → eval → service
-health check) is:
+The one-command version of the whole offline loop (corpus → index → question → decision →
+service health check) is `uv run answerdesk demo --smoke` above; `scripts/demo.ps1` is the
+PowerShell wrapper that additionally runs the calibration + eval smoke steps for a reviewer's
+transcript:
 
 ```powershell
 pwsh -File scripts/demo.ps1
 ```
 
 > **Windows with a system proxy.** `httpx` reads the Windows proxy settings; a `socks4` proxy
-> URL that it cannot drive will fail at client construction. The scripts set `NO_PROXY` for the
-> loopback hosts; if you run commands by hand, prefix them with `$env:NO_PROXY='*'`.
+> URL that it cannot drive fails at client construction. The shipped code handles that: the
+> hosted embedder/reranker build their client through a proxy-tolerant factory that ignores an
+> unusable ambient proxy with a warning, and the `--healthcheck` probe talks to loopback with
+> `trust_env=False`. The scripts still set `NO_PROXY` for the loopback hosts, and so should you
+> when running the CLI by hand: `$env:NO_PROXY='*'`. The test suite does not depend on it — the
+> proxy tests set and clear `NO_PROXY` themselves, so `pytest` is green either way (t50).
 
 ## Run it against a real model
 

@@ -194,19 +194,17 @@ def test_missing_config_file_exits_two(tmp_path: Path) -> None:
     assert "not found" in _combined(result)
 
 
-@pytest.mark.parametrize(
-    ("argv", "owner"),
-    [
-        (["demo", "--smoke"], "t14"),
-    ],
-)
-def test_stubs_name_their_owning_task_and_exit_two(argv: list[str], owner: str) -> None:
-    """A stub must never pretend to work: exit 2 and say which task implements it."""
-    result = runner.invoke(app, argv)
-    assert result.exit_code == 2, _combined(result)
-    text = _combined(result)
-    assert owner in text
-    assert "not implemented" in text.lower() or "implemented by" in text.lower()
+def test_every_command_is_implemented() -> None:
+    """v0.2 has no stubs left: demo was the last one (t14, wired in t50, AT-OPS-06).
+
+    The old test asserted that stubs exit 2 and name their owner task; with demo implemented
+    the parametrised list became empty, so the guarantee is inverted: every command must now
+    run, and none may answer with the "not implemented" message.
+    """
+    for argv in (["demo", "--help"], ["version"], ["config", "check"]):
+        result = runner.invoke(app, argv)
+        assert result.exit_code == 0, _combined(result)
+        assert "not implemented" not in _combined(result).lower(), argv
 
 
 def test_serve_delegates_to_the_service_runner(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -76,7 +76,16 @@ export function ConfidenceMeter({ value, threshold = 0.95, label = "Calibrated p
 }
 
 export function PriorityDot({ priority }: { priority: "normal" | "high" | "urgent" }) {
-  return <span className={`priority priority--${priority}`} title={`${priority} priority`} aria-label={`${priority} priority`} />;
+  // `role="img"` makes the label legal on a non-interactive span (axe: aria-prohibited-attr);
+  // the dot stays decorative for a screen reader user who reads the row text instead.
+  return (
+    <span
+      className={`priority priority--${priority}`}
+      role="img"
+      title={`${priority} priority`}
+      aria-label={`${priority} priority`}
+    />
+  );
 }
 
 export function Spinner({ label = "Loading" }: { label?: string }) {

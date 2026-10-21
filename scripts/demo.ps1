@@ -2,6 +2,11 @@
 #
 #   pwsh -File scripts/demo.ps1
 #
+# The Python equivalent is `uv run answerdesk demo --smoke` (t14/t50): same corpus → index →
+# question → decision → service-health loop, plus a machine-readable reports/demo/summary.json.
+# Use this PowerShell script when you also want the calibration artifact and the offline
+# evaluation smoke in the transcript; use the CLI command for the short path (README quickstart).
+#
 # What it does, in order: install the light environment, build the synthetic corpus, build the
 # index, ask one question end-to-end, fit a calibration artifact, run the offline evaluation
 # smoke, and health-check the HTTP service. No API key, no network, no Docker.

@@ -1,7 +1,8 @@
 # answerdesk architecture
 
-Status: **skeleton (t3) frozen**. This document describes the boundaries the parallel
-module tasks build against; it is normative where it names a contract or an import rule.
+Status: **contract frozen at v1.0.0; implementations complete (v0.2)**. This document is
+normative where it names a contract or an import rule; §12 records what the tree contains
+today and is descriptive.
 The product contract is `docs/requirements.md` (`AD-REQ-v1.0`); the decisions behind the
 boundaries are in `docs/design-decisions.md`.
 
@@ -375,28 +376,48 @@ install stays light and importable on a machine without a GPU (NFR-PORT-03, test
 
 ---
 
-## 12. Skeleton status
+## 12. Implementation status (v0.2)
 
-| Surface | State after t3 | Owner of the implementation |
+This section is descriptive, not normative: the boundaries above are the contract, this table
+is what the tree actually contains today. Every row is exercised offline by the gate
+(`pwsh -File scripts/ci-offline.ps1` / `.github/workflows/ci.yml`).
+
+| Area | State | Where |
 |---|---|---|
-| `contracts.py`, `config.py`, `errors.py`, `logging.py` | frozen | t3 |
-| `cli.py` command surface | wired; bodies exit 2 naming the owning task | t4–t9, t14 |
-| `testing/` doubles | implemented (`HashingEmbedder`, `FakeProvider`, `FakeJudge`, `FakeVerifier`, `InMemoryCache`, `InMemoryTraceSink`) | t3 |
-| `configs/` defaults, profiles, pricing | present | t3; `configs/policy`, `configs/retrieval`, `configs/prompts` belong to t8/t5/t6 |
-| Module packages | placeholder `__init__.py` only | t4–t9 |
-| CI workflow | offline gate, Linux + Windows | t3; extended by t14 |
-| Repo hygiene (`LICENSE`, `.gitignore`, `.env.example`) | present | t3 |
+| Contracts, config, errors, logging | frozen schema 1.0.0; value-level log redaction (t36) | `src/answerdesk/{contracts,config,errors,logging}.py` |
+| Ingestion + synthetic corpus v2.1 | structure-aware loaders, atomic chunks, 648 docs / 5,739 chunks / 6 locales, 12 archetypes | `src/answerdesk/ingest/`, `data/corpus/` |
+| Retrieval | BM25 + exact dense, RRF / convex fusion fitted on dev, query analysis, rerank, MMR, ablation runner | `src/answerdesk/{index,retrieval,rerank}/` |
+| Generation | OpenAI-compatible providers (API + local servers), retry/circuit/fallback, prompts, packer, span-validated citations, numeric guard, one repair pass | `src/answerdesk/{llm,generate}/` |
+| Escalation + cache | split conformal with the n+1 correction, cost-sensitive bands, PII/injection guards, sealed calibration artifact, guarded semantic cache | `src/answerdesk/{policy,cache}/` |
+| Service | FastAPI + SSE, sessions/turns, feedback, escalation tickets, admin ingest, trace API, Prometheus metrics, closed error taxonomy, healthcheck | `src/answerdesk/{service,telemetry}/` |
+| Evaluation | internal harness (corpus v2.1, honest CI labels), external-validity arm (Belebele / Mr. TyDi), consistency audit, human-judge gate scripts | `src/answerdesk/eval/`, `scripts/`, `reports/` |
+| Operator console | React + Vite: queue, streamed answers with clickable citations, diagnostics drawer, analytics; MSW mock mode; 66 vitest tests incl. XSS and axe-core accessibility | `web/` |
+| CLI surface | `demo --smoke` (AT-OPS-06), ingest/index/ask/calibrate/serve/eval, app-level and per-command `--profile`/`--config` | `src/answerdesk/cli.py` |
+| Gate | offline CI on Linux + Windows, Python 3.11/3.12: ruff, format, mypy, traceability/numbers/licence checkers, full suite + coverage floor, load smoke | `.github/workflows/ci.yml`, `scripts/ci-offline.ps1` |
 
-Repository map:
+Repository map (current):
 
 ```
 answerdesk/
 ├── pyproject.toml  uv.lock  LICENSE  .gitignore  .env.example
-├── configs/            default.yaml · profiles/{offline,api,local}.yaml · pricing.yaml
-├── docs/               requirements.md · architecture.md · design-decisions.md
-├── scripts/            ci-offline.ps1
-├── src/answerdesk/     contracts · config · errors · logging · cli · testing/
-│   └── ingest index retrieval rerank llm generate policy cache service telemetry eval
-├── tests/              conftest.py · unit/ · smoke/
+├── configs/            default.yaml · profiles/{offline,api,local}.yaml · pricing.yaml · prompts/
+├── docs/               requirements · architecture · design-decisions · api · ops · results · robustness
+│                       ingestion · retrieval · generation · escalation · cache · evaluation · external-validity
+├── web/                operator console (React 18 + Vite + vitest + MSW; a11y + XSS suites)
+├── scripts/            ci-offline.ps1 · demo.ps1 · check-{traceability,numbers,licenses}.py · load.py · bench/
+├── src/answerdesk/     contracts · config · errors · logging · cli
+│   ├── ingest/  index/  retrieval/  rerank/     corpus → evidence
+│   ├── llm/  generate/                           provider layer + grounded generation
+│   ├── policy/  cache/  service/  telemetry/     decision, cache, HTTP surface, observability
+│   └── eval/  testing/                           harness, external arm, doubles
+├── tests/              unit/ · integration/ · property/ · load/ · smoke/
+├── reports/            offline-smoke · bench · external-p0 · judge-gate · policy-smoke · cache-smoke
 └── .github/workflows/  ci.yml
 ```
+
+Known, documented gaps (each with an owner and a follow-up in the review report): the numeric
+guard sees digit-bearing tokens only (R-30), a numeric rejection surfaces as `CITATION_FAILED`
+with the count on the trace (R-31), and the human-judge calibration gate still awaits real
+human labels (the scoring pipeline itself is done). The web console's XSS and accessibility
+gates are test-enforced; colour contrast is covered by the Playwright screenshots rather than
+jsdom, which has no layout engine.

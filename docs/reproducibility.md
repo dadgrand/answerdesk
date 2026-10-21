@@ -74,7 +74,8 @@ Run from the repository root. `pwsh` on Windows; the Python commands are cross-p
 |---|---|---|---|
 | Install (light) | `uv sync --extra dev` | first time only | `.venv/` |
 | Offline gate (same as CI) | `pwsh -File scripts/ci-offline.ps1` | no | `.pytest_cache/`, caches |
-| One-command demo | `pwsh -File scripts/demo.ps1` | no | `data/`, `reports/demo-t12/` |
+| One-command demo | `uv run answerdesk demo --smoke` | no | `data/`, `reports/demo/`, `logs/` |
+| Demo (PowerShell, adds calibration + eval smoke) | `pwsh -File scripts/demo.ps1` | no | `data/`, `reports/demo/`, `logs/` |
 | Build corpus | `uv run answerdesk ingest --demo` | no | `data/corpus/` |
 | Build index | `uv run answerdesk index --demo` | no | `data/index/<corpus-version>/` |
 | Ask one question | `uv run answerdesk ask --fake "<question>"` | no | nothing |

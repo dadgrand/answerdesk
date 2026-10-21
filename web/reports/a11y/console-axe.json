@@ -1,0 +1,26 @@
+{
+  "generatedAt": "2026-10-21T17:01:45.098Z",
+  "engine": "axe-core 4.14.0",
+  "url": "app://answerdesk-console",
+  "runOnly": [
+    "wcag2a",
+    "wcag2aa",
+    "wcag21a",
+    "wcag21aa"
+  ],
+  "excluded": [
+    "color-contrast (needs layout; Playwright/screenshots cover it)"
+  ],
+  "violations": [],
+  "passes": 23,
+  "incomplete": [
+    {
+      "id": "aria-prohibited-attr",
+      "nodes": 1
+    },
+    {
+      "id": "label-content-name-mismatch",
+      "nodes": 1
+    }
+  ]
+}

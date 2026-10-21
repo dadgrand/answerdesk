@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit --pretty false",
     "test": "vitest run",
     "test:watch": "vitest",
+    "a11y": "vitest run src/a11y.test.tsx",
     "screenshots": "node scripts/screenshots.mjs",
     "mock:worker": "msw init public --save"
   },
@@ -26,6 +27,7 @@
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
+    "axe-core": "^4.14.0",
     "jsdom": "^25.0.0",
     "msw": "^2.4.9",
     "playwright": "^1.47.0",

@@ -29,8 +29,17 @@ Handler = Callable[[httpx.Request], httpx.Response]
 
 
 def _break_ambient_proxy(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Make the ambient proxy unusable *regardless of the shell* (t50, R-16).
+
+    Setting the proxy variables alone is not enough: a developer who followed the README's
+    `NO_PROXY='*'` workaround has that variable exported, httpx then bypasses the proxy, and
+    the fallback under test never triggers. Clearing it makes the scenario depend on what the
+    test sets, not on the environment that ran it.
+    """
     for name in PROXY_ENV_VARS:
         monkeypatch.setenv(name, UNUSABLE_PROXY)
+    for name in ("NO_PROXY", "no_proxy"):
+        monkeypatch.delenv(name, raising=False)
 
 
 def _clear_ambient_proxy(monkeypatch: pytest.MonkeyPatch) -> None:
