@@ -207,6 +207,16 @@ class RerankSettings(Section):
         return value
 
 
+class SecuritySettings(Section):
+    """Second-line prompt-injection classifier (see policy/security_agent.py)."""
+
+    enabled: bool = False
+    #: Block when the classifier is unavailable or returns malformed JSON. Fail-closed is
+    #: the production default; an operator can opt into availability over strictness.
+    fail_closed: bool = True
+    max_chars: int = Field(default=4000, gt=0, le=32000)
+
+
 class RetrievalSettings(Section):
     fuser: Literal["rrf", "cc"] = "rrf"
     rrf_k: int = Field(default=60, ge=1)
@@ -400,6 +410,7 @@ class Settings(BaseSettings):
     llm: LLMSettings = Field(default_factory=LLMSettings)
     embedding: EmbeddingSettings = Field(default_factory=EmbeddingSettings)
     retrieval: RetrievalSettings = Field(default_factory=RetrievalSettings)
+    security: SecuritySettings = Field(default_factory=SecuritySettings)
     generate: GenerateSettings = Field(default_factory=GenerateSettings)
     policy: PolicySettings = Field(default_factory=PolicySettings)
     cache: CacheSettings = Field(default_factory=CacheSettings)
@@ -493,6 +504,7 @@ def apply_profile(settings: Settings, profile: Profile | None = None) -> Setting
         if resolved.llm.preset == "fake":
             resolved.llm.preset = "openai"
         resolved.eval.provider = "api"
+        resolved.security.enabled = True
     elif chosen == "local":
         if resolved.llm.preset == "fake":
             resolved.llm.preset = "ollama"

@@ -121,6 +121,7 @@ class TurnResult:
     cache_similarity: float | None = None
     cache_reason: str = ""
     p_hat: float = 0.0
+    security: dict[str, Any] | None = None
     history_turns: int = 0
     follow_up: bool = False
     retrieval_query: str = ""
@@ -174,6 +175,7 @@ class TurnRunner:
         generation: GenerationResult | None = None
         usage = Usage()
         p_hat = 0.0
+        security_verdict = None
         outcome: PolicyOutcome | None = None
         decision: Decision | None = None
         answer: Answer | None = None
@@ -186,6 +188,22 @@ class TurnRunner:
                 bucket=request.intent_bucket,
                 intent_label=request.intent_label,
             )
+            if decision is None and runtime.security is not None:
+                anchor = time.perf_counter()
+                security_verdict = runtime.security.check(request.message)
+                timings["security"] = _ms(anchor)
+                if security_verdict.blocked:
+                    decision = _forced(
+                        runtime.engine,
+                        request.intent_bucket,
+                        0.0,
+                        ReasonCode.INJECTION_SUSPECTED,
+                        "security validator: " + security_verdict.reason,
+                    )
+                    p_hat = 0.0
+                    runtime.metrics.observe_decision(
+                        decision.action.value, decision.reason_code.value
+                    )
             if decision is not None:
                 p_hat = decision.score
                 timings["policy"] = _ms(anchor)
@@ -364,6 +382,11 @@ class TurnRunner:
                 cache_similarity=cache_similarity,
                 cache_reason=cache_reason,
                 p_hat=p_hat,
+                security=(
+                    security_verdict.as_trace(model=runtime.provider.config.model)
+                    if security_verdict is not None
+                    else None
+                ),
                 history_turns=len(history_rows),
                 follow_up=replay.follow_up,
                 retrieval_query=replay.query,
@@ -487,6 +510,7 @@ class TurnRunner:
                 "redacted": getattr(query, "count", 0),
                 "kinds": list(getattr(query, "kinds", ())),
             },
+            "security": result.security,
         }
         line, _summary = trace_line(record, extra=extra)
         runtime.tracer.write(line)

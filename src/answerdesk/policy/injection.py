@@ -48,6 +48,40 @@ POLICY_RULES: tuple[tuple[str, re.Pattern[str]], ...] = (
             re.IGNORECASE,
         ),
     ),
+    (
+        "instruction-override-multilingual",
+        re.compile(
+            r"(игнорир\w*\s+(все\s+)?(предыдущ\w+\s+)?инструкц\w*"
+            r"|проигнорир\w*\s+(все\s+)?инструкц\w*"
+            r"|не\s+следуй\s+инструкц\w*"
+            r"|ignore\s+(all\s+)?(previous\s+|prior\s+)?instructions"
+            r"|disregard\s+(all\s+)?(previous\s+|prior\s+)?instructions"
+            r"|ko'?rsatmalarni\s+(e'?tiborsiz|tashla)"
+            r"|дастурҳоро\s+нодида)",
+            re.IGNORECASE,
+        ),
+    ),
+    (
+        "system-prompt-extraction",
+        re.compile(
+            r"((покаж\w*|вывед\w*|раскрой\w*|напечатай\w*|озвуч\w*)"
+            r"[\s\S]{0,30}?(системн\w+\s+)?промпт"
+            r"|(reveal|show|print|leak|repeat)\s+(me\s+)?(your\s+)?"
+            r"(system\s+)?prompt"
+            r"|(tizim|system)\s*prompt\w*\s*(ni|ни)?\s*(ko'?rsat|нишон)"
+            r"|系统提示|系统指令)",
+            re.IGNORECASE,
+        ),
+    ),
+    (
+        "role-play-jailbreak",
+        re.compile(
+            r"(ты\s+теперь\b|представь,?\s+что\s+ты\b"
+            r"|\bact\s+as\b|\byou\s+are\s+now\b|\bjailbreak\b|\bDAN\b"
+            r"|\bdeveloper\s+mode\b|\bdo\s+anything\s+now\b)",
+            re.IGNORECASE,
+        ),
+    ),
 )
 
 

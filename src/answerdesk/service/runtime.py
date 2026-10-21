@@ -67,6 +67,7 @@ from answerdesk.policy import (
     load_guard_config,
 )
 from answerdesk.policy.scorers import OverlapScorer
+from answerdesk.policy.security_agent import SecurityValidator
 from answerdesk.retrieval.pipeline import RetrievalPipeline, build_pipeline
 from answerdesk.service.config import (
     DEFAULT_CACHE_THRESHOLDS,
@@ -136,6 +137,7 @@ class ServiceRuntime:
         retriever: RetrievalPipeline | None,
         provider: RedactingProvider,
         answerer: AnswerPipeline,
+        security: SecurityValidator | None,
         engine: DecisionEngine | None,
         guards: GuardConfig,
         scorer: OverlapScorer,
@@ -152,6 +154,7 @@ class ServiceRuntime:
         self.retriever = retriever
         self.provider = provider
         self.answerer = answerer
+        self.security = security
         self.engine = engine
         self.guards = guards
         self.scorer = scorer
@@ -222,6 +225,15 @@ class ServiceRuntime:
                 resolved_provider_inner = build_provider(settings)
         wrapped = wrap_provider(resolved_provider_inner)
         answerer = AnswerPipeline.from_settings(wrapped, settings)
+        security = None
+        if settings.security.enabled:
+            from answerdesk.policy.security_agent import SecurityValidator
+
+            security = SecurityValidator(
+                wrapped,
+                fail_closed=settings.security.fail_closed,
+                max_chars=settings.security.max_chars,
+            )
 
         resolved_guards = guards or load_guard_config()
         calibration, resolved_engine = _load_engine(settings, svc, resolved_guards, engine=engine)
@@ -271,6 +283,7 @@ class ServiceRuntime:
             retriever=resolved_retriever,
             provider=wrapped,
             answerer=answerer,
+            security=security,
             engine=resolved_engine,
             guards=resolved_guards,
             scorer=OverlapScorer(),
