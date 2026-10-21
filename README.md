@@ -13,7 +13,7 @@ command on a laptop — no Docker, no vector database, no API key required for t
 `Windows + Linux in CI; macOS expected but not a CI leg` ·
 `local-first, API-optional (OpenAI-compatible: vLLM, llama.cpp, Ollama)`
 
-> **v0.1.0 is released** (2026-10-21, annotated tag `v0.1.0` on the audited commit). The pipeline, service, console and evaluation harness work
+> **v0.1.1 is released** (2026-10-21, annotated tag `v0.1.0` on the audited commit). The pipeline, service, console and evaluation harness work
 > end-to-end and offline. The first live study produced a **negative result on risk control**:
 > with the shipped overlap-based confidence signal, realised risk on answered turns was 22.3%
 > against a 5% target. That result is published in [`docs/results.md`](docs/results.md) and

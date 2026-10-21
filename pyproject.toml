@@ -1,6 +1,6 @@
 [project]
 name = "answerdesk"
-version = "0.1.0"
+version = "0.1.1"
 description = "Local-first, multilingual customer-support RAG+LLM reference stack: hybrid retrieval, grounded citations, calibrated escalation, semantic cache and reproducible evals."
 authors = [{ name = "answerdesk contributors" }]
 license = { text = "MIT" }
