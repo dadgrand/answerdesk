@@ -84,3 +84,6 @@ web/test-results/
 
 # --- Keep the example env file ------------------------------------------------
 !.env.example
+
+# Local probe dirs from audits/experiments
+/t*-probe-*/
