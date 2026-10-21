@@ -1,0 +1,112 @@
+{
+  "command": "python.exe scripts/scale/measure.py --smoke",
+  "config": {
+    "bm25": {
+      "b": 0.75,
+      "k1": 1.2
+    },
+    "chunking": {
+      "chunker": "structure-first-v1",
+      "context_header": false,
+      "overlap_tokens": 48,
+      "repeat_table_header": true,
+      "token_budget": 320
+    },
+    "docs_per_locale": 12,
+    "embedding_backend": "hashing-64",
+    "embedding_dimension": 64,
+    "final_k": 8,
+    "fuser": "rrf",
+    "locales": [
+      "ru",
+      "tg",
+      "uz",
+      "ky",
+      "tr",
+      "zh"
+    ],
+    "queries_measured": 24,
+    "seed": 20261020
+  },
+  "corpus": {
+    "chunks": 684,
+    "corpus_version": "corpus-c3d71a8626532ddd",
+    "documents": 72,
+    "grounding_findings": 0,
+    "identifier_findings": 0,
+    "license": "CC0-1.0",
+    "path": "data\\scale\\corpus",
+    "queries": 288,
+    "schema_version": "2.1.0",
+    "tokens": 50065
+  },
+  "cwd": "D:\\Documents\\deepseek-harness\\default-workspace\\answerdesk",
+  "hardware": {
+    "cpu_count": 28,
+    "implementation": "CPython",
+    "machine": "AMD64",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "processor": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+    "python": "3.12.10",
+    "release": "11",
+    "system": "Windows"
+  },
+  "label": "smoke",
+  "nfr_scale_01": {
+    "checks": {
+      "chunks": false,
+      "documents": false,
+      "index_build": true,
+      "peak_rss": true,
+      "retrieval_p95": true
+    },
+    "failed": [
+      "documents",
+      "chunks"
+    ],
+    "requirement": "NFR-SCALE-01",
+    "status": "miss",
+    "targets": {
+      "chunks": 20000,
+      "documents": 3000,
+      "index_build_s": 600.0,
+      "peak_rss_gb": 4.0,
+      "retrieval_p95_ms": 500.0
+    }
+  },
+  "resources": {
+    "peak_rss_bytes": 76783616,
+    "peak_rss_gb": 0.072
+  },
+  "sizes": {
+    "corpus_bytes": 1257575,
+    "index_bytes": 1447530,
+    "index_dir": "data\\scale\\index\\corpus-c3d71a8626532ddd",
+    "index_mib": 1.38
+  },
+  "task": "t42 (R-05, NFR-SCALE-01)",
+  "timings": {
+    "index_build_reported_ms": {
+      "bm25_build_ms": 144.61,
+      "dense_build_ms": 42.0,
+      "total_ms": 208.863
+    },
+    "index_build_s": 0.223,
+    "ingest_s": 0.824,
+    "retrieval": {
+      "count": 24,
+      "max_ms": 8.318,
+      "mean_ms": 1.946,
+      "p50_ms": 1.704,
+      "p95_ms": 2.17,
+      "stage_mean_ms": {
+        "analysis_ms": 0.536,
+        "dedupe_ms": 0.682,
+        "dense_ms": 0.157,
+        "fusion_ms": 0.214,
+        "sparse_ms": 0.307,
+        "total_ms": 1.895
+      }
+    }
+  }
+}
