@@ -60,6 +60,19 @@ api = [
   "uvicorn>=0.30,<1",
   "sse-starlette>=2.1,<4",
 ]
+# Local query-rewriter training (t26): QLoRA/LoRA fine-tuning of a small instruction
+# model on one consumer GPU. Nothing here is imported by the package at runtime unless the
+# optional rewriter backend is switched on, and the base install stays torch-free
+# (NFR-PORT-03). `uv sync --extra train` is the only supported way to get these wheels.
+train = [
+  "torch>=2.4,<3",
+  "transformers>=4.44,<5",
+  "peft>=0.12,<1",
+  "bitsandbytes>=0.43,<1",
+  "accelerate>=0.33,<2",
+  "datasets>=2.20,<4",
+  "huggingface-hub>=0.24,<1",
+]
 
 [project.scripts]
 answerdesk = "answerdesk.cli:main"
@@ -83,6 +96,18 @@ include = ["src", "tests", "configs", "docs", "scripts", ".env.example", "LICENS
 # Editable install of this project for `uv run`, plus a compiled bytecode cache
 # is intentionally not configured: determinism over speed in CI.
 default-groups = []
+
+# CUDA 12.6 wheels for the `train` extra (t26). The base install never resolves torch
+# (NFR-PORT-03); this index is only consulted for requirements that name torch, and the
+# rest of the project keeps resolving from PyPI. On a CPU-only host the same wheels run on
+# the CPU, so no separate CPU lock is needed.
+[[tool.uv.index]]
+name = "pytorch-cu126"
+url = "https://download.pytorch.org/whl/cu126"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu126" }
 
 [tool.pytest.ini_options]
 minversion = "8.0"

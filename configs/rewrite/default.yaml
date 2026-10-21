@@ -1,0 +1,30 @@
+# Optional query rewriter (t26) — OFF by default.
+#
+# The rewriter is an optimisation: with `enabled: false` the pipeline retrieves with the
+# customer's message unchanged, exactly as before this task. Turning it on is a config edit,
+# never a code edit, and a missing adapter or a missing `train` extra degrades to identity with
+# a logged reason (`answerdesk rewrite status` shows it).
+#
+# Backends
+#   identity        no-op (default)
+#   deterministic   dependency-free normaliser: fillers, Latin→Cyrillic transliteration, typos
+#   local_lora      the trained QLoRA adapter (needs `uv sync --extra train` + the adapter dir)
+#
+# Measured effect of the two non-trivial backends is in docs/query-rewriter.md; do not enable
+# this without reading that table first.
+
+rewrite:
+  enabled: false
+  backend: identity
+
+  deterministic:
+    transliterate: true     # "zaym kak oformit" → "займ как оформить"
+    drop_fillers: true      # "подскажите пожалуйста ..." → "..."
+    repair: true            # curated misspellings seen in the noisy slice ("денги" → "деньги")
+
+  local_lora:
+    base_model: Qwen/Qwen2.5-1.5B-Instruct
+    adapter_path: data/training/adapter
+    device: auto            # auto | cuda | cpu
+    max_new_tokens: 64
+    timeout_ms: 2000        # a rewrite slower than this falls back to the original query

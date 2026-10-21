@@ -1,0 +1,654 @@
+{
+  "by_category": {
+    "code_switch": 155,
+    "direct": 176,
+    "identifier": 78,
+    "multi_hop": 87,
+    "noisy_freeform": 389,
+    "numeric_date": 211,
+    "perturbation": 178,
+    "typo": 156
+  },
+  "by_locale": {
+    "ky": 239,
+    "ru": 257,
+    "tg": 245,
+    "tr": 221,
+    "uz": 244,
+    "zh": 224
+  },
+  "by_source": {
+    "corpus_clean": 552,
+    "corpus_noisy": 700,
+    "perturbation": 178
+  },
+  "by_split": {
+    "test": 138,
+    "train": 1153,
+    "val": 139
+  },
+  "by_style": {
+    "clean": 863,
+    "dropped_preposition": 22,
+    "run_on": 171,
+    "telegraphic": 65,
+    "translit": 130,
+    "typo_mix": 179
+  },
+  "dataset_version": "1.0.0",
+  "dropped_pairs": 160,
+  "hash": "3abde3534057b395b4e609a34490c1b1d7664492c1269d1eb551452d09b5eb38",
+  "mean_lengths": {
+    "clean_chars": 32.7,
+    "noisy_chars": 41.31
+  },
+  "pairs": 1430,
+  "pii_excluded": [
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "ky",
+      "pair_id": "c-syn-ky-0003-q0"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "ky",
+      "pair_id": "c-syn-ky-0005-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "ky",
+      "pair_id": "c-syn-ky-0025-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "ky",
+      "pair_id": "c-syn-ky-0035-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "ky",
+      "pair_id": "c-syn-ky-0050-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "ky",
+      "pair_id": "c-syn-ky-0053-q0"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "ky",
+      "pair_id": "c-syn-ky-0055-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "ky",
+      "pair_id": "c-syn-ky-0078-q0"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "ky",
+      "pair_id": "c-syn-ky-0080-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "ky",
+      "pair_id": "c-syn-ky-0103-q0"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "ky",
+      "pair_id": "c-syn-ky-0105-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "ky",
+      "pair_id": "c-syn-ky-0108-q0"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "ky",
+      "pair_id": "c-syn-ky-0110-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "ky",
+      "pair_id": "c-syn-ky-0130-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "ru",
+      "pair_id": "c-syn-ru-0010-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "ru",
+      "pair_id": "c-syn-ru-0030-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "ru",
+      "pair_id": "c-syn-ru-0035-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "ru",
+      "pair_id": "c-syn-ru-0058-q0"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "ru",
+      "pair_id": "c-syn-ru-0075-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "ru",
+      "pair_id": "c-syn-ru-0085-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "ru",
+      "pair_id": "c-syn-ru-0103-q0"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "ru",
+      "pair_id": "c-syn-ru-0105-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "ru",
+      "pair_id": "c-syn-ru-0110-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "ru",
+      "pair_id": "c-syn-ru-0128-q0"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "ru",
+      "pair_id": "c-syn-ru-0133-q0"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "tg",
+      "pair_id": "c-syn-tg-0000-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "tg",
+      "pair_id": "c-syn-tg-0005-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "tg",
+      "pair_id": "c-syn-tg-0008-q0"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "tg",
+      "pair_id": "c-syn-tg-0025-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "tg",
+      "pair_id": "c-syn-tg-0028-q0"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "tg",
+      "pair_id": "c-syn-tg-0030-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "tg",
+      "pair_id": "c-syn-tg-0050-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "tg",
+      "pair_id": "c-syn-tg-0053-q0"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "tg",
+      "pair_id": "c-syn-tg-0058-q0"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "tg",
+      "pair_id": "c-syn-tg-0060-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "tg",
+      "pair_id": "c-syn-tg-0075-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "tg",
+      "pair_id": "c-syn-tg-0083-q0"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "tg",
+      "pair_id": "c-syn-tg-0108-q0"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "tg",
+      "pair_id": "c-syn-tg-0125-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "tr",
+      "pair_id": "c-syn-tr-0000-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "tr",
+      "pair_id": "c-syn-tr-0003-q0"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "tr",
+      "pair_id": "c-syn-tr-0005-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "tr",
+      "pair_id": "c-syn-tr-0008-q0"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "tr",
+      "pair_id": "c-syn-tr-0010-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "tr",
+      "pair_id": "c-syn-tr-0028-q0"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "tr",
+      "pair_id": "c-syn-tr-0035-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "tr",
+      "pair_id": "c-syn-tr-0055-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "tr",
+      "pair_id": "c-syn-tr-0058-q0"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "tr",
+      "pair_id": "c-syn-tr-0080-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "tr",
+      "pair_id": "c-syn-tr-0085-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "tr",
+      "pair_id": "c-syn-tr-0103-q0"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "tr",
+      "pair_id": "c-syn-tr-0108-q0"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "tr",
+      "pair_id": "c-syn-tr-0110-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "tr",
+      "pair_id": "c-syn-tr-0128-q0"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "tr",
+      "pair_id": "c-syn-tr-0130-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "uz",
+      "pair_id": "c-syn-uz-0000-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "uz",
+      "pair_id": "c-syn-uz-0003-q0"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "uz",
+      "pair_id": "c-syn-uz-0025-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "uz",
+      "pair_id": "c-syn-uz-0053-q0"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "uz",
+      "pair_id": "c-syn-uz-0058-q0"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "uz",
+      "pair_id": "c-syn-uz-0075-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "uz",
+      "pair_id": "c-syn-uz-0083-q0"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "uz",
+      "pair_id": "c-syn-uz-0085-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "uz",
+      "pair_id": "c-syn-uz-0100-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "uz",
+      "pair_id": "c-syn-uz-0105-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "uz",
+      "pair_id": "c-syn-uz-0108-q0"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "uz",
+      "pair_id": "c-syn-uz-0110-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "uz",
+      "pair_id": "c-syn-uz-0133-q0"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "zh",
+      "pair_id": "c-syn-zh-0000-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "zh",
+      "pair_id": "c-syn-zh-0005-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "zh",
+      "pair_id": "c-syn-zh-0008-q0"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "zh",
+      "pair_id": "c-syn-zh-0010-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "zh",
+      "pair_id": "c-syn-zh-0025-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "zh",
+      "pair_id": "c-syn-zh-0028-q0"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "zh",
+      "pair_id": "c-syn-zh-0033-q0"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "zh",
+      "pair_id": "c-syn-zh-0050-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "zh",
+      "pair_id": "c-syn-zh-0055-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "zh",
+      "pair_id": "c-syn-zh-0060-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "zh",
+      "pair_id": "c-syn-zh-0075-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "zh",
+      "pair_id": "c-syn-zh-0085-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "zh",
+      "pair_id": "c-syn-zh-0100-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "zh",
+      "pair_id": "c-syn-zh-0103-q0"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "zh",
+      "pair_id": "c-syn-zh-0108-q0"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "zh",
+      "pair_id": "c-syn-zh-0125-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "zh",
+      "pair_id": "c-syn-zh-0130-q2"
+    },
+    {
+      "kinds": [
+        "phone"
+      ],
+      "locale": "zh",
+      "pair_id": "c-syn-zh-0133-q0"
+    },
+    {
+      "reviewed_identifier_false_positives": []
+    }
+  ],
+  "pii_excluded_count": 87
+}

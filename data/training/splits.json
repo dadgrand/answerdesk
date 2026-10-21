@@ -1,0 +1,24 @@
+{
+  "assignment": "document-disjoint sha256(salt:doc_id) buckets (80/10/10); clean/noisy target texts bound to one split (collisions dropped)",
+  "counts": {
+    "test": 138,
+    "train": 1153,
+    "val": 139
+  },
+  "dataset_version": "1.0.0",
+  "hash": "3abde3534057b395b4e609a34490c1b1d7664492c1269d1eb551452d09b5eb38",
+  "perturbation_styles": [
+    "telegraphic",
+    "run_on",
+    "dropped_preposition",
+    "typo_mix",
+    "translit"
+  ],
+  "salt": "answerdesk-rewriter-split-v1",
+  "seed": 1337,
+  "sources": [
+    "noisy_freeform",
+    "typo",
+    "code_switch"
+  ]
+}

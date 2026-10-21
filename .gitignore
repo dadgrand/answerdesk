@@ -10,6 +10,7 @@ dist/
 
 # --- Environments -------------------------------------------------------------
 .venv/
+.venv-train/
 venv/
 .env
 .secrets/
@@ -37,6 +38,10 @@ data/service/
 data/external/
 data/corpus/*.jsonl
 data/corpus/.cache/
+# Trained adapters are reproducible from the committed dataset + script; the
+# 85 MiB weights stay local (checksum in docs/adapter-card.md).
+data/training/adapter/
+/_tmp/
 *.log
 *.tmp
 

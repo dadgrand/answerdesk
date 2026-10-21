@@ -1,0 +1,71 @@
+{
+  "backend": "deterministic",
+  "bootstrap_samples": 1000,
+  "clean_gate_delta": -0.029167,
+  "clean_gate_passed": false,
+  "corpus_version": "corpus-77d7d081813738a6",
+  "index_version": "index-dc9909c648367626",
+  "ks": [
+    10,
+    20
+  ],
+  "latency_ms": {
+    "mean": 0.029,
+    "note": "wall-clock of the rewrite call only (retrieval excluded)",
+    "p50": 0.025,
+    "p95": 0.045
+  },
+  "n_cases": 870,
+  "notes": "paired bootstrap over cases; recall_any@k against gold chunk ids; the same statistic t23 uses for its noisy-input ablation",
+  "seed": 20261021,
+  "slices": [
+    {
+      "ci_high@10": 0.004219,
+      "ci_high@20": 0.010549,
+      "ci_low@10": -0.010549,
+      "ci_low@20": -0.006329,
+      "delta@10": -0.00211,
+      "delta@20": 0.00211,
+      "improved@20": 3,
+      "n": 474,
+      "name": "noisy_freeform",
+      "recall@10": 0.548523,
+      "recall@10_rewritten": 0.546414,
+      "recall@20": 0.822785,
+      "recall@20_rewritten": 0.824895,
+      "worsened@20": 2
+    },
+    {
+      "ci_high@10": 0.051282,
+      "ci_high@20": 0.019231,
+      "ci_low@10": 0.00641,
+      "ci_low@20": -0.019231,
+      "delta@10": 0.025641,
+      "delta@20": 0.0,
+      "improved@20": 1,
+      "n": 156,
+      "name": "held_out",
+      "recall@10": 0.865385,
+      "recall@10_rewritten": 0.891026,
+      "recall@20": 0.967949,
+      "recall@20_rewritten": 0.967949,
+      "worsened@20": 1
+    },
+    {
+      "ci_high@10": -0.004167,
+      "ci_high@20": -0.008333,
+      "ci_low@10": -0.033333,
+      "ci_low@20": -0.054167,
+      "delta@10": -0.016667,
+      "delta@20": -0.029167,
+      "improved@20": 1,
+      "n": 240,
+      "name": "clean",
+      "recall@10": 0.754167,
+      "recall@10_rewritten": 0.7375,
+      "recall@20": 0.920833,
+      "recall@20_rewritten": 0.891667,
+      "worsened@20": 8
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+# Training requirements for the local query rewriter (t26).
+#
+# The project declares these in `pyproject.toml` as the `train` extra; this file pins the
+# versions the adapter was actually built with (`uv lock` output), so the run is
+# reproducible without re-resolving:
+#
+#   python -m venv .venv-train
+#   .venv-train/Scripts/python -m pip install -r data/training/requirements-train.txt \
+#       --extra-index-url https://download.pytorch.org/whl/cu126
+#
+# or, on a machine where the shared environment may be changed:
+#
+#   uv sync --extra train
+#
+# `torch` resolves to the CUDA 12.6 wheel index declared in pyproject.toml
+# (`[[tool.uv.index]] name = "pytorch-cu126"`). On a CPU-only host the same wheel runs on
+# the CPU; nothing in the base install depends on any of this (NFR-PORT-03).
+# Regenerate the full resolved set at any time with:
+#   uv export --extra train --format requirements-txt --no-hashes --no-emit-project
+# (the curated list below is the short form used in the docs)
+torch==2.14.1+cu126
+transformers==4.57.6
+peft==0.21.2
+bitsandbytes==0.50.2
+accelerate==1.15.0
+datasets==3.6.0
+huggingface-hub==0.36.2
+safetensors==0.8.0
+tokenizers==0.22.2
