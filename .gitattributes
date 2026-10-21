@@ -1,0 +1,20 @@
+# Normalise line endings so a fresh checkout is byte-identical on Windows and Linux.
+# The corpus, benchmarks and reports are compared by hash in tests; CRLF drift must
+# never be able to fail a reproducibility check.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.sqlite binary
+*.db binary
+*.zip binary
+*.gz binary
