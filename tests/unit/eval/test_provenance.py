@@ -16,9 +16,7 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 RESULTS = REPO_ROOT / "docs" / "results.md"
-FROZEN_CORPUS_MANIFEST_SHA256 = (
-    "da33968a0d0087ecc0c4e8d966c1cdc47d40699dec139a00694818c0e583af69"
-)
+FROZEN_CORPUS_MANIFEST_SHA256 = "da33968a0d0087ecc0c4e8d966c1cdc47d40699dec139a00694818c0e583af69"
 
 
 def _raw_sha256(path: Path) -> str:

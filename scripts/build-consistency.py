@@ -158,10 +158,7 @@ def render(run: Path) -> str:
     lines.append("")
     pooled_evidence = None
     if language:
-        flags = [
-            block["leakage"]["successes"]
-            for block in language.values()
-        ]
+        flags = [block["leakage"]["successes"] for block in language.values()]
         totals = [block["leakage"]["n"] for block in language.values()]
         if sum(totals):
             pooled_evidence = round(sum(flags) / sum(totals), 3)

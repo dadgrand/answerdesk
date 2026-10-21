@@ -89,8 +89,6 @@ def test_committed_report_matches_the_measurement(report: dict) -> None:
     if not path.is_file():  # pragma: no cover - first run writes it
         pytest.skip("reports/locale-filter/report.json has not been written yet")
     committed = json.loads(path.read_text(encoding="utf-8"))
-    assert committed["purity"]["after"]["chunk_purity"] == report["purity"]["after"][
-        "chunk_purity"
-    ]
+    assert committed["purity"]["after"]["chunk_purity"] == report["purity"]["after"]["chunk_purity"]
     assert committed["consistency_set"]["digest"] == report["consistency_set"]["digest"]
     assert committed["gates"] == report["gates"]
