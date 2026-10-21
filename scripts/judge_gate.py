@@ -49,6 +49,21 @@ _FALSE_LABELS = frozenset({"unsupported", "no", "false", "0", "fail", "unclear"}
 _BLANK = frozenset({"", "none", "null", "nan", "-"})
 
 
+def canonical_bytes(payload: bytes) -> bytes:
+    """Canonical text bytes: LF endings, independent of the checkout platform.
+
+    Git normalises text on checkout, so a Windows working tree can hand us CRLF files while
+    a CI archive is LF. The gate hashes the *content*, not the checkout, or the committed
+    verdict would only reproduce on the machine that wrote it.
+    """
+    return payload.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+
+
+def canonical_sha256(path: Path) -> str:
+    """SHA-256 of a text file over :func:`canonical_bytes`."""
+    return hashlib.sha256(canonical_bytes(path.read_bytes())).hexdigest()
+
+
 class GateError(RuntimeError):
     """A configuration or sheet set the gate cannot score."""
 
@@ -74,6 +89,12 @@ class Policy:
     bootstrap_seed: int
     confidence: float
     synthetic_marker: str = SYNTHETIC_MARKER
+    path: Path | None = field(default=None, compare=False, repr=False)
+
+    @property
+    def sha256(self) -> str | None:
+        """Canonical LF SHA-256 of the policy file (``None`` for an in-memory policy)."""
+        return canonical_sha256(self.path) if self.path is not None else None
 
     @classmethod
     def load(cls, path: Path | None = None) -> Policy:
@@ -96,6 +117,7 @@ class Policy:
                 bootstrap_seed=int(payload["ci"]["seed"]),
                 confidence=float(payload["ci"]["confidence"]),
                 synthetic_marker=str(payload.get("synthetic_marker", SYNTHETIC_MARKER)),
+                path=policy_path,
             )
         except (KeyError, TypeError, ValueError) as error:
             raise GateError(f"gate policy is incomplete: {policy_path}: {error!r}") from error
@@ -272,7 +294,7 @@ def load_sheet(path: Path, policy: Policy) -> Sheet:
     if errors:
         raise GateError(f"invalid sheet {path}", errors=errors)
 
-    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    digest = canonical_sha256(path)
     return Sheet(
         path=path,
         language=language,
@@ -456,6 +478,7 @@ def evaluate(
         "schema_version": ARTEFACT_SCHEMA_VERSION,
         "source": source or _relative(directory),
         "policy": policy.to_dict(),
+        "policy_sha256": policy.sha256,
         "inputs": [],
         "per_language": {},
         "pooled": {

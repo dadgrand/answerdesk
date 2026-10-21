@@ -1,26 +1,26 @@
 {
   "disagreements": 0,
-  "generated_at": "2026-10-21T15:33:51+00:00",
+  "generated_at": "2026-10-21T16:11:01+00:00",
   "inputs": [
     {
       "path": "reports/external-p0/calibration/calibration-ky.csv",
-      "sha256": "d05896e85fe052ef6c5e7c4802391493c54828ca2e6bfffa88e10375bce78f55"
+      "sha256": "988f43905b413b503863751e51632522703658a1b7a6821910aadd08686d5328"
     },
     {
       "path": "reports/external-p0/calibration/calibration-ru.csv",
-      "sha256": "3ef52dc59230408b0411ded4c2529aabce5196c21c1fcbba8cfec42448eb2ed3"
+      "sha256": "ce576aa2e1c66bc75384b740007166c179a2cbb75441176c779dd79300392581"
     },
     {
       "path": "reports/external-p0/calibration/calibration-tg.csv",
-      "sha256": "2348f95ae5134eeb18d6f052335216b330089a23cb1f19ee9e5463924ba4851d"
+      "sha256": "d9ba725bd7ab7e012b651207525bcc2cea1a8788b821e3d53645665f7db65e4b"
     },
     {
       "path": "reports/external-p0/calibration/calibration-uz.csv",
-      "sha256": "0bc533852cf93779a506b26166cf08be09e007b5d27e753e748fbdf794237271"
+      "sha256": "23fc302d2e51e83fbd21a45dce9b18ab16910db09bbb5c52c8dc2cb24a35bf72"
     },
     {
       "path": "reports/external-p0/calibration/calibration-zh.csv",
-      "sha256": "9985b455717758adb3dcc067bd81f152a5207de639562771d3e8993bba4ae812"
+      "sha256": "3c8b423db20161efd2b4a45e35fa2cfc6068447e8d15fae62cdbb9208dc86373"
     }
   ],
   "judged_metrics_label": "diagnostic",
@@ -129,6 +129,7 @@
       "pairwise_agreement": 0.7
     }
   },
+  "policy_sha256": "0db1cfad1532589adfe408af345b449e8c9fac360bdc8e6a1ed9964ee429bda7",
   "pooled": {
     "items": 750,
     "judge_kappa": null,

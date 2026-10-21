@@ -7,6 +7,7 @@ exist to prove the computation and the mechanical flip, never to stand in for hu
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
 import random
 import sys
@@ -103,6 +104,53 @@ def test_bootstrap_ci_is_deterministic_and_ordered() -> None:
 # --------------------------------------------------------------------------- committed state
 
 
+def test_gate_input_hashes_are_checkout_independent() -> None:
+    """The committed hashes are over canonical LF bytes, not over the CRLF working tree."""
+    stored = json.loads(GATE_PATH.read_text(encoding="utf-8"))
+    for row in stored["inputs"]:
+        path = REPO_ROOT / row["path"]
+        assert row["sha256"] == judge_gate.canonical_sha256(path), row["path"]
+        # On the Windows tree these files are CRLF; on CI they are LF. Both hash the same.
+        if b"\r\n" in path.read_bytes():
+            assert row["sha256"] != hashlib.sha256(path.read_bytes()).hexdigest()
+    policy_path = REPO_ROOT / "evals" / "judge" / "gate-policy.json"
+    assert stored["policy_sha256"] == judge_gate.canonical_sha256(policy_path)
+
+
+def test_sheet_digest_is_line_ending_independent(tmp_path: Path) -> None:
+    """A CRLF twin of a sheet must produce the same digest as its LF twin."""
+    policy = _fixture_policy()
+    rows = _read_rows(FIXTURES / "high" / "calibration-ru.csv")
+    lf_dir = tmp_path / "lf"
+    crlf_dir = tmp_path / "crlf"
+    lf_path = _write_sheet(lf_dir, "ru", rows)
+    lf_bytes = lf_path.read_bytes().replace(b"\r\n", b"\n")
+    lf_path.write_bytes(lf_bytes)
+    assert b"\r\n" not in lf_bytes
+    crlf_path = crlf_dir / "calibration-ru.csv"
+    crlf_dir.mkdir(parents=True, exist_ok=True)
+    crlf_path.write_bytes(lf_bytes.replace(b"\n", b"\r\n"))
+    assert b"\r\n" in crlf_path.read_bytes()
+    assert lf_path.read_bytes() != crlf_path.read_bytes()
+    lf_sheet = judge_gate.load_sheet(lf_path, policy)
+    crlf_sheet = judge_gate.load_sheet(crlf_path, policy)
+    assert lf_sheet.sha256 == crlf_sheet.sha256
+    assert lf_sheet.rows == crlf_sheet.rows
+
+
+def test_policy_digest_is_line_ending_independent(tmp_path: Path) -> None:
+    text = (FIXTURES / "policy.json").read_text(encoding="utf-8")
+    lf_path = tmp_path / "policy-lf.json"
+    crlf_path = tmp_path / "policy-crlf.json"
+    lf_path.write_bytes(text.encode("utf-8"))
+    crlf_path.write_bytes(text.replace("\n", "\r\n").encode("utf-8"))
+    assert b"\r\n" in crlf_path.read_bytes()
+    lf_policy = judge_gate.Policy.load(lf_path)
+    crlf_policy = judge_gate.Policy.load(crlf_path)
+    assert lf_policy.sha256 == crlf_policy.sha256
+    assert lf_policy.sha256 == judge_gate.canonical_sha256(lf_path)
+
+
 def test_committed_sheets_are_pending_and_unlabelled() -> None:
     artefact = judge_gate.evaluate(SHEETS, judge_gate.Policy.load())
     assert artefact["status"] == "pending"
@@ -122,6 +170,7 @@ def test_committed_gate_matches_the_committed_sheets() -> None:
     assert stored["status"] == recomputed["status"] == "pending"
     assert stored["judged_metrics_label"] == "diagnostic"
     assert stored["inputs"] == recomputed["inputs"]
+    assert stored["policy_sha256"] == recomputed["policy_sha256"]
     for language, block in recomputed["per_language"].items():
         assert stored["per_language"][language]["items"] == block["items"]
         assert stored["per_language"][language]["status"] == block["status"]
