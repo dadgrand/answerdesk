@@ -1,0 +1,72 @@
+name: Feature or behaviour change
+description: Propose a capability, a metric, a threshold change, or a contract change.
+title: "feat: <one line>"
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This project accepts changes that are **measured and traceable**. A proposal that changes a
+        contract (`src/answerdesk/contracts.py`), a config key, a CLI flag, a metric definition or a
+        threshold also needs a requirement amendment (`docs/requirements.md` §18) and an ADR entry
+        (`docs/design-decisions.md`). Say which one applies.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is wrong or missing today, for whom, and how you noticed.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: The change you want, with the mechanism (not just the outcome).
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: How would we know it works?
+      description: |
+        The metric, dataset and gate that would prove it. If it is a claim about quality, name the
+        split, the sample size, and the interval you expect. If it is plumbing, name the test.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind of change
+      options:
+        - plumbing / refactor (no claim changes)
+        - new metric or evaluation
+        - threshold / policy change
+        - contract or config change (needs amendment + ADR)
+        - documentation
+        - performance
+    validations:
+      required: true
+
+  - type: textarea
+    id: non-goals
+    attributes:
+      label: Does this collide with a non-goal?
+      description: |
+        Check `docs/requirements.md` §12. Voice, connectors, autonomous account actions, multi-tenancy,
+        fine-tuning and deployment are explicit non-goals; a proposal that needs one of them must say so.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: Confirmations
+      options:
+        - label: I understand that any published number must come from committed artifacts, not hand-edited docs.
+          required: true
+        - label: I have not included secrets or private data in this issue.
+          required: true

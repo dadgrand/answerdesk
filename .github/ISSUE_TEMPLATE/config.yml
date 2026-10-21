@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/answerdesk/answerdesk/security/advisories/new
+    about: Report privately. Do not open a public issue for security problems (see SECURITY.md).
+  - name: Question or usage help
+    url: https://github.com/answerdesk/answerdesk/discussions
+    about: Ask how to run the stack, point it at a local model, or reproduce a number.
+  - name: Read the docs first
+    url: https://github.com/answerdesk/answerdesk/blob/main/docs/requirements.md
+    about: The frozen v1.0 requirements, traceability matrix and change-control rules.

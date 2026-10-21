@@ -1,0 +1,84 @@
+name: Bug report
+description: Something behaves incorrectly, crashes, or violates a requirement/invariant.
+title: "bug: <one line>"
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Please **do not** paste secrets, provider keys, or real customer text.
+        For security issues use the private channel described in [SECURITY.md](../SECURITY.md), not this form.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: Observed behaviour, verbatim output, and what you expected instead.
+      placeholder: |
+        Command: uv run answerdesk ask --fake "…"
+        Observed: …
+        Expected: …
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction
+      description: Exact commands from a clean checkout. Offline profile preferred (`--fake`, `--synthetic`).
+      render: shell
+      placeholder: |
+        uv sync --extra dev
+        uv run answerdesk ingest --demo
+        uv run answerdesk index --demo
+        uv run answerdesk ask --fake "…"
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Python, uv version, and profile (`offline` / `api` / `local`).
+      placeholder: "Windows 11 · Python 3.12.10 · uv 0.11 · profile offline"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: requirement
+    attributes:
+      label: Which requirement or invariant does this violate (if known)?
+      description: IDs come from docs/requirements.md. Choose "not sure" if you cannot tell.
+      options:
+        - not sure
+        - INV (grounding / PII / control-flow invariant)
+        - FR-ING (ingestion)
+        - FR-RET (retrieval)
+        - FR-GEN (generation / citations)
+        - FR-ESC (escalation)
+        - FR-CAC (cache)
+        - FR-SVC (service)
+        - FR-UI (console)
+        - FR-EVL (evaluation)
+        - NFR (latency / cost / determinism / security / docs)
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant trace or log excerpt (redacted)
+      description: Paste a redacted JSONL trace line or error envelope if useful. Remove keys and PII.
+      render: json
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: Confirmations
+      options:
+        - label: I removed secrets, API keys and real customer data from this report.
+          required: true
+        - label: I can reproduce this on the current `main` with the commands above.
+          required: true

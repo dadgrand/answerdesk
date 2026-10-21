@@ -81,6 +81,10 @@ flowchart TB
 Every arrow is a `Protocol` seam from `answerdesk.contracts` or a pydantic model; modules do
 not import each other's internals.
 
+A rendered export of this diagram (same boxes, same semantics, no Mermaid runtime needed) is
+committed as [`docs/assets/architecture.svg`](assets/architecture.svg); this mermaid block remains the
+source of truth, so change both together.
+
 ---
 
 ## 3. Contracts (`answerdesk.contracts`)

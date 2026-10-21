@@ -1,0 +1,27 @@
+cff-version: 1.2.0
+message: "If you use this software or its evaluation artifacts, please cite it as below."
+title: "answerdesk: a reproducible multilingual customer-support RAG reference stack"
+abstract: >-
+  A local-first, MIT-licensed reference implementation of multilingual customer-support RAG with
+  span-verified citations, a split-conformal answer/escalate decision under a cost model, a guarded
+  semantic cache, an operator console showing the decision, and a reproducible evaluation harness
+  (frozen hashed splits, paired bootstrap, McNemar, judge calibration protocol). Ships its negative
+  results: risk control did not hold on the first live study.
+authors:
+  - name: "answerdesk contributors"
+version: "0.1.0"
+date-released: "2026-10-21"
+license: MIT
+repository-code: "https://github.com/answerdesk/answerdesk"
+url: "https://github.com/answerdesk/answerdesk"
+keywords:
+  - retrieval-augmented generation
+  - customer support
+  - multilingual
+  - conformal prediction
+  - calibrated abstention
+  - citation verification
+  - semantic cache
+  - reproducible evaluation
+  - uv
+  - python

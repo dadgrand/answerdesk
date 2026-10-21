@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="800" viewBox="0 0 1240 800"
+     role="img" aria-labelledby="title desc" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <title id="title">answerdesk component architecture</title>
+  <desc id="desc">Rendered export of the component diagram in docs/architecture.md. Three bands:
+  surfaces (CLI, HTTP service, operator console), the pipeline (ingest, index, retrieval, rerank,
+  generate, verify, policy, cache, answer or escalate) and the platform (provider layer, telemetry,
+  frozen contracts and config). Solid arrows are calls or data; dashed arrows are configuration,
+  metrics and traces.</desc>
+
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+            orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2d3748"/>
+    </marker>
+    <marker id="arrow-dash" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+            orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#718096"/>
+    </marker>
+    <style>
+      .band-title { font-size: 12px; font-weight: 700; letter-spacing: 1.6px; fill: #718096; }
+      .box-label  { font-size: 14px; font-weight: 600; fill: #1a202c; }
+      .box-sub    { font-size: 11.5px; fill: #4a5568; }
+      .edge-label { font-size: 10.5px; fill: #4a5568; }
+      .legend     { font-size: 11.5px; fill: #4a5568; }
+      .footer     { font-size: 11px; fill: #718096; }
+      .box        { fill: #ffffff; stroke: #2d3748; stroke-width: 1.4; rx: 10; }
+      .box-frozen { fill: #edf2f7; stroke: #2d3748; stroke-width: 1.4; rx: 10; }
+      .box-out    { fill: #f7fafc; stroke: #4a5568; stroke-width: 1.2; rx: 10; }
+      .box-answer { fill: #f0fff4; stroke: #276749; stroke-width: 1.6; rx: 10; }
+      .box-esc    { fill: #fffaf0; stroke: #975a16; stroke-width: 1.6; rx: 10; }
+      .edge       { stroke: #2d3748; stroke-width: 1.4; fill: none; }
+      .edge-dash  { stroke: #718096; stroke-width: 1.2; stroke-dasharray: 5 4; fill: none; }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1240" height="800" fill="#ffffff"/>
+  <rect x="16" y="16" width="1208" height="768" fill="none" stroke="#e2e8f0" stroke-width="2" rx="16"/>
+
+  <text x="44" y="58" font-size="23" font-weight="700" fill="#1a202c">answerdesk — component architecture</text>
+  <text x="44" y="82" class="box-sub" font-size="12.5">Frozen contracts at every seam · one OpenAI-compatible provider layer · offline-deterministic evaluation</text>
+
+  <!-- ============================ surfaces ============================ -->
+  <text x="44" y="122" class="band-title">SURFACES</text>
+  <rect x="44" y="132" width="352" height="66" class="box"/>
+  <text x="60" y="158" class="box-label">CLI (typer)</text>
+  <text x="60" y="177" class="box-sub">ingest · index · ask · eval · calibrate · serve</text>
+
+  <rect x="416" y="132" width="360" height="66" class="box"/>
+  <text x="432" y="158" class="box-label">HTTP service (FastAPI + SSE)</text>
+  <text x="432" y="177" class="box-sub">sessions · idempotency · traces · Prometheus</text>
+
+  <rect x="796" y="132" width="384" height="66" class="box"/>
+  <text x="812" y="158" class="box-label">Operator console (React + Vite)</text>
+  <text x="812" y="177" class="box-sub">queue · citations · diagnostics · analytics</text>
+
+  <!-- ============================ pipeline ============================ -->
+  <text x="44" y="238" class="band-title">PIPELINE</text>
+
+  <!-- ingest path -->
+  <rect x="44" y="248" width="196" height="84" class="box"/>
+  <text x="60" y="274" class="box-label">Ingest</text>
+  <text x="60" y="293" class="box-sub">loaders · structure-first</text>
+  <text x="60" y="309" class="box-sub">chunking · dedup · manifest</text>
+
+  <rect x="280" y="248" width="196" height="84" class="box"/>
+  <text x="296" y="274" class="box-label">Index</text>
+  <text x="296" y="293" class="box-sub">BM25 (FTS5) · exact numpy</text>
+  <text x="296" y="309" class="box-sub">dense · corpus version</text>
+
+  <!-- query path -->
+  <rect x="516" y="248" width="196" height="84" class="box"/>
+  <text x="532" y="274" class="box-label">Retrieval</text>
+  <text x="532" y="293" class="box-sub">query analysis · fusion</text>
+  <text x="532" y="309" class="box-sub">RRF / convex · top-k</text>
+
+  <rect x="752" y="248" width="196" height="84" class="box-out"/>
+  <text x="768" y="274" class="box-label">Rerank (optional)</text>
+  <text x="768" y="293" class="box-sub">cross-encoder · MMR</text>
+  <text x="768" y="309" class="box-sub">local extra only</text>
+
+  <rect x="988" y="248" width="192" height="84" class="box"/>
+  <text x="1004" y="274" class="box-label">Generate</text>
+  <text x="1004" y="293" class="box-sub">packer · prompts · JSON</text>
+  <text x="1004" y="309" class="box-sub">claims · citation spans</text>
+
+  <!-- decision path (right to left) -->
+  <rect x="988" y="392" width="192" height="84" class="box"/>
+  <text x="1004" y="418" class="box-label">Verify</text>
+  <text x="1004" y="437" class="box-sub">claim ↔ passage</text>
+  <text x="1004" y="453" class="box-sub">numeric guard · repair</text>
+
+  <rect x="752" y="392" width="196" height="84" class="box"/>
+  <text x="768" y="418" class="box-label">Policy</text>
+  <text x="768" y="437" class="box-sub">conformal q̂ · cost model</text>
+  <text x="768" y="453" class="box-sub">PII / injection guards</text>
+
+  <rect x="516" y="392" width="196" height="84" class="box"/>
+  <text x="532" y="418" class="box-label">Semantic cache</text>
+  <text x="532" y="437" class="box-sub">entity · source-doc</text>
+  <text x="532" y="453" class="box-sub">version guards · revalidation</text>
+
+  <rect x="280" y="392" width="196" height="84" class="box-answer"/>
+  <text x="296" y="418" class="box-label">Answer</text>
+  <text x="296" y="437" class="box-sub">verified citations only</text>
+  <text x="296" y="453" class="box-sub">language = query language</text>
+
+  <rect x="44" y="392" width="196" height="84" class="box-esc"/>
+  <text x="60" y="418" class="box-label">Escalate / refuse</text>
+  <text x="60" y="437" class="box-sub">reason code + evidence</text>
+  <text x="60" y="453" class="box-sub">ticket · operator review</text>
+
+  <!-- eval -->
+  <rect x="988" y="536" width="192" height="76" class="box-out"/>
+  <text x="1004" y="562" class="box-label">Eval harness</text>
+  <text x="1004" y="581" class="box-sub">frozen splits · metrics</text>
+  <text x="1004" y="597" class="box-sub">bootstrap · judge · reports</text>
+
+  <!-- pipeline edges -->
+  <line x1="240" y1="290" x2="272" y2="290" class="edge" marker-end="url(#arrow)"/>
+  <line x1="476" y1="290" x2="508" y2="290" class="edge" marker-end="url(#arrow)"/>
+  <line x1="712" y1="290" x2="744" y2="290" class="edge" marker-end="url(#arrow)"/>
+  <line x1="948" y1="290" x2="980" y2="290" class="edge" marker-end="url(#arrow)"/>
+  <text x="726" y="283" class="edge-label">top 50</text>
+
+  <line x1="1084" y1="332" x2="1084" y2="384" class="edge" marker-end="url(#arrow)"/>
+  <line x1="988" y1="434" x2="956" y2="434" class="edge" marker-end="url(#arrow)"/>
+  <line x1="752" y1="434" x2="720" y2="434" class="edge" marker-end="url(#arrow)"/>
+  <line x1="516" y1="434" x2="484" y2="434" class="edge" marker-end="url(#arrow)"/>
+  <text x="600" y="378" class="edge-label">decision → cache → render</text>
+  <path d="M 516 476 L 516 492 L 144 492 L 144 480" class="edge" marker-end="url(#arrow)"/>
+  <text x="300" y="487" class="edge-label">escalate instead</text>
+
+  <!-- eval measures the pipeline -->
+  <path d="M 1084 536 L 1084 504 L 664 504 L 664 480" class="edge-dash" marker-end="url(#arrow-dash)"/>
+  <text x="700" y="497" class="edge-label">measures every stage</text>
+
+  <!-- ============================ platform ============================ -->
+  <text x="44" y="506" class="band-title">PLATFORM</text>
+  <rect x="44" y="516" width="352" height="84" class="box"/>
+  <text x="60" y="542" class="box-label">Provider layer</text>
+  <text x="60" y="561" class="box-sub">one OpenAI-compatible client · retries · cost ledger</text>
+  <text x="60" y="577" class="box-sub">presets: openai · deepseek · vllm · ollama</text>
+  <text x="60" y="592" class="box-sub">called by generate, verify and policy</text>
+
+  <rect x="416" y="516" width="360" height="84" class="box"/>
+  <text x="432" y="544" class="box-label">Telemetry</text>
+  <text x="432" y="563" class="box-sub">JSONL traces (PII redacted) · Prometheus</text>
+  <text x="432" y="579" class="box-sub">per-stage latency · tokens · USD · reason</text>
+  <text x="432" y="594" class="box-sub">one record per turn, read by the console</text>
+
+  <rect x="796" y="640" width="384" height="76" class="box-frozen"/>
+  <text x="812" y="666" class="box-label">contracts · config · errors · logging (frozen)</text>
+  <text x="812" y="685" class="box-sub">pydantic models + Protocols, schema 1.0.0</text>
+  <text x="812" y="701" class="box-sub">imported by every module · presets and profiles are data, not code</text>
+
+  <!-- platform edges (dashed: configuration / telemetry) -->
+
+
+  <!-- ============================ legend ============================ -->
+  <line x1="44" y1="742" x2="88" y2="742" class="edge" marker-end="url(#arrow)"/>
+  <text x="96" y="746" class="legend">call / data flow</text>
+  <line x1="220" y1="742" x2="264" y2="742" class="edge-dash" marker-end="url(#arrow-dash)"/>
+  <text x="272" y="746" class="legend">configuration, metrics, traces</text>
+  <rect x="470" y="732" width="14" height="14" class="box-answer"/>
+  <text x="492" y="746" class="legend">answer path</text>
+  <rect x="610" y="732" width="14" height="14" class="box-esc"/>
+  <text x="632" y="746" class="legend">escalation path</text>
+
+  <text x="44" y="772" class="footer">Rendered export of the mermaid source in docs/architecture.md (that file is the source of truth). Ownership, import rules and the token budget: docs/architecture.md §5, §8.</text>
+</svg>
