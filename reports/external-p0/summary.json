@@ -1,0 +1,920 @@
+{
+  "belebele_qa": {
+    "answerer_model": "deepseek-chat",
+    "language_results": {
+      "ky": {
+        "claim_status": "comprehension claim admissible; retrieval labels derived/diagnostic",
+        "closed_book": {
+          "accuracy": 0.458333,
+          "ci": [
+            0.371861,
+            0.54739
+          ],
+          "correct": 55
+        },
+        "delta": {
+          "ci_crosses_zero": false,
+          "ci_high": 0.391667,
+          "ci_low": 0.175,
+          "closed_book_accuracy": 0.458333,
+          "delta": 0.283333,
+          "n": 120,
+          "rag_accuracy": 0.741667,
+          "samples": 1000,
+          "seed": 0
+        },
+        "n": 120,
+        "rag": {
+          "accuracy": 0.741667,
+          "ci": [
+            0.656715,
+            0.811626
+          ],
+          "correct": 89
+        }
+      },
+      "ru": {
+        "claim_status": "native comprehension claim admissible",
+        "closed_book": {
+          "accuracy": 0.583333,
+          "ci": [
+            0.49388,
+            0.667616
+          ],
+          "correct": 70
+        },
+        "delta": {
+          "ci_crosses_zero": false,
+          "ci_high": 0.358333,
+          "ci_low": 0.175,
+          "closed_book_accuracy": 0.583333,
+          "delta": 0.266667,
+          "n": 120,
+          "rag_accuracy": 0.85,
+          "samples": 1000,
+          "seed": 0
+        },
+        "n": 120,
+        "rag": {
+          "accuracy": 0.85,
+          "ci": [
+            0.775325,
+            0.902962
+          ],
+          "correct": 102
+        }
+      },
+      "tg": {
+        "claim_status": "comprehension claim admissible; retrieval labels derived/diagnostic",
+        "closed_book": {
+          "accuracy": 0.533333,
+          "ci": [
+            0.444428,
+            0.620171
+          ],
+          "correct": 64
+        },
+        "delta": {
+          "ci_crosses_zero": false,
+          "ci_high": 0.358333,
+          "ci_low": 0.158333,
+          "closed_book_accuracy": 0.533333,
+          "delta": 0.258333,
+          "n": 120,
+          "rag_accuracy": 0.791667,
+          "samples": 1000,
+          "seed": 0
+        },
+        "n": 120,
+        "rag": {
+          "accuracy": 0.791667,
+          "ci": [
+            0.710523,
+            0.854716
+          ],
+          "correct": 95
+        }
+      },
+      "uz": {
+        "claim_status": "comprehension claim admissible; retrieval labels derived/diagnostic",
+        "closed_book": {
+          "accuracy": 0.541667,
+          "ci": [
+            0.45261,
+            0.628139
+          ],
+          "correct": 65
+        },
+        "delta": {
+          "ci_crosses_zero": false,
+          "ci_high": 0.333333,
+          "ci_low": 0.133333,
+          "closed_book_accuracy": 0.541667,
+          "delta": 0.233333,
+          "n": 120,
+          "rag_accuracy": 0.775,
+          "samples": 1000,
+          "seed": 0
+        },
+        "n": 120,
+        "rag": {
+          "accuracy": 0.775,
+          "ci": [
+            0.692431,
+            0.840508
+          ],
+          "correct": 93
+        }
+      },
+      "zh": {
+        "claim_status": "native comprehension claim admissible",
+        "closed_book": {
+          "accuracy": 0.7,
+          "ci": [
+            0.612849,
+            0.774744
+          ],
+          "correct": 84
+        },
+        "delta": {
+          "ci_crosses_zero": true,
+          "ci_high": 0.075,
+          "ci_low": -0.083333,
+          "closed_book_accuracy": 0.7,
+          "delta": -0.008333,
+          "n": 120,
+          "rag_accuracy": 0.691667,
+          "samples": 1000,
+          "seed": 0
+        },
+        "n": 120,
+        "rag": {
+          "accuracy": 0.691667,
+          "ci": [
+            0.60417,
+            0.767273
+          ],
+          "correct": 83
+        }
+      }
+    },
+    "suite": "belebele_qa",
+    "task": "multiple_choice (judge-free: option letter is scored against answer_index)"
+  },
+  "belebele_retrieval": {
+    "caveat": "Belebele-derived retrieval qrels are derived from the reading-comprehension gold passage, not collected by a retrieval-labeling process; they are diagnostic for uz/tg/ky (no public qrels exist in any language for these) and are never a retrieval-quality claim.",
+    "label_status": "derived/diagnostic",
+    "language_results": {
+      "ky": {
+        "bm25": {
+          "ndcg@10": 0.737558,
+          "ndcg@10_ci": [
+            0.66813,
+            0.804218
+          ],
+          "recall@10": 0.816667,
+          "recall@10_ci": [
+            0.75,
+            0.883333
+          ]
+        },
+        "comparison": {
+          "baseline": "bm25",
+          "candidate": "hybrid",
+          "n": 120,
+          "ndcg@10": {
+            "baseline": 0.737558,
+            "candidate": 0.827194,
+            "ci_crosses_zero": false,
+            "ci_high": 0.122829,
+            "ci_low": 0.056524,
+            "delta": 0.089637
+          },
+          "recall@10": {
+            "baseline": 0.816667,
+            "candidate": 0.9,
+            "ci_crosses_zero": false,
+            "ci_high": 0.133333,
+            "ci_low": 0.041667,
+            "delta": 0.083333
+          }
+        },
+        "hybrid": {
+          "ndcg@10": 0.827194,
+          "ndcg@10_ci": [
+            0.769151,
+            0.880671
+          ],
+          "recall@10": 0.9,
+          "recall@10_ci": [
+            0.841667,
+            0.95
+          ]
+        },
+        "label_status": "derived/diagnostic",
+        "n": 120,
+        "passages": 488
+      },
+      "ru": {
+        "bm25": {
+          "ndcg@10": 0.724983,
+          "ndcg@10_ci": [
+            0.656075,
+            0.798539
+          ],
+          "recall@10": 0.8,
+          "recall@10_ci": [
+            0.733333,
+            0.875
+          ]
+        },
+        "comparison": {
+          "baseline": "bm25",
+          "candidate": "hybrid",
+          "n": 120,
+          "ndcg@10": {
+            "baseline": 0.724983,
+            "candidate": 0.860306,
+            "ci_crosses_zero": false,
+            "ci_high": 0.17497,
+            "ci_low": 0.097471,
+            "delta": 0.135323
+          },
+          "recall@10": {
+            "baseline": 0.8,
+            "candidate": 0.95,
+            "ci_crosses_zero": false,
+            "ci_high": 0.216667,
+            "ci_low": 0.083333,
+            "delta": 0.15
+          }
+        },
+        "hybrid": {
+          "ndcg@10": 0.860306,
+          "ndcg@10_ci": [
+            0.80961,
+            0.911958
+          ],
+          "recall@10": 0.95,
+          "recall@10_ci": [
+            0.908333,
+            0.983333
+          ]
+        },
+        "label_status": "derived/diagnostic",
+        "n": 120,
+        "passages": 488
+      },
+      "tg": {
+        "bm25": {
+          "ndcg@10": 0.729744,
+          "ndcg@10_ci": [
+            0.662186,
+            0.794605
+          ],
+          "recall@10": 0.85,
+          "recall@10_ci": [
+            0.783333,
+            0.908333
+          ]
+        },
+        "comparison": {
+          "baseline": "bm25",
+          "candidate": "hybrid",
+          "n": 120,
+          "ndcg@10": {
+            "baseline": 0.729744,
+            "candidate": 0.839775,
+            "ci_crosses_zero": false,
+            "ci_high": 0.149057,
+            "ci_low": 0.077857,
+            "delta": 0.110032
+          },
+          "recall@10": {
+            "baseline": 0.85,
+            "candidate": 0.925,
+            "ci_crosses_zero": false,
+            "ci_high": 0.125,
+            "ci_low": 0.033125,
+            "delta": 0.075
+          }
+        },
+        "hybrid": {
+          "ndcg@10": 0.839775,
+          "ndcg@10_ci": [
+            0.786196,
+            0.890786
+          ],
+          "recall@10": 0.925,
+          "recall@10_ci": [
+            0.875,
+            0.966667
+          ]
+        },
+        "label_status": "derived/diagnostic",
+        "n": 120,
+        "passages": 488
+      },
+      "uz": {
+        "bm25": {
+          "ndcg@10": 0.681534,
+          "ndcg@10_ci": [
+            0.599571,
+            0.754131
+          ],
+          "recall@10": 0.775,
+          "recall@10_ci": [
+            0.691667,
+            0.85
+          ]
+        },
+        "comparison": {
+          "baseline": "bm25",
+          "candidate": "hybrid",
+          "n": 120,
+          "ndcg@10": {
+            "baseline": 0.681534,
+            "candidate": 0.857894,
+            "ci_crosses_zero": false,
+            "ci_high": 0.235669,
+            "ci_low": 0.125321,
+            "delta": 0.17636
+          },
+          "recall@10": {
+            "baseline": 0.775,
+            "candidate": 0.933333,
+            "ci_crosses_zero": false,
+            "ci_high": 0.225,
+            "ci_low": 0.1,
+            "delta": 0.158333
+          }
+        },
+        "hybrid": {
+          "ndcg@10": 0.857894,
+          "ndcg@10_ci": [
+            0.796124,
+            0.910389
+          ],
+          "recall@10": 0.933333,
+          "recall@10_ci": [
+            0.883333,
+            0.975
+          ]
+        },
+        "label_status": "derived/diagnostic",
+        "n": 120,
+        "passages": 488
+      },
+      "zh": {
+        "bm25": {
+          "ndcg@10": 0.066397,
+          "ndcg@10_ci": [
+            0.027652,
+            0.110135
+          ],
+          "recall@10": 0.091667,
+          "recall@10_ci": [
+            0.041667,
+            0.15
+          ]
+        },
+        "comparison": {
+          "baseline": "bm25",
+          "candidate": "hybrid",
+          "n": 120,
+          "ndcg@10": {
+            "baseline": 0.066397,
+            "candidate": 0.969015,
+            "ci_crosses_zero": false,
+            "ci_high": 0.943801,
+            "ci_low": 0.856783,
+            "delta": 0.902618
+          },
+          "recall@10": {
+            "baseline": 0.091667,
+            "candidate": 0.991667,
+            "ci_crosses_zero": false,
+            "ci_high": 0.95,
+            "ci_low": 0.841667,
+            "delta": 0.9
+          }
+        },
+        "hybrid": {
+          "ndcg@10": 0.969015,
+          "ndcg@10_ci": [
+            0.942189,
+            0.99218
+          ],
+          "recall@10": 0.991667,
+          "recall@10_ci": [
+            0.975,
+            1.0
+          ]
+        },
+        "label_status": "derived/diagnostic",
+        "n": 120,
+        "passages": 488
+      }
+    },
+    "suite": "belebele_retrieval",
+    "task": "retrieval with derived qrels (reading-comprehension gold passage)"
+  },
+  "calibration": {
+    "note": "no human labels are present in this checkout; every judged metric in this arm is diagnostic until calibration-kappa.json exists with κ >= 0.6 per language",
+    "protocol": "reports\\external-p0\\calibration\\PROTOCOL.md",
+    "status": "pending-human-labels",
+    "templates": [
+      {
+        "items": 150,
+        "language": "ru",
+        "path": "reports\\external-p0\\calibration\\calibration-ru.csv"
+      },
+      {
+        "items": 150,
+        "language": "zh",
+        "path": "reports\\external-p0\\calibration\\calibration-zh.csv"
+      },
+      {
+        "items": 150,
+        "language": "uz",
+        "path": "reports\\external-p0\\calibration\\calibration-uz.csv"
+      },
+      {
+        "items": 150,
+        "language": "tg",
+        "path": "reports\\external-p0\\calibration\\calibration-tg.csv"
+      },
+      {
+        "items": 150,
+        "language": "ky",
+        "path": "reports\\external-p0\\calibration\\calibration-ky.csv"
+      }
+    ]
+  },
+  "dataset": {
+    "cache_dir": null,
+    "files": [
+      {
+        "bytes": 1080,
+        "items": 0,
+        "path": "LICENSES/MIT.txt",
+        "sha256": "065d0dd275de3cb251f461a6bcb3a05d9962117cb11c6819cf15316865fa3bdf"
+      },
+      {
+        "bytes": 20138,
+        "items": 0,
+        "path": "belebele/LICENSE-CC-BY-SA-4.0.txt",
+        "sha256": "28a9529c7d0bb4dc51f4bf5c116a3d16ef247a052f7591466768ddf563fd1cf5"
+      },
+      {
+        "bytes": 172442,
+        "items": 150,
+        "path": "belebele/qa/ky.jsonl",
+        "sha256": "372aff8a933e5688376aa22a418a513e40e0a612e5cd180a77fa561901933396"
+      },
+      {
+        "bytes": 179632,
+        "items": 150,
+        "path": "belebele/qa/ru.jsonl",
+        "sha256": "300c19b23467c28d8c1469d3cd4a915419e46c901e80a85883bd7ce714baed33"
+      },
+      {
+        "bytes": 174499,
+        "items": 150,
+        "path": "belebele/qa/tg.jsonl",
+        "sha256": "80ca393478fa720e5b60b1f9712405ea5b62eba580507a3f8c85a409f0e8581e"
+      },
+      {
+        "bytes": 151162,
+        "items": 150,
+        "path": "belebele/qa/uz.jsonl",
+        "sha256": "52a81d8c0cb1a45c33d1836bb4cf8a1acbba610c8c8b5b6fc3410a6f870907b4"
+      },
+      {
+        "bytes": 146272,
+        "items": 150,
+        "path": "belebele/qa/zh.jsonl",
+        "sha256": "4a64c45a508505e18e6c3e97c3b6563ad79810a311d0db1b736fcecca31af671"
+      },
+      {
+        "bytes": 737207,
+        "items": 488,
+        "path": "belebele/retrieval/ky/corpus.jsonl",
+        "sha256": "23d9327d5a0a1579ca2418a3bc0744c76cc414a711b5d08d3fd635c51798ae8b"
+      },
+      {
+        "bytes": 149222,
+        "items": 150,
+        "path": "belebele/retrieval/ky/queries.jsonl",
+        "sha256": "565faec01cfaecf378e965c3fca70b83fa15cbe528ca23391702e1b1bd8e4c8f"
+      },
+      {
+        "bytes": 762748,
+        "items": 488,
+        "path": "belebele/retrieval/ru/corpus.jsonl",
+        "sha256": "51a6801ed7bbc888b35bcfab3bbd5f44680debf02f55541b5262d9d847d369d3"
+      },
+      {
+        "bytes": 151259,
+        "items": 150,
+        "path": "belebele/retrieval/ru/queries.jsonl",
+        "sha256": "7c8ed32aa649e17e273c6dc25a248acd622fa259c67ba155178e8a83ed1fb0dc"
+      },
+      {
+        "bytes": 767331,
+        "items": 488,
+        "path": "belebele/retrieval/tg/corpus.jsonl",
+        "sha256": "e0e0a5f808d079a1f04889131a308fef2239b5b18051f4f8d46fd677ce7e2b3d"
+      },
+      {
+        "bytes": 148742,
+        "items": 150,
+        "path": "belebele/retrieval/tg/queries.jsonl",
+        "sha256": "048085067938b6603c20233a3b1df0b7bb19034e85c7749e6d7c78b569656a60"
+      },
+      {
+        "bytes": 563416,
+        "items": 488,
+        "path": "belebele/retrieval/uz/corpus.jsonl",
+        "sha256": "1b12ae58d077843a8feba7d2688ba4762929c9bd95eb0920e1e2c22b3d084f10"
+      },
+      {
+        "bytes": 139812,
+        "items": 150,
+        "path": "belebele/retrieval/uz/queries.jsonl",
+        "sha256": "9943977c28a666ce7175d6e0a49ed9f159a2623b59f9ab4221276d62f98137ea"
+      },
+      {
+        "bytes": 513648,
+        "items": 488,
+        "path": "belebele/retrieval/zh/corpus.jsonl",
+        "sha256": "aa31c1c452a7d6341a551cd44ef43ce39abb0503abae61203ad5103eac9127d3"
+      },
+      {
+        "bytes": 137828,
+        "items": 150,
+        "path": "belebele/retrieval/zh/queries.jsonl",
+        "sha256": "7ec89d64090dfe4519ef6ef534b76a616f0cdf30c562dc2266833bc6ef497a73"
+      },
+      {
+        "bytes": 7048,
+        "items": 0,
+        "path": "domain/LICENSE-CC0-1.0.txt",
+        "sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499"
+      },
+      {
+        "bytes": 62692,
+        "items": 0,
+        "path": "domain/exclusions.json",
+        "sha256": "57997c69fc810e0104423b005e4686bece7fcdc711c81c4bb0da19cf73f4c236"
+      },
+      {
+        "bytes": 51832,
+        "items": 40,
+        "path": "domain/ky.jsonl",
+        "sha256": "9aac44b7410323c7bd9837220d40342e6a3ae4c8189d03bcf77ea4733dab70f1"
+      },
+      {
+        "bytes": 52518,
+        "items": 40,
+        "path": "domain/ru.jsonl",
+        "sha256": "d969701533ba7abdde417fd9bbd62cc40bcfbab5270a8defb2916e78cf56d42b"
+      },
+      {
+        "bytes": 51901,
+        "items": 40,
+        "path": "domain/tg.jsonl",
+        "sha256": "6b46431c67ba038aaffa70252d42e1249083fff34d5fb98de5930be8b82352a1"
+      },
+      {
+        "bytes": 46172,
+        "items": 40,
+        "path": "domain/tr.jsonl",
+        "sha256": "4a6ecf0ad28aa9968ae64eee75371e71090f205825e89faa307a58ec0298662b"
+      },
+      {
+        "bytes": 45989,
+        "items": 40,
+        "path": "domain/uz.jsonl",
+        "sha256": "14884c53186e8d3ef1c3ac0cb443e1b3e7c0a1b6d007d888eb86790e7789e520"
+      },
+      {
+        "bytes": 45034,
+        "items": 40,
+        "path": "domain/zh.jsonl",
+        "sha256": "8614b5e0b70941a1a5940bc9bbbbdad6b237e8ec3b0ce370b0b90d031be1ab7b"
+      },
+      {
+        "bytes": 11358,
+        "items": 0,
+        "path": "mrtydi/LICENSE-APACHE-2.0.txt",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+      },
+      {
+        "bytes": 3596599,
+        "items": 2428,
+        "path": "mrtydi/ru/corpus.jsonl",
+        "sha256": "236cb2d1ee816bf2fb1398c1499fad8f262363a4d81d1b289ffc5d2a8191c480"
+      },
+      {
+        "bytes": 1944718,
+        "items": 2369,
+        "path": "mrtydi/ru/queries.jsonl",
+        "sha256": "2aee9beda1228542d00eafeca984ef75c3daf2c37cdd494eed34a97c39429b48"
+      },
+      {
+        "bytes": 11839,
+        "items": 0,
+        "path": "schema.json",
+        "sha256": "3b6b918496f16b280686294dff25f04a700c89d10235e52c2d29dbcfd075439e"
+      }
+    ],
+    "homepage": "https://github.com/answerdesk/answerdesk/tree/main/data/bench",
+    "languages": [
+      "ru",
+      "uz",
+      "tg",
+      "ky",
+      "zh",
+      "tr"
+    ],
+    "licence": "mixed: CC-BY-SA-4.0 (belebele), CC0-1.0 (domain), Apache-2.0 (mrtydi), MIT (repo)",
+    "manifest_sha256": "65de8498b494b653b82be70bc854c7cb24f543fd911cfeda61705b522d356671",
+    "name": "answerdesk-bench",
+    "redistribute": true,
+    "root": "D:/Documents/deepseek-harness/default-workspace/answerdesk/data/bench/answerdesk-bench/v0.1",
+    "task": "curated suite: Belebele-derived retrieval+QA, Mr. TyDi ru, domain slice",
+    "version": "v0.1"
+  },
+  "dataset_digest": {
+    "digest": "77d5b5fdf7ad26e120b40ad69bd336211c264a99a2cdd1b6f78ff27e11d7992f",
+    "files": {
+      "LICENSES/MIT.txt": "065d0dd275de3cb251f461a6bcb3a05d9962117cb11c6819cf15316865fa3bdf",
+      "belebele/LICENSE-CC-BY-SA-4.0.txt": "28a9529c7d0bb4dc51f4bf5c116a3d16ef247a052f7591466768ddf563fd1cf5",
+      "belebele/qa/ky.jsonl": "372aff8a933e5688376aa22a418a513e40e0a612e5cd180a77fa561901933396",
+      "belebele/qa/ru.jsonl": "300c19b23467c28d8c1469d3cd4a915419e46c901e80a85883bd7ce714baed33",
+      "belebele/qa/tg.jsonl": "80ca393478fa720e5b60b1f9712405ea5b62eba580507a3f8c85a409f0e8581e",
+      "belebele/qa/uz.jsonl": "52a81d8c0cb1a45c33d1836bb4cf8a1acbba610c8c8b5b6fc3410a6f870907b4",
+      "belebele/qa/zh.jsonl": "4a64c45a508505e18e6c3e97c3b6563ad79810a311d0db1b736fcecca31af671",
+      "belebele/retrieval/ky/corpus.jsonl": "23d9327d5a0a1579ca2418a3bc0744c76cc414a711b5d08d3fd635c51798ae8b",
+      "belebele/retrieval/ky/queries.jsonl": "565faec01cfaecf378e965c3fca70b83fa15cbe528ca23391702e1b1bd8e4c8f",
+      "belebele/retrieval/ru/corpus.jsonl": "51a6801ed7bbc888b35bcfab3bbd5f44680debf02f55541b5262d9d847d369d3",
+      "belebele/retrieval/ru/queries.jsonl": "7c8ed32aa649e17e273c6dc25a248acd622fa259c67ba155178e8a83ed1fb0dc",
+      "belebele/retrieval/tg/corpus.jsonl": "e0e0a5f808d079a1f04889131a308fef2239b5b18051f4f8d46fd677ce7e2b3d",
+      "belebele/retrieval/tg/queries.jsonl": "048085067938b6603c20233a3b1df0b7bb19034e85c7749e6d7c78b569656a60",
+      "belebele/retrieval/uz/corpus.jsonl": "1b12ae58d077843a8feba7d2688ba4762929c9bd95eb0920e1e2c22b3d084f10",
+      "belebele/retrieval/uz/queries.jsonl": "9943977c28a666ce7175d6e0a49ed9f159a2623b59f9ab4221276d62f98137ea",
+      "belebele/retrieval/zh/corpus.jsonl": "aa31c1c452a7d6341a551cd44ef43ce39abb0503abae61203ad5103eac9127d3",
+      "belebele/retrieval/zh/queries.jsonl": "7ec89d64090dfe4519ef6ef534b76a616f0cdf30c562dc2266833bc6ef497a73",
+      "domain/LICENSE-CC0-1.0.txt": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499",
+      "domain/exclusions.json": "57997c69fc810e0104423b005e4686bece7fcdc711c81c4bb0da19cf73f4c236",
+      "domain/ky.jsonl": "9aac44b7410323c7bd9837220d40342e6a3ae4c8189d03bcf77ea4733dab70f1",
+      "domain/ru.jsonl": "d969701533ba7abdde417fd9bbd62cc40bcfbab5270a8defb2916e78cf56d42b",
+      "domain/tg.jsonl": "6b46431c67ba038aaffa70252d42e1249083fff34d5fb98de5930be8b82352a1",
+      "domain/tr.jsonl": "4a6ecf0ad28aa9968ae64eee75371e71090f205825e89faa307a58ec0298662b",
+      "domain/uz.jsonl": "14884c53186e8d3ef1c3ac0cb443e1b3e7c0a1b6d007d888eb86790e7789e520",
+      "domain/zh.jsonl": "8614b5e0b70941a1a5940bc9bbbbdad6b237e8ec3b0ce370b0b90d031be1ab7b",
+      "mrtydi/LICENSE-APACHE-2.0.txt": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "mrtydi/ru/corpus.jsonl": "236cb2d1ee816bf2fb1398c1499fad8f262363a4d81d1b289ffc5d2a8191c480",
+      "mrtydi/ru/queries.jsonl": "2aee9beda1228542d00eafeca984ef75c3daf2c37cdd494eed34a97c39429b48",
+      "schema.json": "3b6b918496f16b280686294dff25f04a700c89d10235e52c2d29dbcfd075439e"
+    },
+    "manifest_sha256": "65de8498b494b653b82be70bc854c7cb24f543fd911cfeda61705b522d356671"
+  },
+  "domain": {
+    "note": "the domain slice reuses the internal harness and its frozen split; external numbers come from Belebele and Mr. TyDi only",
+    "status": "delegated to the internal benchmark (reports/bench)",
+    "suite": "domain",
+    "task": "grounded QA on the synthetic corpus (CC0-1.0)"
+  },
+  "duration_s": 0.403,
+  "generated_at": "2026-10-21T11:13:59Z",
+  "hardware": "Windows 11 / Python 3.12.10",
+  "inventory": {
+    "benchmark": "answerdesk-bench",
+    "derived_label_caveat": "Belebele-derived retrieval qrels are derived from the reading-comprehension gold passage, not collected by a retrieval-labeling process; they are diagnostic for uz/tg/ky (no public qrels exist in any language for these) and are never a retrieval-quality claim.",
+    "licences": {
+      "LICENSES/MIT.txt": "MIT",
+      "belebele/": "CC-BY-SA-4.0",
+      "domain/": "CC0-1.0",
+      "mrtydi/": "Apache-2.0",
+      "schema.json": "MIT"
+    },
+    "manifest_self_sha256": "65de8498b494b653b82be70bc854c7cb24f543fd911cfeda61705b522d356671",
+    "non_claims": [
+      "no state-of-the-art claim of any kind",
+      "no retrieval-quality claim for uz/tg/ky (derived labels only)",
+      "no claim whose bootstrap interval crosses zero",
+      "no calibrated-judge claim until the human-label κ file exists"
+    ],
+    "release_date": "2026-10-21",
+    "requested": {
+      "languages": [
+        "ru",
+        "zh",
+        "uz",
+        "tg",
+        "ky"
+      ],
+      "limit": 150,
+      "suites": [
+        "belebele_qa"
+      ]
+    },
+    "schema_version": "1.0",
+    "suites": {
+      "belebele_qa": {
+        "counts_by_language": {
+          "ky": null,
+          "ru": null,
+          "tg": null,
+          "uz": null,
+          "zh": null
+        },
+        "items": 750,
+        "label_status": "native",
+        "languages": [
+          "ru",
+          "uz",
+          "tg",
+          "ky",
+          "zh"
+        ],
+        "licence": "CC-BY-SA-4.0",
+        "notes": "Belebele four-option reading-comprehension items; the gold passage is the evidence and the labelled option is the answer.",
+        "paths": [
+          "belebele/qa/ru.jsonl",
+          "belebele/qa/uz.jsonl",
+          "belebele/qa/tg.jsonl",
+          "belebele/qa/ky.jsonl",
+          "belebele/qa/zh.jsonl"
+        ],
+        "task": "multiple_choice"
+      },
+      "belebele_retrieval": {
+        "counts_by_language": {
+          "ky": null,
+          "ru": null,
+          "tg": null,
+          "uz": null,
+          "zh": null
+        },
+        "items": 750,
+        "label_status": "derived/diagnostic",
+        "languages": [
+          "ru",
+          "uz",
+          "tg",
+          "ky",
+          "zh"
+        ],
+        "licence": "CC-BY-SA-4.0",
+        "notes": "Retrieval labels derived from Belebele reading-comprehension triples (question, gold passage, one passage pool per language). Diagnostic: the question was written against a supplied passage, so it contains deictic references and is not an ad-hoc customer query.",
+        "paths": [
+          "belebele/retrieval/ru/queries.jsonl",
+          "belebele/retrieval/uz/queries.jsonl",
+          "belebele/retrieval/tg/queries.jsonl",
+          "belebele/retrieval/ky/queries.jsonl",
+          "belebele/retrieval/zh/queries.jsonl"
+        ],
+        "task": "retrieval"
+      },
+      "domain": {
+        "counts_by_language": {
+          "ky": null,
+          "ru": null,
+          "tg": null,
+          "tr": null,
+          "uz": null,
+          "zh": null
+        },
+        "items": 240,
+        "label_status": "native",
+        "languages": [
+          "ru",
+          "uz",
+          "tg",
+          "ky",
+          "zh",
+          "tr"
+        ],
+        "licence": "CC0-1.0",
+        "notes": "Support-domain slice derived from the synthetic CC0 corpus: grounded answers, numeric/date, multi-evidence, unanswerable, PII and prompt-injection cases.",
+        "paths": [
+          "domain/ru.jsonl",
+          "domain/uz.jsonl",
+          "domain/tg.jsonl",
+          "domain/ky.jsonl",
+          "domain/zh.jsonl",
+          "domain/tr.jsonl"
+        ],
+        "task": "qa"
+      },
+      "mrtydi_retrieval": {
+        "counts_by_language": {
+          "ru": null
+        },
+        "items": 2369,
+        "label_status": "native qrels",
+        "languages": [
+          "ru"
+        ],
+        "licence": "Apache-2.0",
+        "notes": "Native relevance judgments from Mr. TyDi v1.1 (dev + test); the passage pool is the union of the positive passages of those queries.",
+        "paths": [
+          "mrtydi/ru/queries.jsonl"
+        ],
+        "task": "retrieval"
+      }
+    },
+    "version": "0.1.0"
+  },
+  "judge_gate": {
+    "reason": "no human labels in this checkout; judged metrics are diagnostic",
+    "status": "diagnostic-only"
+  },
+  "languages": [
+    "ru",
+    "zh",
+    "uz",
+    "tg",
+    "ky"
+  ],
+  "mrtydi_retrieval": {
+    "bm25": {
+      "mrr@10": 0.601402,
+      "n": 994,
+      "ndcg@10": 0.603617,
+      "ndcg@10_ci": [
+        0.578028,
+        0.629241
+      ],
+      "recall@10": 0.72837,
+      "recall@10_ci": [
+        0.699195,
+        0.755533
+      ]
+    },
+    "comparison": {
+      "baseline": "bm25",
+      "candidate": "hybrid",
+      "n": 994,
+      "ndcg@10": {
+        "baseline": 0.603617,
+        "candidate": 0.747153,
+        "ci_crosses_zero": false,
+        "ci_high": 0.158084,
+        "ci_low": 0.129003,
+        "delta": 0.143536
+      },
+      "recall@10": {
+        "baseline": 0.72837,
+        "candidate": 0.8833,
+        "ci_crosses_zero": false,
+        "ci_high": 0.179074,
+        "ci_low": 0.132797,
+        "delta": 0.15493
+      }
+    },
+    "fusion": {
+      "alpha_bm25": 0.5,
+      "family": "convex combination",
+      "normalisation": "min-max"
+    },
+    "hybrid": {
+      "mrr@10": 0.728749,
+      "n": 994,
+      "ndcg@10": 0.747153,
+      "ndcg@10_ci": [
+        0.726172,
+        0.767994
+      ],
+      "recall@10": 0.8833,
+      "recall@10_ci": [
+        0.862148,
+        0.903421
+      ]
+    },
+    "label_status": "native qrels",
+    "n": 994,
+    "passages": 2428,
+    "per_query_files": [
+      "mrtydi-bm25-per-query.csv",
+      "mrtydi-hybrid-per-query.csv"
+    ],
+    "split": "test",
+    "suite": "mrtydi_retrieval",
+    "task": "retrieval with native qrels (Mr. TyDi ru, Apache-2.0)"
+  },
+  "non_claims": [
+    "no state-of-the-art claim of any kind",
+    "no retrieval-quality claim for uz/tg/ky (derived labels only)",
+    "no claim whose bootstrap interval crosses zero",
+    "no calibrated-judge claim until the human-label κ file exists"
+  ],
+  "replay": false,
+  "run_id": "external-p0",
+  "suites_requested": [
+    "belebele_qa"
+  ]
+}

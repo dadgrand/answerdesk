@@ -216,6 +216,31 @@ def serve(
 
 @app.command()
 def eval(  # the command is named `eval` on purpose (requirements §17.2)
+    mode: str | None = typer.Argument(
+        None, help="Omit for the internal harness; `external` runs the external-validity arm."
+    ),
+    list_suites: bool = typer.Option(
+        False, "--list-suites", help="External arm: list suites, licences and cache state."
+    ),
+    run_external_arm: bool = typer.Option(
+        False, "--run", help="External arm: execute the selected suites and write artefacts."
+    ),
+    suites: str | None = typer.Option(
+        None, "--suites", help="External arm: comma-separated suite names."
+    ),
+    languages: str | None = typer.Option(
+        None, "--languages", help="External arm: comma-separated languages."
+    ),
+    answerer_model: str | None = typer.Option(
+        None, "--answerer-model", help="External arm: model answering the multiple-choice items."
+    ),
+    embedder: str = typer.Option(
+        "auto", "--embedder", help="External arm: auto | api | fake (dense channel)."
+    ),
+    samples: int = typer.Option(1000, "--samples", help="Bootstrap resamples for the CIs."),
+    score_calibration: Path | None = typer.Option(
+        None, "--score-calibration", help="External arm: directory of filled label sheets."
+    ),
     all_arms: bool = typer.Option(False, "--all", help="Run every ablation arm."),
     retrieval_only: bool = typer.Option(False, "--retrieval-only", help="Retrieval arms only."),
     synthetic: bool = typer.Option(False, "--synthetic", help="Use the synthetic golden set."),
@@ -255,8 +280,44 @@ def eval(  # the command is named `eval` on purpose (requirements §17.2)
     config: Path | None = typer.Option(None, "--config"),
     profile: str | None = typer.Option(None, "--profile"),
 ) -> None:
-    """Run the evaluation harness and write a report (t7)."""
+    """Run the evaluation harness and write a report (t7); `external` runs the public arm."""
     settings = _settings(config, profile)
+    if mode == "external" or list_suites or run_external_arm or score_calibration is not None:
+        from answerdesk.eval.external.cli import external_command
+        from answerdesk.eval.external.datasets import ExternalDataError
+
+        try:
+            code = external_command(
+                list_suites=list_suites,
+                run=mode == "external" or run_external_arm,
+                suites=tuple(item.strip() for item in (suites or "").split(",") if item.strip())
+                or (
+                    "belebele_qa",
+                    "belebele_retrieval",
+                    "mrtydi_retrieval",
+                    "domain",
+                ),
+                languages=tuple(
+                    item.strip() for item in (languages or "").split(",") if item.strip()
+                )
+                or ("ru", "zh", "uz", "tg", "ky"),
+                limit=limit,
+                report=report,
+                provider=provider,
+                answerer_model=answerer_model,
+                embedder=embedder,
+                samples=samples,
+                replay=replay,
+                score_calibration=score_calibration,
+            )
+        except ExternalDataError as exc:
+            typer.secho(f"external error: {exc.message}", err=True, fg=typer.colors.RED)
+            if exc.detail:
+                typer.secho(f"  detail: {exc.detail}", err=True)
+            raise typer.Exit(code=2) from exc
+        if code != 0:
+            raise typer.Exit(code=code)
+        return
     # Implemented by answerdesk.eval (FR-EVL-01…11); the CLI only delegates.
     from answerdesk.eval.cli import eval_command
     from answerdesk.eval.errors import EvalError
