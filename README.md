@@ -362,6 +362,15 @@ uv run python scripts/build-results.py --run reports/bench --out docs/results.md
     the negative result documented in [`docs/query-rewriter.md`](docs/query-rewriter.md).
 11. **Content is LLM-assisted.** Scripts, terminology, formats and grounding are tested; native
     fluency is not.
+12. **Cross-language consistency is not solved.** The same fact asked in different languages agreed
+    only 14–33% of the time (n=63/language), and retrieval evidence matched the query locale ~68%
+    before the locale-aware fix; the synthetic corpus has ~6.8 sibling documents per fact with
+    different slot values, so the same question can legitimately find different numbers. See
+    [`docs/consistency.md`](docs/consistency.md).
+13. **The synthetic corpus contradicts itself across documents.** 774 cross-document contradictions
+    were found (same product tier, same parameter row, different values); zero within-document
+    contradictions. This is a generator-design flaw, documented as CNS-1/CNS-2 rather than hidden,
+    and it depresses the consistency numbers above.
 
 ---
 
