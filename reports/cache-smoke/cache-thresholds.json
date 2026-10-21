@@ -1,0 +1,153 @@
+{
+  "calibrated_at": "2026-10-20T22:12:01+00:00",
+  "cohorts": [
+    {
+      "cohort": "account_legal:cjk:len1",
+      "epsilon": 0.01,
+      "feasible": true,
+      "hit_rate": 0.2166666667,
+      "hits": 26,
+      "n_pairs": 120,
+      "threshold": 1.0,
+      "wrong_hit_rate": 0.0,
+      "wrong_hit_ucb": 0.1287289219,
+      "wrong_hits": 0
+    },
+    {
+      "cohort": "account_legal:cyrillic:len1",
+      "epsilon": 0.01,
+      "feasible": true,
+      "hit_rate": 0.2166666667,
+      "hits": 78,
+      "n_pairs": 360,
+      "threshold": 1.0,
+      "wrong_hit_rate": 0.0,
+      "wrong_hit_ucb": 0.0469378097,
+      "wrong_hits": 0
+    },
+    {
+      "cohort": "account_legal:latin-tr:len1",
+      "epsilon": 0.01,
+      "feasible": true,
+      "hit_rate": 0.2166666667,
+      "hits": 26,
+      "n_pairs": 120,
+      "threshold": 1.0,
+      "wrong_hit_rate": 0.0,
+      "wrong_hit_ucb": 0.1287289219,
+      "wrong_hits": 0
+    },
+    {
+      "cohort": "account_legal:latin-uz:len1",
+      "epsilon": 0.01,
+      "feasible": true,
+      "hit_rate": 0.2166666667,
+      "hits": 26,
+      "n_pairs": 120,
+      "threshold": 1.0,
+      "wrong_hit_rate": 0.0,
+      "wrong_hit_ucb": 0.1287289219,
+      "wrong_hits": 0
+    },
+    {
+      "cohort": "informational:cjk:len1",
+      "epsilon": 0.01,
+      "feasible": true,
+      "hit_rate": 0.3083333333,
+      "hits": 37,
+      "n_pairs": 120,
+      "threshold": 1.0,
+      "wrong_hit_rate": 0.0,
+      "wrong_hit_ucb": 0.0940578258,
+      "wrong_hits": 0
+    },
+    {
+      "cohort": "informational:cyrillic:len1",
+      "epsilon": 0.01,
+      "feasible": true,
+      "hit_rate": 0.3,
+      "hits": 108,
+      "n_pairs": 360,
+      "threshold": 1.0,
+      "wrong_hit_rate": 0.0,
+      "wrong_hit_ucb": 0.0343473597,
+      "wrong_hits": 0
+    },
+    {
+      "cohort": "informational:latin-tr:len1",
+      "epsilon": 0.01,
+      "feasible": true,
+      "hit_rate": 0.275,
+      "hits": 33,
+      "n_pairs": 120,
+      "threshold": 1.0,
+      "wrong_hit_rate": 0.0,
+      "wrong_hit_ucb": 0.1042699975,
+      "wrong_hits": 0
+    },
+    {
+      "cohort": "informational:latin-uz:len1",
+      "epsilon": 0.01,
+      "feasible": true,
+      "hit_rate": 0.3083333333,
+      "hits": 37,
+      "n_pairs": 120,
+      "threshold": 1.0,
+      "wrong_hit_rate": 0.0,
+      "wrong_hit_ucb": 0.0940578258,
+      "wrong_hits": 0
+    },
+    {
+      "cohort": "transactional:cjk:len1",
+      "epsilon": 0.01,
+      "feasible": true,
+      "hit_rate": 0.2166666667,
+      "hits": 26,
+      "n_pairs": 120,
+      "threshold": 0.9999999999999998,
+      "wrong_hit_rate": 0.0,
+      "wrong_hit_ucb": 0.1287289219,
+      "wrong_hits": 0
+    },
+    {
+      "cohort": "transactional:cyrillic:len1",
+      "epsilon": 0.01,
+      "feasible": true,
+      "hit_rate": 0.2166666667,
+      "hits": 78,
+      "n_pairs": 360,
+      "threshold": 0.9999999999999998,
+      "wrong_hit_rate": 0.0,
+      "wrong_hit_ucb": 0.0469378097,
+      "wrong_hits": 0
+    },
+    {
+      "cohort": "transactional:latin-tr:len1",
+      "epsilon": 0.01,
+      "feasible": true,
+      "hit_rate": 0.2166666667,
+      "hits": 26,
+      "n_pairs": 120,
+      "threshold": 0.9999999999999998,
+      "wrong_hit_rate": 0.0,
+      "wrong_hit_ucb": 0.1287289219,
+      "wrong_hits": 0
+    },
+    {
+      "cohort": "transactional:latin-uz:len1",
+      "epsilon": 0.01,
+      "feasible": true,
+      "hit_rate": 0.2166666667,
+      "hits": 26,
+      "n_pairs": 120,
+      "threshold": 0.9999999999999998,
+      "wrong_hit_rate": 0.0,
+      "wrong_hit_ucb": 0.1287289219,
+      "wrong_hits": 0
+    }
+  ],
+  "default_threshold": 0.93,
+  "epsilon": 0.01,
+  "replay_hash": "82cfe3b586091942c76f8921a560b608c9ce5fc305148283b2ca4a4219274075",
+  "table_version": "1.0.0"
+}

@@ -1,0 +1,74 @@
+# --- Python -------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+build/
+dist/
+.eggs/
+.python-version
+
+# --- Environments -------------------------------------------------------------
+.venv/
+venv/
+.env
+.secrets/
+
+# --- Tooling caches -----------------------------------------------------------
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.cache/
+
+# --- Generated artifacts (never committed) ------------------------------------
+# NOTE: reports/<run>/ result artifacts ARE committed (evidence for published
+# numbers); only scratch/tmp run output is ignored.
+pytest-of-*/
+.pytest_tmp/
+logs/
+reports/_tmp/
+reports/*/tmp/
+data/index/
+data/external/
+data/corpus/*.jsonl
+data/corpus/.cache/
+*.log
+*.tmp
+
+# --- answerdesk-bench (t20) ---------------------------------------------------
+# Downloads live in a git-ignored cache; only the derived JSONL subset is committed
+# (docs/benchmark.md §3, §5). Raw upstream archives must never be committed:
+# `scripts/build_bench.py --verify` fails if one appears under data/bench.
+.cache/answerdesk-bench/
+data/bench/**/*.gz
+data/bench/**/*.zip
+data/bench/**/*.tar
+data/bench/**/*.tgz
+data/bench/**/*.bz2
+data/bench/**/*.xz
+
+# --- Test leftovers (members' temp dirs must never be committed) --------------
+/tmp*/
+/pytest-of-*/
+/answerdesk-guards-*/
+/t9-smoke*/
+
+# --- Editors / OS -------------------------------------------------------------
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# --- Web toolchain ------------------------------------------------------------
+node_modules/
+web/dist/
+web/.vite/
+web/playwright-report/
+web/test-results/
+
+# --- Keep the example env file ------------------------------------------------
+!.env.example

@@ -1,0 +1,159 @@
+{
+  "benchmark": "answerdesk-bench",
+  "local_sources": [
+    {
+      "citation": "answerdesk synthetic support corpus, docs/ingestion.md §7",
+      "dataset": "answerdesk-synthetic",
+      "files": [
+        {
+          "bytes": 1296532,
+          "repo_path": "data/corpus/queries/queries.jsonl",
+          "sha256": "b1a0b4cbd1eeb93282418e49fe76cb8292dec5ea301a96b21aa98c09efba6d6b"
+        },
+        {
+          "bytes": 331168,
+          "repo_path": "data/corpus/manifest.json",
+          "sha256": "d1624360b2eb16a1078287a2ce5a0f83b391dbf838907b08c321830e07254d77"
+        }
+      ],
+      "homepage": "data/corpus/README.md",
+      "id": "answerdesk-synthetic",
+      "license": "CC0-1.0",
+      "version": "answerdesk-synthetic-v2.0.0"
+    }
+  ],
+  "note": "Pinned upstream sources. Bytes are never committed; run --fetch to fill .cache/answerdesk-bench/.",
+  "release_date": "2026-10-21",
+  "seed": 20261021,
+  "sources": [
+    {
+      "citation": "Bandarkar et al. 2023, The Belebele Benchmark: a Parallel Reading Comprehension Dataset in 122 Language Variants (arXiv:2308.16884)",
+      "dataset": "facebook/belebele",
+      "files": [
+        {
+          "bytes": 3574715,
+          "cache_path": "raw/belebele/rus_Cyrl.jsonl",
+          "language": "ru",
+          "published_path": "data/rus_Cyrl.jsonl",
+          "sha256": "e8b81853605b97e993af07a34ad2c0a48ccd8dab80956b0650a161e8fea00de5",
+          "url": "https://huggingface.co/datasets/facebook/belebele/resolve/main/data/rus_Cyrl.jsonl"
+        },
+        {
+          "bytes": 904950,
+          "cache_path": "raw/belebele/uzn_Latn.jsonl",
+          "language": "uz",
+          "published_path": "data/uzn_Latn.jsonl",
+          "sha256": "4dfc231dbda70767f5e2e7b033cd0fe7ed23e9b9694d560cc1ce248206519202",
+          "url": "https://huggingface.co/datasets/facebook/belebele/resolve/main/data/uzn_Latn.jsonl"
+        },
+        {
+          "bytes": 3526931,
+          "cache_path": "raw/belebele/tgk_Cyrl.jsonl",
+          "language": "tg",
+          "published_path": "data/tgk_Cyrl.jsonl",
+          "sha256": "a6591baa6bb68a7b3acb36bbd84fb71f8398662a042d3c87c8e1bf3d86db3c4f",
+          "url": "https://huggingface.co/datasets/facebook/belebele/resolve/main/data/tgk_Cyrl.jsonl"
+        },
+        {
+          "bytes": 3415404,
+          "cache_path": "raw/belebele/kir_Cyrl.jsonl",
+          "language": "ky",
+          "published_path": "data/kir_Cyrl.jsonl",
+          "sha256": "88712edc7f96b97c52dbe4960269de129a33a7efacc9532e94580c8916d6aa49",
+          "url": "https://huggingface.co/datasets/facebook/belebele/resolve/main/data/kir_Cyrl.jsonl"
+        },
+        {
+          "bytes": 1285910,
+          "cache_path": "raw/belebele/zho_Hans.jsonl",
+          "language": "zh",
+          "published_path": "data/zho_Hans.jsonl",
+          "sha256": "f3b7915eaa27e44225979ffd38708c5beee63d28bea27a91253e5fe68e2fa147",
+          "url": "https://huggingface.co/datasets/facebook/belebele/resolve/main/data/zho_Hans.jsonl"
+        }
+      ],
+      "homepage": "https://huggingface.co/datasets/facebook/belebele",
+      "id": "belebele",
+      "license": "CC-BY-SA-4.0",
+      "version": "7899cdfa4e1e0d733fd77c848e2c273cb1d32be2"
+    },
+    {
+      "citation": "Zhang et al. 2021, Mr. TyDi: A Multi-lingual Benchmark for Dense Retrieval (arXiv:2108.08787)",
+      "dataset": "castorini/mr-tydi",
+      "files": [
+        {
+          "bytes": 51224,
+          "cache_path": "raw/mrtydi/dev.ru.jsonl.gz",
+          "language": "dev",
+          "published_path": "mrtydi-v1.1-russian/dev.jsonl.gz",
+          "sha256": "778912f4dca8e653cd3c0a4b8a42f78d9f9d2064e4d47a5e7799251e96b6518c",
+          "url": "https://huggingface.co/datasets/castorini/mr-tydi/resolve/main/mrtydi-v1.1-russian/dev.jsonl.gz"
+        },
+        {
+          "bytes": 40114,
+          "cache_path": "raw/mrtydi/test.ru.jsonl.gz",
+          "language": "test",
+          "published_path": "mrtydi-v1.1-russian/test.jsonl.gz",
+          "sha256": "1f8d5ec77e4cd14ee72997818fb8cb7f57a5abcc61e26be077229cb0b4e720de",
+          "url": "https://huggingface.co/datasets/castorini/mr-tydi/resolve/main/mrtydi-v1.1-russian/test.jsonl.gz"
+        }
+      ],
+      "homepage": "https://huggingface.co/datasets/castorini/mr-tydi",
+      "id": "mrtydi",
+      "license": "Apache-2.0",
+      "version": "1d43c80218d06d0ef80f5b172ccabd848b948bc1"
+    },
+    {
+      "citation": "Zhang et al. 2021, Mr. TyDi (corpus release)",
+      "dataset": "castorini/mr-tydi-corpus",
+      "files": [
+        {
+          "bytes": 1588019137,
+          "cache_path": "raw/mrtydi/corpus.ru.jsonl.gz",
+          "language": "ru",
+          "published_path": "mrtydi-v1.1-russian/corpus.jsonl.gz",
+          "sha256": "c468bdb502a2f596469b3bb52448f670a1efd2ab7301beab79753c14cfd5bb79",
+          "url": "https://huggingface.co/datasets/castorini/mr-tydi-corpus/resolve/main/mrtydi-v1.1-russian/corpus.jsonl.gz"
+        }
+      ],
+      "homepage": "https://huggingface.co/datasets/castorini/mr-tydi-corpus",
+      "id": "mrtydi-corpus",
+      "license": "Apache-2.0",
+      "version": "3a3aa212bbe94a8cc0dc858710a3dad49d532054"
+    },
+    {
+      "citation": "",
+      "dataset": "license-texts",
+      "files": [
+        {
+          "bytes": 20138,
+          "cache_path": "raw/licenses/CC-BY-SA-4.0.txt",
+          "language": "",
+          "published_path": "",
+          "sha256": "28a9529c7d0bb4dc51f4bf5c116a3d16ef247a052f7591466768ddf563fd1cf5",
+          "url": "https://creativecommons.org/licenses/by-sa/4.0/legalcode.txt"
+        },
+        {
+          "bytes": 7048,
+          "cache_path": "raw/licenses/CC0-1.0.txt",
+          "language": "",
+          "published_path": "",
+          "sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499",
+          "url": "https://creativecommons.org/publicdomain/zero/1.0/legalcode.txt"
+        },
+        {
+          "bytes": 11358,
+          "cache_path": "raw/licenses/APACHE-2.0.txt",
+          "language": "",
+          "published_path": "",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+          "url": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        }
+      ],
+      "homepage": "https://creativecommons.org/licenses/",
+      "id": "license-texts",
+      "license": "n/a",
+      "version": "2026-10-21"
+    }
+  ],
+  "version": "0.1.0"
+}

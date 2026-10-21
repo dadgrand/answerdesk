@@ -1,0 +1,33 @@
+# Model pricing table (requirements NFR-COST-02, Appendix C `llm.pricing_table`).
+#
+# The cost ledger multiplies recorded token counts by these numbers. Two rules:
+#   1. Never hard-code a price in code or in a document — it lives here with provenance.
+#   2. A cost number in `docs/results.md` must name this file's `retrieved_at` date.
+#
+# The values below are STRUCTURAL EXAMPLES, not a price quote. Replace them with the
+# provider's current published prices before publishing any USD figure.
+
+pricing:
+  - model: fake-model
+    input_usd_per_1k_tokens: 0.0
+    output_usd_per_1k_tokens: 0.0
+    retrieved_at: "2026-10-20"
+    source: "deterministic CI double — always free"
+
+  - model: gpt-4o-mini
+    input_usd_per_1k_tokens: 0.0
+    output_usd_per_1k_tokens: 0.0
+    retrieved_at: "2026-10-20"
+    source: "placeholder — replace with the provider's published price before quoting USD"
+
+  - model: deepseek-chat
+    input_usd_per_1k_tokens: 0.0
+    output_usd_per_1k_tokens: 0.0
+    retrieved_at: "2026-10-20"
+    source: "placeholder — replace with the provider's published price before quoting USD"
+
+  - model: local-model
+    input_usd_per_1k_tokens: 0.0
+    output_usd_per_1k_tokens: 0.0
+    retrieved_at: "2026-10-20"
+    source: "self-hosted (vLLM / llama.cpp / Ollama): electricity only, recorded as 0"

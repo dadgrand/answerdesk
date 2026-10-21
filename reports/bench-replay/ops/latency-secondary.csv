@@ -1,0 +1,4 @@
+stage,n,p50_ms,p95_ms,mean_ms
+retrieval,12,1.911,2.062,1.955
+generation,12,1.926,2.63,1.912
+total,12,3.782,4.503,3.867

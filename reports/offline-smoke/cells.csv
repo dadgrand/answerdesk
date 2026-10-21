@@ -1,0 +1,277 @@
+name,value,ci_low,ci_high,n,method,arm,locale,category,note
+recall_any@10,1.0,1.0,1.0,49,bootstrap,hybrid-rrf,ky,,
+recall_any@10,0.959184,0.897959,1.0,49,bootstrap,hybrid-rrf,ru,,
+recall_any@10,0.979592,0.938776,1.0,49,bootstrap,hybrid-rrf,tg,,
+recall_any@10,0.959184,0.897959,1.0,49,bootstrap,hybrid-rrf,tr,,
+recall_any@10,1.0,1.0,1.0,49,bootstrap,hybrid-rrf,uz,,
+recall_any@10,0.897959,0.816327,0.979592,49,bootstrap,hybrid-rrf,zh,,
+recall_any@10,0.965986,0.942177,0.986395,294,bootstrap,hybrid-rrf,macro,,"unweighted mean over the locales present; the interval is a two-level bootstrap (queries within locale, then the macro mean)"
+recall_all@10,0.830612,0.761224,0.895969,49,bootstrap,hybrid-rrf,ky,,
+recall_all@10,0.679025,0.586834,0.756922,49,bootstrap,hybrid-rrf,ru,,
+recall_all@10,0.826984,0.749427,0.904785,49,bootstrap,hybrid-rrf,tg,,
+recall_all@10,0.785714,0.693827,0.87148,49,bootstrap,hybrid-rrf,tr,,
+recall_all@10,0.638776,0.546888,0.728571,49,bootstrap,hybrid-rrf,uz,,
+recall_all@10,0.428571,0.357143,0.5,49,bootstrap,hybrid-rrf,zh,,
+recall_all@10,0.69828,0.667209,0.731764,294,bootstrap,hybrid-rrf,macro,,"unweighted mean over the locales present; the interval is a two-level bootstrap (queries within locale, then the macro mean)"
+nDCG@10,0.849179,0.781693,0.910341,49,bootstrap,hybrid-rrf,ky,,
+nDCG@10,0.701166,0.605942,0.784651,49,bootstrap,hybrid-rrf,ru,,
+nDCG@10,0.832043,0.750322,0.90641,49,bootstrap,hybrid-rrf,tg,,
+nDCG@10,0.777318,0.68512,0.862401,49,bootstrap,hybrid-rrf,tr,,
+nDCG@10,0.627489,0.539376,0.715029,49,bootstrap,hybrid-rrf,uz,,
+nDCG@10,0.410712,0.331797,0.487695,49,bootstrap,hybrid-rrf,zh,,
+nDCG@10,0.699651,0.667523,0.733391,294,bootstrap,hybrid-rrf,macro,,"unweighted mean over the locales present; the interval is a two-level bootstrap (queries within locale, then the macro mean)"
+MRR@10,0.946145,0.889456,0.989796,49,bootstrap,hybrid-rrf,ky,,
+MRR@10,0.818756,0.71744,0.904288,49,bootstrap,hybrid-rrf,ru,,
+MRR@10,0.893367,0.805026,0.965306,49,bootstrap,hybrid-rrf,tg,,
+MRR@10,0.847166,0.755777,0.928577,49,bootstrap,hybrid-rrf,tr,,
+MRR@10,0.735714,0.640468,0.82994,49,bootstrap,hybrid-rrf,uz,,
+MRR@10,0.511492,0.401746,0.617484,49,bootstrap,hybrid-rrf,zh,,
+MRR@10,0.792107,0.755495,0.827752,294,bootstrap,hybrid-rrf,macro,,"unweighted mean over the locales present; the interval is a two-level bootstrap (queries within locale, then the macro mean)"
+recall_any@20,1.0,1.0,1.0,49,bootstrap,hybrid-rrf,ky,,
+recall_any@20,1.0,1.0,1.0,49,bootstrap,hybrid-rrf,ru,,
+recall_any@20,1.0,1.0,1.0,49,bootstrap,hybrid-rrf,tg,,
+recall_any@20,1.0,1.0,1.0,49,bootstrap,hybrid-rrf,tr,,
+recall_any@20,1.0,1.0,1.0,49,bootstrap,hybrid-rrf,uz,,
+recall_any@20,1.0,1.0,1.0,49,bootstrap,hybrid-rrf,zh,,
+recall_any@20,1.0,1.0,1.0,294,bootstrap,hybrid-rrf,macro,,"unweighted mean over the locales present; the interval is a two-level bootstrap (queries within locale, then the macro mean)"
+recall_all@20,0.94898,0.914235,0.979592,49,bootstrap,hybrid-rrf,ky,,
+recall_all@20,0.872902,0.819816,0.914286,49,bootstrap,hybrid-rrf,ru,,
+recall_all@20,0.948073,0.907029,0.982545,49,bootstrap,hybrid-rrf,tg,,
+recall_all@20,0.934694,0.891837,0.971429,49,bootstrap,hybrid-rrf,tr,,
+recall_all@20,0.887755,0.844898,0.932653,49,bootstrap,hybrid-rrf,uz,,
+recall_all@20,0.85102,0.802041,0.891837,49,bootstrap,hybrid-rrf,zh,,
+recall_all@20,0.907237,0.889243,0.924386,294,bootstrap,hybrid-rrf,macro,,"unweighted mean over the locales present; the interval is a two-level bootstrap (queries within locale, then the macro mean)"
+nDCG@20,0.913503,0.86512,0.953554,49,bootstrap,hybrid-rrf,ky,,
+nDCG@20,0.806518,0.732574,0.86508,49,bootstrap,hybrid-rrf,ru,,
+nDCG@20,0.898647,0.839183,0.952066,49,bootstrap,hybrid-rrf,tg,,
+nDCG@20,0.859191,0.795075,0.916235,49,bootstrap,hybrid-rrf,tr,,
+nDCG@20,0.763989,0.703755,0.826703,49,bootstrap,hybrid-rrf,uz,,
+nDCG@20,0.639664,0.577775,0.697314,49,bootstrap,hybrid-rrf,zh,,
+nDCG@20,0.813585,0.788196,0.838111,294,bootstrap,hybrid-rrf,macro,,"unweighted mean over the locales present; the interval is a two-level bootstrap (queries within locale, then the macro mean)"
+MRR@20,0.946145,0.889456,0.989796,49,bootstrap,hybrid-rrf,ky,,
+MRR@20,0.821686,0.72255,0.905317,49,bootstrap,hybrid-rrf,ru,,
+MRR@20,0.894728,0.806441,0.965306,49,bootstrap,hybrid-rrf,tg,,
+MRR@20,0.850722,0.762184,0.930427,49,bootstrap,hybrid-rrf,tr,,
+MRR@20,0.735714,0.640468,0.82994,49,bootstrap,hybrid-rrf,uz,,
+MRR@20,0.519514,0.415816,0.622447,49,bootstrap,hybrid-rrf,zh,,
+MRR@20,0.794752,0.75933,0.829242,294,bootstrap,hybrid-rrf,macro,,"unweighted mean over the locales present; the interval is a two-level bootstrap (queries within locale, then the macro mean)"
+groundedness_verifier,1.0,1.0,1.0,202,bootstrap,hybrid-rrf,,,mean per-answer claim-support rate
+groundedness_claim_pooled,1.0,0.990246,1.0,390,wilson,hybrid-rrf,,,390/390 displayed claims supported
+citation_precision,1.0,1.0,1.0,202,bootstrap,hybrid-rrf,,,per-answer mean; a phantom citation is impossible by contract (F-5)
+citation_recall,1.0,1.0,1.0,202,bootstrap,hybrid-rrf,,,fraction of required evidence chunks actually cited
+rubric_score,5.0,5.0,5.0,202,bootstrap,hybrid-rrf,,,"judge rubric, 1-5 (context-anchored, per claim)"
+rubric_reference_overlap,2.575643,2.394792,2.748521,164,bootstrap,hybrid-rrf,,,diagnostic: the same rubric against the reference answer; low means the reference is not entailed by any document
+rubric_pass_rate,1.0,0.981338,1.0,202,wilson,hybrid-rrf,,,rubric >= 4 (F-1/§8.1 'correct' component)
+phantom_citations,0.0,0.0,0.018662,202,wilson,hybrid-rrf,,,structural: must be 0 (F-5)
+unsupported_displayed_claims,0.0,0.0,0.018662,202,wilson,hybrid-rrf,,,structural: must be 0 (F-4)
+language_agreement,0.950495,0.911285,0.972891,202,wilson,hybrid-rrf,,,F-7: answer language equals the detected query language
+realised_risk,0.074257,0.045514,0.118891,202,wilson,hybrid-rrf,,,15/202 auto-answered turns were incorrect (E-1)
+coverage,0.801587,0.747982,0.846136,252,wilson,hybrid-rrf,,,auto-answer coverage on answerable items (E-4)
+must_escalate_recall,1.0,0.965653,1.0,108,wilson,hybrid-rrf,,,108/108 unsafe or unanswerable turns were escalated (E-2)
+escalation_precision,0.683544,0.607401,0.750974,158,wilson,hybrid-rrf,,,escalated turns that were genuinely unsafe/unanswerable (E-3)
+realised_risk_by_bucket,0.074257,0.045514,0.118891,202,wilson,hybrid-rrf,,informational,intent bucket informational (E-1 per bucket)
+coverage_by_bucket,0.801587,0.747982,0.846136,252,wilson,hybrid-rrf,,informational,intent bucket informational
+answer_accuracy_by_category,0.896825,0.831462,0.938708,126,wilson,hybrid-rrf,,direct,category direct
+answer_accuracy_by_category,0.388889,0.284657,0.504376,72,wilson,hybrid-rrf,,numeric_date,category numeric_date
+answer_accuracy_by_category,0.851852,0.733999,0.922969,54,wilson,hybrid-rrf,,typo_code_switch,category typo_code_switch
+answer_accuracy_by_category,1.0,0.944997,1.0,66,wilson,hybrid-rrf,,unanswerable,category unanswerable
+answer_accuracy_by_category,1.0,0.824121,1.0,18,wilson,hybrid-rrf,,pii,category pii
+answer_accuracy_by_category,1.0,0.862024,1.0,24,wilson,hybrid-rrf,,injection,category injection
+latency_generation_p50_ms,2.09305,1.95835,2.15387,360,none,hybrid-rrf,,,distribution summary; the bracket is the p(q-5)..p(q+5) spread
+latency_generation_p95_ms,3.673215,3.10226,5.3274,360,none,hybrid-rrf,,,distribution summary; the bracket is the p(q-5)..p(q+5) spread
+latency_judge_p50_ms,0.04275,0.040335,0.0458,202,none,hybrid-rrf,,,distribution summary; the bracket is the p(q-5)..p(q+5) spread
+latency_judge_p95_ms,0.06103,0.05699,0.1125,202,none,hybrid-rrf,,,distribution summary; the bracket is the p(q-5)..p(q+5) spread
+latency_retrieval_p50_ms,2.69895,2.65672,2.75169,360,none,hybrid-rrf,,,distribution summary; the bracket is the p(q-5)..p(q+5) spread
+latency_retrieval_p95_ms,4.03341,3.71494,4.7714,360,none,hybrid-rrf,,,distribution summary; the bracket is the p(q-5)..p(q+5) spread
+latency_total_p50_ms,4.92665,4.853115,5.03266,360,none,hybrid-rrf,,,distribution summary; the bracket is the p(q-5)..p(q+5) spread
+latency_total_p95_ms,6.81356,6.39372,8.8828,360,none,hybrid-rrf,,,distribution summary; the bracket is the p(q-5)..p(q+5) spread
+latency_total_mean_ms,5.085476,4.987908,5.179955,360,bootstrap,hybrid-rrf,,,wall clock measured in-process; not a server-side latency claim (NFR-LAT-01)
+usd_per_answer,0.0,0.0,0.0,360,bootstrap,hybrid-rrf,,,priced with the pinned pricing table (NFR-COST-02)
+usd_per_answer_p95,0.0,0.0,0.0,360,none,hybrid-rrf,,,distribution summary; the bracket is the p(q-5)..p(q+5) spread
+tokens_input_mean,710.622222,682.062153,740.699167,360,bootstrap,hybrid-rrf,,,
+tokens_output_mean,32.886111,30.616319,35.302917,360,bootstrap,hybrid-rrf,,,
+cache_hit_rate,0.175,0.139238,0.217624,360,wilson,hybrid-rrf,,,exact-normalised-query replay; the semantic cache is owned by t8 (§9)
+recall_any@10,1.0,1.0,1.0,49,bootstrap,bm25,ky,,
+recall_any@10,1.0,1.0,1.0,49,bootstrap,bm25,ru,,
+recall_any@10,1.0,1.0,1.0,49,bootstrap,bm25,tg,,
+recall_any@10,1.0,1.0,1.0,49,bootstrap,bm25,tr,,
+recall_any@10,1.0,1.0,1.0,49,bootstrap,bm25,uz,,
+recall_any@10,1.0,1.0,1.0,49,bootstrap,bm25,zh,,
+recall_any@10,1.0,1.0,1.0,294,bootstrap,bm25,macro,,"unweighted mean over the locales present; the interval is a two-level bootstrap (queries within locale, then the macro mean)"
+recall_all@10,1.0,1.0,1.0,49,bootstrap,bm25,ky,,
+recall_all@10,0.988776,0.97551,0.997959,49,bootstrap,bm25,ru,,
+recall_all@10,1.0,1.0,1.0,49,bootstrap,bm25,tg,,
+recall_all@10,0.995918,0.989796,1.0,49,bootstrap,bm25,tr,,
+recall_all@10,0.997959,0.993878,1.0,49,bootstrap,bm25,uz,,
+recall_all@10,1.0,1.0,1.0,49,bootstrap,bm25,zh,,
+recall_all@10,0.997109,0.994728,0.99898,294,bootstrap,bm25,macro,,"unweighted mean over the locales present; the interval is a two-level bootstrap (queries within locale, then the macro mean)"
+nDCG@10,0.99359,0.980769,1.0,49,bootstrap,bm25,ky,,
+nDCG@10,0.985227,0.968558,0.998702,49,bootstrap,bm25,ru,,
+nDCG@10,0.99359,0.980769,1.0,49,bootstrap,bm25,tg,,
+nDCG@10,0.988177,0.974825,0.998583,49,bootstrap,bm25,tr,,
+nDCG@10,0.98928,0.969193,1.0,49,bootstrap,bm25,uz,,
+nDCG@10,0.997043,0.991128,1.0,49,bootstrap,bm25,zh,,
+nDCG@10,0.991151,0.984964,0.996062,294,bootstrap,bm25,macro,,"unweighted mean over the locales present; the interval is a two-level bootstrap (queries within locale, then the macro mean)"
+MRR@10,0.989796,0.969388,1.0,49,bootstrap,bm25,ky,,
+MRR@10,0.969388,0.928571,1.0,49,bootstrap,bm25,ru,,
+MRR@10,0.989796,0.969388,1.0,49,bootstrap,bm25,tg,,
+MRR@10,0.989796,0.969388,1.0,49,bootstrap,bm25,tr,,
+MRR@10,0.982993,0.94898,1.0,49,bootstrap,bm25,uz,,
+MRR@10,1.0,1.0,1.0,49,bootstrap,bm25,zh,,
+MRR@10,0.986961,0.975624,0.994898,294,bootstrap,bm25,macro,,"unweighted mean over the locales present; the interval is a two-level bootstrap (queries within locale, then the macro mean)"
+recall_any@20,1.0,1.0,1.0,49,bootstrap,bm25,ky,,
+recall_any@20,1.0,1.0,1.0,49,bootstrap,bm25,ru,,
+recall_any@20,1.0,1.0,1.0,49,bootstrap,bm25,tg,,
+recall_any@20,1.0,1.0,1.0,49,bootstrap,bm25,tr,,
+recall_any@20,1.0,1.0,1.0,49,bootstrap,bm25,uz,,
+recall_any@20,1.0,1.0,1.0,49,bootstrap,bm25,zh,,
+recall_any@20,1.0,1.0,1.0,294,bootstrap,bm25,macro,,"unweighted mean over the locales present; the interval is a two-level bootstrap (queries within locale, then the macro mean)"
+recall_all@20,1.0,1.0,1.0,49,bootstrap,bm25,ky,,
+recall_all@20,0.994898,0.984694,1.0,49,bootstrap,bm25,ru,,
+recall_all@20,1.0,1.0,1.0,49,bootstrap,bm25,tg,,
+recall_all@20,1.0,1.0,1.0,49,bootstrap,bm25,tr,,
+recall_all@20,1.0,1.0,1.0,49,bootstrap,bm25,uz,,
+recall_all@20,1.0,1.0,1.0,49,bootstrap,bm25,zh,,
+recall_all@20,0.99915,0.997449,1.0,294,bootstrap,bm25,macro,,"unweighted mean over the locales present; the interval is a two-level bootstrap (queries within locale, then the macro mean)"
+nDCG@20,0.99359,0.980769,1.0,49,bootstrap,bm25,ky,,
+nDCG@20,0.986925,0.973729,0.996761,49,bootstrap,bm25,ru,,
+nDCG@20,0.99359,0.980769,1.0,49,bootstrap,bm25,tg,,
+nDCG@20,0.990683,0.978851,0.999836,49,bootstrap,bm25,tr,,
+nDCG@20,0.990533,0.971699,1.0,49,bootstrap,bm25,uz,,
+nDCG@20,0.997043,0.991128,1.0,49,bootstrap,bm25,zh,,
+nDCG@20,0.992061,0.986221,0.996737,294,bootstrap,bm25,macro,,"unweighted mean over the locales present; the interval is a two-level bootstrap (queries within locale, then the macro mean)"
+MRR@20,0.989796,0.969388,1.0,49,bootstrap,bm25,ky,,
+MRR@20,0.969388,0.928571,1.0,49,bootstrap,bm25,ru,,
+MRR@20,0.989796,0.969388,1.0,49,bootstrap,bm25,tg,,
+MRR@20,0.989796,0.969388,1.0,49,bootstrap,bm25,tr,,
+MRR@20,0.982993,0.94898,1.0,49,bootstrap,bm25,uz,,
+MRR@20,1.0,1.0,1.0,49,bootstrap,bm25,zh,,
+MRR@20,0.986961,0.975624,0.994898,294,bootstrap,bm25,macro,,"unweighted mean over the locales present; the interval is a two-level bootstrap (queries within locale, then the macro mean)"
+groundedness_verifier,1.0,1.0,1.0,200,bootstrap,bm25,,,mean per-answer claim-support rate
+groundedness_claim_pooled,1.0,0.990221,1.0,389,wilson,bm25,,,389/389 displayed claims supported
+citation_precision,1.0,1.0,1.0,200,bootstrap,bm25,,,per-answer mean; a phantom citation is impossible by contract (F-5)
+citation_recall,1.0,1.0,1.0,200,bootstrap,bm25,,,fraction of required evidence chunks actually cited
+rubric_score,5.0,5.0,5.0,200,bootstrap,bm25,,,"judge rubric, 1-5 (context-anchored, per claim)"
+rubric_reference_overlap,2.497047,2.32727,2.663752,160,bootstrap,bm25,,,diagnostic: the same rubric against the reference answer; low means the reference is not entailed by any document
+rubric_pass_rate,1.0,0.981155,1.0,200,wilson,bm25,,,rubric >= 4 (F-1/§8.1 'correct' component)
+phantom_citations,0.0,0.0,0.018845,200,wilson,bm25,,,structural: must be 0 (F-5)
+unsupported_displayed_claims,0.0,0.0,0.018845,200,wilson,bm25,,,structural: must be 0 (F-4)
+language_agreement,0.92,0.874011,0.950159,200,wilson,bm25,,,F-7: answer language equals the detected query language
+realised_risk,0.08,0.049841,0.125989,200,wilson,bm25,,,16/200 auto-answered turns were incorrect (E-1)
+coverage,0.793651,0.739458,0.839026,252,wilson,bm25,,,auto-answer coverage on answerable items (E-4)
+must_escalate_recall,1.0,0.965653,1.0,108,wilson,bm25,,,108/108 unsafe or unanswerable turns were escalated (E-2)
+escalation_precision,0.675,0.599061,0.742732,160,wilson,bm25,,,escalated turns that were genuinely unsafe/unanswerable (E-3)
+realised_risk_by_bucket,0.08,0.049841,0.125989,200,wilson,bm25,,informational,intent bucket informational (E-1 per bucket)
+coverage_by_bucket,0.793651,0.739458,0.839026,252,wilson,bm25,,informational,intent bucket informational
+answer_accuracy_by_category,0.888889,0.822116,0.93265,126,wilson,bm25,,direct,category direct
+answer_accuracy_by_category,0.375,0.272192,0.490471,72,wilson,bm25,,numeric_date,category numeric_date
+answer_accuracy_by_category,0.833333,0.712635,0.909756,54,wilson,bm25,,typo_code_switch,category typo_code_switch
+answer_accuracy_by_category,1.0,0.944997,1.0,66,wilson,bm25,,unanswerable,category unanswerable
+answer_accuracy_by_category,1.0,0.824121,1.0,18,wilson,bm25,,pii,category pii
+answer_accuracy_by_category,1.0,0.862024,1.0,24,wilson,bm25,,injection,category injection
+latency_generation_p50_ms,1.77925,1.677415,1.833045,360,none,bm25,,,distribution summary; the bracket is the p(q-5)..p(q+5) spread
+latency_generation_p95_ms,3.096445,2.73577,4.3771,360,none,bm25,,,distribution summary; the bracket is the p(q-5)..p(q+5) spread
+latency_judge_p50_ms,0.04355,0.040565,0.046615,200,none,bm25,,,distribution summary; the bracket is the p(q-5)..p(q+5) spread
+latency_judge_p95_ms,0.08804,0.06042,0.1681,200,none,bm25,,,distribution summary; the bracket is the p(q-5)..p(q+5) spread
+latency_retrieval_p50_ms,0.419,0.37504,0.50403,360,none,bm25,,,distribution summary; the bracket is the p(q-5)..p(q+5) spread
+latency_retrieval_p95_ms,1.563155,1.33609,3.6681,360,none,bm25,,,distribution summary; the bracket is the p(q-5)..p(q+5) spread
+latency_total_p50_ms,2.34035,2.26342,2.4396,360,none,bm25,,,distribution summary; the bracket is the p(q-5)..p(q+5) spread
+latency_total_p95_ms,3.83937,3.48605,7.4093,360,none,bm25,,,distribution summary; the bracket is the p(q-5)..p(q+5) spread
+latency_total_mean_ms,2.511106,2.427011,2.607695,360,bootstrap,bm25,,,wall clock measured in-process; not a server-side latency claim (NFR-LAT-01)
+usd_per_answer,0.0,0.0,0.0,360,bootstrap,bm25,,,priced with the pinned pricing table (NFR-COST-02)
+usd_per_answer_p95,0.0,0.0,0.0,360,none,bm25,,,distribution summary; the bracket is the p(q-5)..p(q+5) spread
+tokens_input_mean,611.780556,587.978472,635.808819,360,bootstrap,bm25,,,
+tokens_output_mean,31.777778,29.702083,34.064653,360,bootstrap,bm25,,,
+cache_hit_rate,0.175,0.139238,0.217624,360,wilson,bm25,,,exact-normalised-query replay; the semantic cache is owned by t8 (§9)
+recall_any@10,0.714286,0.591837,0.836735,49,bootstrap,dense-hash,ky,,
+recall_any@10,0.591837,0.44898,0.734694,49,bootstrap,dense-hash,ru,,
+recall_any@10,0.816327,0.714286,0.918367,49,bootstrap,dense-hash,tg,,
+recall_any@10,0.673469,0.55102,0.816327,49,bootstrap,dense-hash,tr,,
+recall_any@10,0.428571,0.306122,0.571429,49,bootstrap,dense-hash,uz,,
+recall_any@10,0.122449,0.040816,0.22449,49,bootstrap,dense-hash,zh,,
+recall_any@10,0.557823,0.506803,0.605527,294,bootstrap,dense-hash,macro,,"unweighted mean over the locales present; the interval is a two-level bootstrap (queries within locale, then the macro mean)"
+recall_all@10,0.485714,0.383673,0.591888,49,bootstrap,dense-hash,ky,,
+recall_all@10,0.274036,0.190439,0.360899,49,bootstrap,dense-hash,ru,,
+recall_all@10,0.5322,0.426525,0.634518,49,bootstrap,dense-hash,tg,,
+recall_all@10,0.440816,0.338776,0.54898,49,bootstrap,dense-hash,tr,,
+recall_all@10,0.306122,0.199949,0.418418,49,bootstrap,dense-hash,uz,,
+recall_all@10,0.07551,0.018367,0.14898,49,bootstrap,dense-hash,zh,,
+recall_all@10,0.3524,0.310711,0.394562,294,bootstrap,dense-hash,macro,,"unweighted mean over the locales present; the interval is a two-level bootstrap (queries within locale, then the macro mean)"
+nDCG@10,0.49135,0.390463,0.602441,49,bootstrap,dense-hash,ky,,
+nDCG@10,0.266714,0.179579,0.354212,49,bootstrap,dense-hash,ru,,
+nDCG@10,0.521108,0.410821,0.629673,49,bootstrap,dense-hash,tg,,
+nDCG@10,0.445987,0.341738,0.556668,49,bootstrap,dense-hash,tr,,
+nDCG@10,0.292034,0.187075,0.400697,49,bootstrap,dense-hash,uz,,
+nDCG@10,0.076807,0.018869,0.15147,49,bootstrap,dense-hash,zh,,
+nDCG@10,0.349,0.308277,0.392462,294,bootstrap,dense-hash,macro,,"unweighted mean over the locales present; the interval is a two-level bootstrap (queries within locale, then the macro mean)"
+MRR@10,0.573469,0.463248,0.693929,49,bootstrap,dense-hash,ky,,
+MRR@10,0.305782,0.209515,0.409191,49,bootstrap,dense-hash,ru,,
+MRR@10,0.570295,0.45462,0.685098,49,bootstrap,dense-hash,tg,,
+MRR@10,0.538265,0.413244,0.668389,49,bootstrap,dense-hash,tr,,
+MRR@10,0.320295,0.208603,0.444501,49,bootstrap,dense-hash,uz,,
+MRR@10,0.086816,0.022676,0.168448,49,bootstrap,dense-hash,zh,,
+MRR@10,0.399154,0.355124,0.449738,294,bootstrap,dense-hash,macro,,"unweighted mean over the locales present; the interval is a two-level bootstrap (queries within locale, then the macro mean)"
+recall_any@20,0.755102,0.632653,0.877551,49,bootstrap,dense-hash,ky,,
+recall_any@20,0.632653,0.489796,0.77551,49,bootstrap,dense-hash,ru,,
+recall_any@20,0.836735,0.734694,0.938776,49,bootstrap,dense-hash,tg,,
+recall_any@20,0.734694,0.612245,0.857143,49,bootstrap,dense-hash,tr,,
+recall_any@20,0.591837,0.44898,0.714796,49,bootstrap,dense-hash,uz,,
+recall_any@20,0.142857,0.040816,0.244898,49,bootstrap,dense-hash,zh,,
+recall_any@20,0.615646,0.564626,0.66335,294,bootstrap,dense-hash,macro,,"unweighted mean over the locales present; the interval is a two-level bootstrap (queries within locale, then the macro mean)"
+recall_all@20,0.587755,0.485663,0.695918,49,bootstrap,dense-hash,ky,,
+recall_all@20,0.419841,0.310544,0.527112,49,bootstrap,dense-hash,ru,,
+recall_all@20,0.688209,0.574592,0.798889,49,bootstrap,dense-hash,tg,,
+recall_all@20,0.597959,0.481633,0.716327,49,bootstrap,dense-hash,tr,,
+recall_all@20,0.381633,0.263265,0.504133,49,bootstrap,dense-hash,uz,,
+recall_all@20,0.093878,0.026531,0.175561,49,bootstrap,dense-hash,zh,,
+recall_all@20,0.461546,0.416626,0.506287,294,bootstrap,dense-hash,macro,,"unweighted mean over the locales present; the interval is a two-level bootstrap (queries within locale, then the macro mean)"
+nDCG@20,0.548033,0.451576,0.658884,49,bootstrap,dense-hash,ky,,
+nDCG@20,0.345698,0.248954,0.446373,49,bootstrap,dense-hash,ru,,
+nDCG@20,0.607688,0.495709,0.716946,49,bootstrap,dense-hash,tg,,
+nDCG@20,0.530389,0.416538,0.645462,49,bootstrap,dense-hash,tr,,
+nDCG@20,0.334618,0.22814,0.448869,49,bootstrap,dense-hash,uz,,
+nDCG@20,0.087,0.023004,0.166726,49,bootstrap,dense-hash,zh,,
+nDCG@20,0.408904,0.366191,0.452713,294,bootstrap,dense-hash,macro,,"unweighted mean over the locales present; the interval is a two-level bootstrap (queries within locale, then the macro mean)"
+MRR@20,0.576113,0.469088,0.697024,49,bootstrap,dense-hash,ky,,
+MRR@20,0.309338,0.214927,0.413392,49,bootstrap,dense-hash,ru,,
+MRR@20,0.571315,0.456046,0.685264,49,bootstrap,dense-hash,tg,,
+MRR@20,0.543546,0.422761,0.671711,49,bootstrap,dense-hash,tr,,
+MRR@20,0.331204,0.219178,0.453425,49,bootstrap,dense-hash,uz,,
+MRR@20,0.088176,0.023324,0.171174,49,bootstrap,dense-hash,zh,,
+MRR@20,0.403282,0.359996,0.45375,294,bootstrap,dense-hash,macro,,"unweighted mean over the locales present; the interval is a two-level bootstrap (queries within locale, then the macro mean)"
+groundedness_verifier,1.0,1.0,1.0,177,bootstrap,dense-hash,,,mean per-answer claim-support rate
+groundedness_claim_pooled,1.0,0.987721,1.0,309,wilson,dense-hash,,,309/309 displayed claims supported
+citation_precision,1.0,1.0,1.0,177,bootstrap,dense-hash,,,per-answer mean; a phantom citation is impossible by contract (F-5)
+citation_recall,1.0,1.0,1.0,177,bootstrap,dense-hash,,,fraction of required evidence chunks actually cited
+rubric_score,5.0,5.0,5.0,177,bootstrap,dense-hash,,,"judge rubric, 1-5 (context-anchored, per claim)"
+rubric_reference_overlap,2.437319,2.234597,2.636264,138,bootstrap,dense-hash,,,diagnostic: the same rubric against the reference answer; low means the reference is not entailed by any document
+rubric_pass_rate,1.0,0.978758,1.0,177,wilson,dense-hash,,,rubric >= 4 (F-1/§8.1 'correct' component)
+phantom_citations,0.0,0.0,0.021242,177,wilson,dense-hash,,,structural: must be 0 (F-5)
+unsupported_displayed_claims,0.0,0.0,0.021242,177,wilson,dense-hash,,,structural: must be 0 (F-4)
+language_agreement,0.960452,0.920629,0.980713,177,wilson,dense-hash,,,F-7: answer language equals the detected query language
+realised_risk,0.276836,0.216192,0.346961,177,wilson,dense-hash,,,49/177 auto-answered turns were incorrect (E-1)
+coverage,0.702381,0.643235,0.755449,252,wilson,dense-hash,,,auto-answer coverage on answerable items (E-4)
+must_escalate_recall,1.0,0.965653,1.0,108,wilson,dense-hash,,,108/108 unsafe or unanswerable turns were escalated (E-2)
+escalation_precision,0.590164,0.517767,0.658853,183,wilson,dense-hash,,,escalated turns that were genuinely unsafe/unanswerable (E-3)
+realised_risk_by_bucket,0.276836,0.216192,0.346961,177,wilson,dense-hash,,informational,intent bucket informational (E-1 per bucket)
+coverage_by_bucket,0.702381,0.643235,0.755449,252,wilson,dense-hash,,informational,intent bucket informational
+answer_accuracy_by_category,0.674603,0.588684,0.750191,126,wilson,dense-hash,,direct,category direct
+answer_accuracy_by_category,0.180556,0.108668,0.284803,72,wilson,dense-hash,,numeric_date,category numeric_date
+answer_accuracy_by_category,0.555556,0.423756,0.679975,54,wilson,dense-hash,,typo_code_switch,category typo_code_switch
+answer_accuracy_by_category,1.0,0.944997,1.0,66,wilson,dense-hash,,unanswerable,category unanswerable
+answer_accuracy_by_category,1.0,0.824121,1.0,18,wilson,dense-hash,,pii,category pii
+answer_accuracy_by_category,1.0,0.862024,1.0,24,wilson,dense-hash,,injection,category injection
+latency_generation_p50_ms,2.44515,2.334175,2.59153,360,none,dense-hash,,,distribution summary; the bracket is the p(q-5)..p(q+5) spread
+latency_generation_p95_ms,4.280955,3.83462,6.5643,360,none,dense-hash,,,distribution summary; the bracket is the p(q-5)..p(q+5) spread
+latency_judge_p50_ms,0.0411,0.03504,0.04586,177,none,dense-hash,,,distribution summary; the bracket is the p(q-5)..p(q+5) spread
+latency_judge_p95_ms,0.06148,0.05784,0.121,177,none,dense-hash,,,distribution summary; the bracket is the p(q-5)..p(q+5) spread
+latency_retrieval_p50_ms,1.95075,1.931615,1.98219,360,none,dense-hash,,,distribution summary; the bracket is the p(q-5)..p(q+5) spread
+latency_retrieval_p95_ms,2.44394,2.29297,24.0979,360,none,dense-hash,,,distribution summary; the bracket is the p(q-5)..p(q+5) spread
+latency_total_p50_ms,4.40685,4.29341,4.50752,360,none,dense-hash,,,distribution summary; the bracket is the p(q-5)..p(q+5) spread
+latency_total_p95_ms,6.47941,6.04507,26.2549,360,none,dense-hash,,,distribution summary; the bracket is the p(q-5)..p(q+5) spread
+latency_total_mean_ms,4.602118,4.456761,4.784365,360,bootstrap,dense-hash,,,wall clock measured in-process; not a server-side latency claim (NFR-LAT-01)
+usd_per_answer,0.0,0.0,0.0,360,bootstrap,dense-hash,,,priced with the pinned pricing table (NFR-COST-02)
+usd_per_answer_p95,0.0,0.0,0.0,360,none,dense-hash,,,distribution summary; the bracket is the p(q-5)..p(q+5) spread
+tokens_input_mean,816.416667,779.912639,854.615833,360,bootstrap,dense-hash,,,
+tokens_output_mean,32.911111,29.305556,37.097431,360,bootstrap,dense-hash,,,
+cache_hit_rate,0.175,0.139238,0.217624,360,wilson,dense-hash,,,exact-normalised-query replay; the semantic cache is owned by t8 (§9)

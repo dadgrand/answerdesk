@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="420" viewBox="0 0 640 420" role="img" aria-label="Cache: hit rate vs wrong-hit rate">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="70" y="24" font-family="monospace" font-size="14">Cache: hit rate vs wrong-hit rate</text>
+<line x1="70.00" y1="40" x2="70.00" y2="360" stroke="#e5e5e5" stroke-width="1"/>
+<line x1="70" y1="360.00" x2="610" y2="360.00" stroke="#e5e5e5" stroke-width="1"/>
+<text x="70.00" y="378" font-family="monospace" font-size="10" text-anchor="middle">0.0</text>
+<text x="62" y="363.00" font-family="monospace" font-size="10" text-anchor="end">0.0</text>
+<line x1="178.00" y1="40" x2="178.00" y2="360" stroke="#e5e5e5" stroke-width="1"/>
+<line x1="70" y1="296.00" x2="610" y2="296.00" stroke="#e5e5e5" stroke-width="1"/>
+<text x="178.00" y="378" font-family="monospace" font-size="10" text-anchor="middle">0.2</text>
+<text x="62" y="299.00" font-family="monospace" font-size="10" text-anchor="end">0.2</text>
+<line x1="286.00" y1="40" x2="286.00" y2="360" stroke="#e5e5e5" stroke-width="1"/>
+<line x1="70" y1="232.00" x2="610" y2="232.00" stroke="#e5e5e5" stroke-width="1"/>
+<text x="286.00" y="378" font-family="monospace" font-size="10" text-anchor="middle">0.4</text>
+<text x="62" y="235.00" font-family="monospace" font-size="10" text-anchor="end">0.4</text>
+<line x1="394.00" y1="40" x2="394.00" y2="360" stroke="#e5e5e5" stroke-width="1"/>
+<line x1="70" y1="168.00" x2="610" y2="168.00" stroke="#e5e5e5" stroke-width="1"/>
+<text x="394.00" y="378" font-family="monospace" font-size="10" text-anchor="middle">0.6</text>
+<text x="62" y="171.00" font-family="monospace" font-size="10" text-anchor="end">0.6</text>
+<line x1="502.00" y1="40" x2="502.00" y2="360" stroke="#e5e5e5" stroke-width="1"/>
+<line x1="70" y1="104.00" x2="610" y2="104.00" stroke="#e5e5e5" stroke-width="1"/>
+<text x="502.00" y="378" font-family="monospace" font-size="10" text-anchor="middle">0.8</text>
+<text x="62" y="107.00" font-family="monospace" font-size="10" text-anchor="end">0.8</text>
+<line x1="610.00" y1="40" x2="610.00" y2="360" stroke="#e5e5e5" stroke-width="1"/>
+<line x1="70" y1="40.00" x2="610" y2="40.00" stroke="#e5e5e5" stroke-width="1"/>
+<text x="610.00" y="378" font-family="monospace" font-size="10" text-anchor="middle">1.0</text>
+<text x="62" y="43.00" font-family="monospace" font-size="10" text-anchor="end">1.0</text>
+<line x1="70" y1="360" x2="610" y2="360" stroke="#333" stroke-width="1"/>
+<line x1="70" y1="40" x2="70" y2="360" stroke="#333" stroke-width="1"/>
+<polyline points="377.00,141.63 338.89,180.00 338.89,180.00 338.89,180.00 324.81,188.89 307.52,198.67 320.88,207.26 320.88,207.26 294.24,220.15 275.08,228.15 275.08,228.15 243.81,239.41 201.67,251.85 167.74,260.15 129.29,272.30 129.29,272.30 129.29,272.30 70.00,281.93" fill="none" stroke="#1f77b4" stroke-width="2"/>
+<text x="80" y="58" font-family="monospace" font-size="11" fill="#1f77b4">hit-rate vs wrong-hit-rate</text>
+<polyline points="75.40,360.00 75.40,40.00" fill="none" stroke="#d62728" stroke-width="2"/>
+<text x="80" y="74" font-family="monospace" font-size="11" fill="#d62728">epsilon=0.01</text>
+<text x="340" y="404" font-family="monospace" font-size="11" text-anchor="middle">wrong-hit rate</text>
+<text x="16" y="200" font-family="monospace" font-size="11" transform="rotate(-90 16 200)" text-anchor="middle">hit rate</text>
+</svg>

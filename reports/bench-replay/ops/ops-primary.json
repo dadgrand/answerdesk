@@ -1,0 +1,67 @@
+{
+  "answered": 12,
+  "arm": "primary",
+  "hardware": "Windows 11 / Python 3.12.10",
+  "latency": [
+    {
+      "mean_ms": 2.18,
+      "n": 12,
+      "p50_ms": 1.982,
+      "p95_ms": 2.798,
+      "stage": "retrieval"
+    },
+    {
+      "mean_ms": 1.957,
+      "n": 12,
+      "p50_ms": 1.902,
+      "p95_ms": 2.649,
+      "stage": "generation"
+    },
+    {
+      "mean_ms": 4.137,
+      "n": 12,
+      "p50_ms": 4.037,
+      "p95_ms": 5.329,
+      "stage": "total"
+    }
+  ],
+  "n": 12,
+  "pricing": [
+    {
+      "input_usd_per_1k_tokens": 0.0,
+      "model": "deepseek-chat",
+      "output_usd_per_1k_tokens": 0.0,
+      "retrieved_at": "2026-10-20",
+      "source": "placeholder — replace with the provider's published price before quoting USD"
+    },
+    {
+      "input_usd_per_1k_tokens": 0.0,
+      "model": "fake-model",
+      "output_usd_per_1k_tokens": 0.0,
+      "retrieved_at": "2026-10-20",
+      "source": "deterministic CI double — always free"
+    },
+    {
+      "input_usd_per_1k_tokens": 0.0,
+      "model": "gpt-4o-mini",
+      "output_usd_per_1k_tokens": 0.0,
+      "retrieved_at": "2026-10-20",
+      "source": "placeholder — replace with the provider's published price before quoting USD"
+    },
+    {
+      "input_usd_per_1k_tokens": 0.0,
+      "model": "local-model",
+      "output_usd_per_1k_tokens": 0.0,
+      "retrieved_at": "2026-10-20",
+      "source": "self-hosted (vLLM / llama.cpp / Ollama): electricity only, recorded as 0"
+    }
+  ],
+  "tokens": {
+    "input_per_answer": 1588.0,
+    "input_total": 19056,
+    "output_per_answer": 48.0,
+    "output_total": 576
+  },
+  "usd_per_answer": 0.0,
+  "usd_total": 0.0
+}

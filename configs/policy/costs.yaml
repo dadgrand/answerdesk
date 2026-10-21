@@ -1,0 +1,31 @@
+# Cost matrix for the three-way escalation rule (requirements §8.3, Appendix C).
+#
+# Every number needs provenance: `answerdesk.policy.costs.load_cost_set` refuses a file
+# whose costs have none, because an unpriced decision is an undisclosed policy.
+#
+# Units are arbitrary but comparable: what matters is the RATIO `C_wrong / C_abstain`
+# ("how many escalations is one wrong answer worth"). The defaults below encode the
+# requirements' reference point: a wrong answer costs ten escalations, and asking a
+# clarifying question costs half an escalation.
+#
+# Derived thresholds at these numbers:
+#   answer    iff p_hat >= 1 - C_delay  / C_wrong  = 0.95
+#   clarify   iff p_hat >= 1 - C_abstain/C_wrong   = 0.90
+#   escalate  otherwise
+#
+# Changing a number here is a policy change: bump `date`, keep `owner`, and re-run
+# `python -m answerdesk.policy.calibrate` so the artifact records the new cost hash.
+
+costs:
+  c_wrong: 1.00      # a wrong auto-answer: customer harm + rework + trust
+  c_abstain: 0.10    # escalating to a human: queue time + operator minutes
+  c_delay: 0.05      # asking one clarifying question: one extra turn
+  c_review: 0.00     # reserved for a v1.1 review queue (unused in v1.0)
+
+provenance:
+  source: "requirements §8.3 reference defaults (ratio 10:1 wrong-vs-escalation)"
+  owner: "answerdesk contributors"
+  date: "2026-10-20"
+  note: >-
+    These are the spec's reference defaults, not a pilot measurement. A deployment replaces
+    them with its own measured costs and keeps the date/owner fields honest.

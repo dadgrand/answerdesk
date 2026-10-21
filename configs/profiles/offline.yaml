@@ -1,0 +1,29 @@
+# Profile: offline — deterministic doubles, no network, no API key (the CI default).
+#
+#   uv run answerdesk --profile offline eval --synthetic --provider fake
+#
+# Anything that would need a model call goes through FakeProvider, and embeddings come
+# from the deterministic HashingEmbedder. Quality numbers produced in this profile are
+# plumbing checks, never release evidence (requirements §0.3).
+
+profile: offline
+
+llm:
+  preset: fake
+  json_mode: true
+
+embedding:
+  backend: hashing
+  dimension: 64
+
+retrieval:
+  rerank:
+    enabled: false
+
+eval:
+  provider: fake
+  judge_model: fake-judge
+
+logging:
+  level: INFO
+  json_output: true

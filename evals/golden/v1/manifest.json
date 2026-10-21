@@ -1,0 +1,766 @@
+{
+  "by_category": {
+    "direct": 126,
+    "injection": 24,
+    "numeric_date": 72,
+    "pii": 18,
+    "typo_code_switch": 234,
+    "unanswerable": 66
+  },
+  "by_locale": {
+    "ky": 90,
+    "ru": 90,
+    "tg": 90,
+    "tr": 90,
+    "uz": 90,
+    "zh": 90
+  },
+  "by_split": {
+    "dev": 216,
+    "test": 540
+  },
+  "composition": [
+    {
+      "actual": 540,
+      "name": "test_total",
+      "passed": true,
+      "target": ">= 300"
+    },
+    {
+      "actual": 60,
+      "name": "required_locale[ru]",
+      "passed": true,
+      "target": ">= 1 test item"
+    },
+    {
+      "actual": 60,
+      "name": "required_locale[tg]",
+      "passed": true,
+      "target": ">= 1 test item"
+    },
+    {
+      "actual": 60,
+      "name": "required_locale[uz]",
+      "passed": true,
+      "target": ">= 1 test item"
+    },
+    {
+      "actual": 60,
+      "name": "required_locale[ky]",
+      "passed": true,
+      "target": ">= 1 test item"
+    },
+    {
+      "actual": 60,
+      "name": "required_locale[tr]",
+      "passed": true,
+      "target": ">= 1 test item"
+    },
+    {
+      "actual": 60,
+      "name": "required_locale[zh]",
+      "passed": true,
+      "target": ">= 1 test item"
+    },
+    {
+      "actual": 60,
+      "name": "test_per_locale[ru]",
+      "passed": true,
+      "target": ">= 50"
+    },
+    {
+      "actual": 36,
+      "name": "dev_per_locale[ru]",
+      "passed": true,
+      "target": ">= 30"
+    },
+    {
+      "actual": 21,
+      "name": "test_cell[ru:direct]",
+      "passed": true,
+      "target": ">= 1"
+    },
+    {
+      "actual": 12,
+      "name": "test_cell[ru:numeric_date]",
+      "passed": true,
+      "target": ">= 1"
+    },
+    {
+      "actual": 39,
+      "name": "test_cell[ru:typo_code_switch]",
+      "passed": true,
+      "target": ">= 1"
+    },
+    {
+      "actual": 11,
+      "name": "test_cell[ru:unanswerable]",
+      "passed": true,
+      "target": ">= 1"
+    },
+    {
+      "actual": 3,
+      "name": "test_cell[ru:pii]",
+      "passed": true,
+      "target": ">= 1"
+    },
+    {
+      "actual": 4,
+      "name": "test_cell[ru:injection]",
+      "passed": true,
+      "target": ">= 1"
+    },
+    {
+      "actual": 60,
+      "name": "test_per_locale[tg]",
+      "passed": true,
+      "target": ">= 50"
+    },
+    {
+      "actual": 36,
+      "name": "dev_per_locale[tg]",
+      "passed": true,
+      "target": ">= 30"
+    },
+    {
+      "actual": 21,
+      "name": "test_cell[tg:direct]",
+      "passed": true,
+      "target": ">= 1"
+    },
+    {
+      "actual": 12,
+      "name": "test_cell[tg:numeric_date]",
+      "passed": true,
+      "target": ">= 1"
+    },
+    {
+      "actual": 39,
+      "name": "test_cell[tg:typo_code_switch]",
+      "passed": true,
+      "target": ">= 1"
+    },
+    {
+      "actual": 11,
+      "name": "test_cell[tg:unanswerable]",
+      "passed": true,
+      "target": ">= 1"
+    },
+    {
+      "actual": 3,
+      "name": "test_cell[tg:pii]",
+      "passed": true,
+      "target": ">= 1"
+    },
+    {
+      "actual": 4,
+      "name": "test_cell[tg:injection]",
+      "passed": true,
+      "target": ">= 1"
+    },
+    {
+      "actual": 60,
+      "name": "test_per_locale[uz]",
+      "passed": true,
+      "target": ">= 50"
+    },
+    {
+      "actual": 36,
+      "name": "dev_per_locale[uz]",
+      "passed": true,
+      "target": ">= 30"
+    },
+    {
+      "actual": 21,
+      "name": "test_cell[uz:direct]",
+      "passed": true,
+      "target": ">= 1"
+    },
+    {
+      "actual": 12,
+      "name": "test_cell[uz:numeric_date]",
+      "passed": true,
+      "target": ">= 1"
+    },
+    {
+      "actual": 39,
+      "name": "test_cell[uz:typo_code_switch]",
+      "passed": true,
+      "target": ">= 1"
+    },
+    {
+      "actual": 11,
+      "name": "test_cell[uz:unanswerable]",
+      "passed": true,
+      "target": ">= 1"
+    },
+    {
+      "actual": 3,
+      "name": "test_cell[uz:pii]",
+      "passed": true,
+      "target": ">= 1"
+    },
+    {
+      "actual": 4,
+      "name": "test_cell[uz:injection]",
+      "passed": true,
+      "target": ">= 1"
+    },
+    {
+      "actual": 60,
+      "name": "test_per_locale[ky]",
+      "passed": true,
+      "target": ">= 50"
+    },
+    {
+      "actual": 36,
+      "name": "dev_per_locale[ky]",
+      "passed": true,
+      "target": ">= 30"
+    },
+    {
+      "actual": 21,
+      "name": "test_cell[ky:direct]",
+      "passed": true,
+      "target": ">= 1"
+    },
+    {
+      "actual": 12,
+      "name": "test_cell[ky:numeric_date]",
+      "passed": true,
+      "target": ">= 1"
+    },
+    {
+      "actual": 39,
+      "name": "test_cell[ky:typo_code_switch]",
+      "passed": true,
+      "target": ">= 1"
+    },
+    {
+      "actual": 11,
+      "name": "test_cell[ky:unanswerable]",
+      "passed": true,
+      "target": ">= 1"
+    },
+    {
+      "actual": 3,
+      "name": "test_cell[ky:pii]",
+      "passed": true,
+      "target": ">= 1"
+    },
+    {
+      "actual": 4,
+      "name": "test_cell[ky:injection]",
+      "passed": true,
+      "target": ">= 1"
+    },
+    {
+      "actual": 60,
+      "name": "test_per_locale[tr]",
+      "passed": true,
+      "target": ">= 50"
+    },
+    {
+      "actual": 36,
+      "name": "dev_per_locale[tr]",
+      "passed": true,
+      "target": ">= 30"
+    },
+    {
+      "actual": 21,
+      "name": "test_cell[tr:direct]",
+      "passed": true,
+      "target": ">= 1"
+    },
+    {
+      "actual": 12,
+      "name": "test_cell[tr:numeric_date]",
+      "passed": true,
+      "target": ">= 1"
+    },
+    {
+      "actual": 39,
+      "name": "test_cell[tr:typo_code_switch]",
+      "passed": true,
+      "target": ">= 1"
+    },
+    {
+      "actual": 11,
+      "name": "test_cell[tr:unanswerable]",
+      "passed": true,
+      "target": ">= 1"
+    },
+    {
+      "actual": 3,
+      "name": "test_cell[tr:pii]",
+      "passed": true,
+      "target": ">= 1"
+    },
+    {
+      "actual": 4,
+      "name": "test_cell[tr:injection]",
+      "passed": true,
+      "target": ">= 1"
+    },
+    {
+      "actual": 60,
+      "name": "test_per_locale[zh]",
+      "passed": true,
+      "target": ">= 50"
+    },
+    {
+      "actual": 36,
+      "name": "dev_per_locale[zh]",
+      "passed": true,
+      "target": ">= 30"
+    },
+    {
+      "actual": 21,
+      "name": "test_cell[zh:direct]",
+      "passed": true,
+      "target": ">= 1"
+    },
+    {
+      "actual": 12,
+      "name": "test_cell[zh:numeric_date]",
+      "passed": true,
+      "target": ">= 1"
+    },
+    {
+      "actual": 39,
+      "name": "test_cell[zh:typo_code_switch]",
+      "passed": true,
+      "target": ">= 1"
+    },
+    {
+      "actual": 11,
+      "name": "test_cell[zh:unanswerable]",
+      "passed": true,
+      "target": ">= 1"
+    },
+    {
+      "actual": 3,
+      "name": "test_cell[zh:pii]",
+      "passed": true,
+      "target": ">= 1"
+    },
+    {
+      "actual": 4,
+      "name": "test_cell[zh:injection]",
+      "passed": true,
+      "target": ">= 1"
+    },
+    {
+      "actual": 0.1833,
+      "name": "test_unanswerable_share",
+      "passed": true,
+      "target": "0.15 <= x <= 0.20"
+    },
+    {
+      "actual": 0.35,
+      "name": "test_quota[direct]",
+      "passed": true,
+      "target": "0.35 +/- 0.03"
+    },
+    {
+      "actual": 0.2,
+      "name": "test_quota[numeric_date]",
+      "passed": true,
+      "target": "0.20 +/- 0.03"
+    },
+    {
+      "actual": 0.15,
+      "name": "test_quota[typo_code_switch]",
+      "passed": true,
+      "target": "0.15 +/- 0.03"
+    },
+    {
+      "actual": 0.1833,
+      "name": "test_quota[unanswerable]",
+      "passed": true,
+      "target": "0.18 +/- 0.03"
+    },
+    {
+      "actual": 0.05,
+      "name": "test_quota[pii]",
+      "passed": true,
+      "target": "0.06 +/- 0.03"
+    },
+    {
+      "actual": 0.0667,
+      "name": "test_quota[injection]",
+      "passed": true,
+      "target": "0.06 +/- 0.03"
+    },
+    {
+      "actual": 0.35,
+      "name": "locale_quota[ru:direct]",
+      "passed": true,
+      "target": "0.35 +/- 0.06"
+    },
+    {
+      "actual": 0.2,
+      "name": "locale_quota[ru:numeric_date]",
+      "passed": true,
+      "target": "0.20 +/- 0.06"
+    },
+    {
+      "actual": 0.15,
+      "name": "locale_quota[ru:typo_code_switch]",
+      "passed": true,
+      "target": "0.15 +/- 0.06"
+    },
+    {
+      "actual": 0.1833,
+      "name": "locale_quota[ru:unanswerable]",
+      "passed": true,
+      "target": "0.18 +/- 0.06"
+    },
+    {
+      "actual": 0.05,
+      "name": "locale_quota[ru:pii]",
+      "passed": true,
+      "target": "0.06 +/- 0.06"
+    },
+    {
+      "actual": 0.0667,
+      "name": "locale_quota[ru:injection]",
+      "passed": true,
+      "target": "0.06 +/- 0.06"
+    },
+    {
+      "actual": 0.35,
+      "name": "locale_quota[tg:direct]",
+      "passed": true,
+      "target": "0.35 +/- 0.06"
+    },
+    {
+      "actual": 0.2,
+      "name": "locale_quota[tg:numeric_date]",
+      "passed": true,
+      "target": "0.20 +/- 0.06"
+    },
+    {
+      "actual": 0.15,
+      "name": "locale_quota[tg:typo_code_switch]",
+      "passed": true,
+      "target": "0.15 +/- 0.06"
+    },
+    {
+      "actual": 0.1833,
+      "name": "locale_quota[tg:unanswerable]",
+      "passed": true,
+      "target": "0.18 +/- 0.06"
+    },
+    {
+      "actual": 0.05,
+      "name": "locale_quota[tg:pii]",
+      "passed": true,
+      "target": "0.06 +/- 0.06"
+    },
+    {
+      "actual": 0.0667,
+      "name": "locale_quota[tg:injection]",
+      "passed": true,
+      "target": "0.06 +/- 0.06"
+    },
+    {
+      "actual": 0.35,
+      "name": "locale_quota[uz:direct]",
+      "passed": true,
+      "target": "0.35 +/- 0.06"
+    },
+    {
+      "actual": 0.2,
+      "name": "locale_quota[uz:numeric_date]",
+      "passed": true,
+      "target": "0.20 +/- 0.06"
+    },
+    {
+      "actual": 0.15,
+      "name": "locale_quota[uz:typo_code_switch]",
+      "passed": true,
+      "target": "0.15 +/- 0.06"
+    },
+    {
+      "actual": 0.1833,
+      "name": "locale_quota[uz:unanswerable]",
+      "passed": true,
+      "target": "0.18 +/- 0.06"
+    },
+    {
+      "actual": 0.05,
+      "name": "locale_quota[uz:pii]",
+      "passed": true,
+      "target": "0.06 +/- 0.06"
+    },
+    {
+      "actual": 0.0667,
+      "name": "locale_quota[uz:injection]",
+      "passed": true,
+      "target": "0.06 +/- 0.06"
+    },
+    {
+      "actual": 0.35,
+      "name": "locale_quota[ky:direct]",
+      "passed": true,
+      "target": "0.35 +/- 0.06"
+    },
+    {
+      "actual": 0.2,
+      "name": "locale_quota[ky:numeric_date]",
+      "passed": true,
+      "target": "0.20 +/- 0.06"
+    },
+    {
+      "actual": 0.15,
+      "name": "locale_quota[ky:typo_code_switch]",
+      "passed": true,
+      "target": "0.15 +/- 0.06"
+    },
+    {
+      "actual": 0.1833,
+      "name": "locale_quota[ky:unanswerable]",
+      "passed": true,
+      "target": "0.18 +/- 0.06"
+    },
+    {
+      "actual": 0.05,
+      "name": "locale_quota[ky:pii]",
+      "passed": true,
+      "target": "0.06 +/- 0.06"
+    },
+    {
+      "actual": 0.0667,
+      "name": "locale_quota[ky:injection]",
+      "passed": true,
+      "target": "0.06 +/- 0.06"
+    },
+    {
+      "actual": 0.35,
+      "name": "locale_quota[tr:direct]",
+      "passed": true,
+      "target": "0.35 +/- 0.06"
+    },
+    {
+      "actual": 0.2,
+      "name": "locale_quota[tr:numeric_date]",
+      "passed": true,
+      "target": "0.20 +/- 0.06"
+    },
+    {
+      "actual": 0.15,
+      "name": "locale_quota[tr:typo_code_switch]",
+      "passed": true,
+      "target": "0.15 +/- 0.06"
+    },
+    {
+      "actual": 0.1833,
+      "name": "locale_quota[tr:unanswerable]",
+      "passed": true,
+      "target": "0.18 +/- 0.06"
+    },
+    {
+      "actual": 0.05,
+      "name": "locale_quota[tr:pii]",
+      "passed": true,
+      "target": "0.06 +/- 0.06"
+    },
+    {
+      "actual": 0.0667,
+      "name": "locale_quota[tr:injection]",
+      "passed": true,
+      "target": "0.06 +/- 0.06"
+    },
+    {
+      "actual": 0.35,
+      "name": "locale_quota[zh:direct]",
+      "passed": true,
+      "target": "0.35 +/- 0.06"
+    },
+    {
+      "actual": 0.2,
+      "name": "locale_quota[zh:numeric_date]",
+      "passed": true,
+      "target": "0.20 +/- 0.06"
+    },
+    {
+      "actual": 0.15,
+      "name": "locale_quota[zh:typo_code_switch]",
+      "passed": true,
+      "target": "0.15 +/- 0.06"
+    },
+    {
+      "actual": 0.1833,
+      "name": "locale_quota[zh:unanswerable]",
+      "passed": true,
+      "target": "0.18 +/- 0.06"
+    },
+    {
+      "actual": 0.05,
+      "name": "locale_quota[zh:pii]",
+      "passed": true,
+      "target": "0.06 +/- 0.06"
+    },
+    {
+      "actual": 0.0667,
+      "name": "locale_quota[zh:injection]",
+      "passed": true,
+      "target": "0.06 +/- 0.06"
+    },
+    {
+      "actual": 0,
+      "name": "split_dev_test_disjoint",
+      "passed": true,
+      "target": "0 shared docs"
+    },
+    {
+      "actual": 78,
+      "name": "injection_set",
+      "passed": true,
+      "target": ">= 40"
+    },
+    {
+      "actual": 72,
+      "name": "pii_set",
+      "passed": true,
+      "target": ">= 40"
+    },
+    {
+      "actual": 144,
+      "name": "near_miss_set",
+      "passed": true,
+      "target": ">= 120"
+    },
+    {
+      "actual": 378,
+      "name": "perturbation_set",
+      "passed": true,
+      "target": ">= 120"
+    },
+    {
+      "actual": 242,
+      "name": "claim_set",
+      "passed": true,
+      "target": ">= 200"
+    }
+  ],
+  "corpus_hash": "7ef3fc20400131dc966904bc68d517a805faf48e98b62584f44e086270e246d6",
+  "corpus_version": "corpus-96f93db4f7f648b5",
+  "files": [
+    {
+      "items": 242,
+      "path": "golden/v1/adversarial/claims.jsonl",
+      "sha256": "fdf88cd2604c908f079d1b005d75329d016fefa40ec81a3b599403b4337804c2"
+    },
+    {
+      "items": 78,
+      "path": "golden/v1/adversarial/injection.jsonl",
+      "sha256": "ebe31647977f627b2eb7bfc1854ed5d1c735241e51cdc317c25e0bd5845fe6f7"
+    },
+    {
+      "items": 144,
+      "path": "golden/v1/adversarial/near_miss.jsonl",
+      "sha256": "c03700545dc4801244f85e1eb7e3088994cc441f71f76906d955c5d99c4d8a73"
+    },
+    {
+      "items": 378,
+      "path": "golden/v1/adversarial/perturbation.jsonl",
+      "sha256": "3307e0bbb1a414442aced2adb3e9a4fe20fd73ea4eb63d90bbce0aaeb9edd929"
+    },
+    {
+      "items": 72,
+      "path": "golden/v1/adversarial/pii.jsonl",
+      "sha256": "695a7738797a0b30402a4a59233cf88072c12168286d9c164b7c2cb0041e11db"
+    },
+    {
+      "items": 216,
+      "path": "golden/v1/dev.jsonl",
+      "sha256": "92b07b2b0ce7e77940c3360601e6cae344e3070321860b623e9009c9b3d417f2"
+    },
+    {
+      "items": 540,
+      "path": "golden/v1/test.jsonl",
+      "sha256": "f6d950243843ad4fb119fecf60b4908f4b6de19905c5a4d82c28eb9a3b46943a"
+    }
+  ],
+  "generator": "eval-generator-v1",
+  "generator_config": {
+    "claims_per_locale": 40,
+    "dev_target_per_locale": 36,
+    "injection_per_locale": 7,
+    "locales": [
+      "ru",
+      "tg",
+      "uz",
+      "ky",
+      "tr",
+      "zh"
+    ],
+    "near_miss_per_locale": 24,
+    "noisy_per_locale": 30,
+    "pii_per_locale": 7,
+    "quotas": {
+      "direct": 0.35,
+      "injection": 0.06,
+      "numeric_date": 0.2,
+      "pii": 0.06,
+      "typo_code_switch": 0.15,
+      "unanswerable": 0.18
+    },
+    "required_locales": [
+      "ru",
+      "tg",
+      "uz",
+      "ky",
+      "tr",
+      "zh"
+    ],
+    "seed": 20261021,
+    "test_ratio": 0.4,
+    "test_target_per_locale": 60,
+    "version": "v1"
+  },
+  "multilingual_cells": {
+    "ky:direct": 21,
+    "ky:injection": 4,
+    "ky:numeric_date": 12,
+    "ky:pii": 3,
+    "ky:typo_code_switch": 39,
+    "ky:unanswerable": 11,
+    "ru:direct": 21,
+    "ru:injection": 4,
+    "ru:numeric_date": 12,
+    "ru:pii": 3,
+    "ru:typo_code_switch": 39,
+    "ru:unanswerable": 11,
+    "tg:direct": 21,
+    "tg:injection": 4,
+    "tg:numeric_date": 12,
+    "tg:pii": 3,
+    "tg:typo_code_switch": 39,
+    "tg:unanswerable": 11,
+    "tr:direct": 21,
+    "tr:injection": 4,
+    "tr:numeric_date": 12,
+    "tr:pii": 3,
+    "tr:typo_code_switch": 39,
+    "tr:unanswerable": 11,
+    "uz:direct": 21,
+    "uz:injection": 4,
+    "uz:numeric_date": 12,
+    "uz:pii": 3,
+    "uz:typo_code_switch": 39,
+    "uz:unanswerable": 11,
+    "zh:direct": 21,
+    "zh:injection": 4,
+    "zh:numeric_date": 12,
+    "zh:pii": 3,
+    "zh:typo_code_switch": 39,
+    "zh:unanswerable": 11
+  },
+  "notes": "Synthetic, machine-labelled golden set: labels derive from the corpus structure, not from human annotation. §10.3 gates are therefore NOT satisfied by this set — it validates the harness, and every judged number is REPLAY-MODE (§10.7).",
+  "seed": 20261021,
+  "split_hash": "5e57276f1c92ad3af6c99b13a8664d7d379b66985f5f2cc3400678d53a75df43",
+  "version": "v1"
+}

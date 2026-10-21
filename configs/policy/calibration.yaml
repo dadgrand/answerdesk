@@ -1,0 +1,43 @@
+# Synthetic calibration study (requirements §8.5; `python -m answerdesk.policy.calibrate`).
+#
+# This file parameterises the *generator*, not the policy: the per-intent alpha values and
+# the cost matrix stay in their own homes (settings `policy.alpha`, `configs/policy/costs.yaml`)
+# so a study cannot quietly change the operating point it is supposed to measure.
+#
+# What is modelled
+#   * each item has a latent answerability `p_true ~ Beta(beta_a, beta_b)`;
+#   * the label is `correct ~ Bernoulli(p_true)`;
+#   * the simulated scorer returns `p_hat = clip(p_true + N(0, scorer_noise_sigma))`, so the
+#     calibration error (ECE/Brier) is a measured quantity, not zero by construction;
+#   * `unanswerable_share` / `pii_share` / `injection_share` / `out_of_scope_share` create the
+#     "must escalate" set on which E-2/E-3 are measured.
+#
+# Sizing: split conformal needs n >= ceil(1/alpha) - 1 per bucket for the quantile to exist
+# (alpha=0.01 -> 99). With 1500 items per bucket and a 50/50 split there are 750 calibration
+# items per bucket, which is comfortable for all three alpha tiers.
+#
+# The `corpus_version` is synthetic; a real run records the corpus manifest hash instead.
+
+population:
+  seed: 20261020
+  n_items: 4500
+  # Bucket mix mirrors the golden-set quotas (mostly informational traffic).
+  bucket_weights:
+    informational: 0.65
+    transactional: 0.25
+    account_legal: 0.10
+  calibration_fraction: 0.5
+  scorer_noise_sigma: 0.02
+  unanswerable_share: 0.18
+  pii_share: 0.02
+  injection_share: 0.02
+  out_of_scope_share: 0.01
+  # Answerability is bimodal on purpose: most support questions are easy (p_true near 1),
+  # a minority are genuinely hard (p_true low). A single Beta put only ~10% of traffic above
+  # 0.95, which made the 60% coverage target (E-4) unreachable by construction.
+  easy_share: 0.85
+  easy_low: 0.97
+  easy_high: 0.9999
+  hard_a: 1.2
+  hard_b: 2.0
+  corpus_version: "synthetic-corpus-1"

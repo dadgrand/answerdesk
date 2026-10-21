@@ -1,0 +1,41 @@
+# Profile: api — generation through an OpenAI-compatible API (the default product path).
+#
+#   export OPENAI_API_KEY=...          # or DEEPSEEK_API_KEY / OPENROUTER_API_KEY
+#   uv run answerdesk --profile api config check
+#   uv run answerdesk --profile api eval --all --report reports/bench
+#
+# Note on embeddings: `hashing` is a deterministic plumbing double. Release evidence
+# (G-REL gates, requirements §6.3) requires a real multilingual embedder: install the
+# `local` extra and set embedding.backend: bge_m3 (or qwen3). Do not publish retrieval or
+# groundedness numbers measured on the hashing embedder.
+
+profile: api
+
+llm:
+  preset: openai
+  model: gpt-4o-mini
+  temperature: 0.0
+  max_tokens: 1024
+  timeout_s: 60.0
+  max_retries: 3
+  json_mode: true
+  # Add a second remote preset here to get retry/fallback behaviour (NFR-PORT-01).
+  fallback_presets: []
+
+embedding:
+  backend: hashing
+  dimension: 64
+
+eval:
+  provider: api
+  judge_model: strong-judge-model-name
+  # Cross-family judge (§10.5). Example wiring (values come from the environment):
+  #   . .\scripts\live-env.ps1 neuraldeep -Judge deepseek
+  # sets judge_preset/judge_model/judge_api_key for a qwen generator judged by deepseek.
+  judge_preset: null
+  judge_base_url: null
+  judge_api_key: null
+  judge_api_key_env: null
+  judge_family: null
+  # Free tiers rate-limit bursts; the benchmark passes 0.2-0.5 s here.
+  min_call_interval_s: 0.0

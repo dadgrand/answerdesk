@@ -1,0 +1,699 @@
+{
+  "adapter": {
+    "corpus_files": {
+      "belebele_retrieval": "belebele/retrieval/<language>/corpus.jsonl",
+      "mrtydi_retrieval": "mrtydi/ru/corpus.jsonl"
+    },
+    "domain_note": "domain items cite data/corpus document ids (gold_evidence_ids, evidence[].doc_id) and carry verbatim evidence quotes; they are not part of the retrieval passage pools",
+    "evidence_field": "gold_evidence_ids",
+    "item_files": {
+      "belebele_qa": [
+        "belebele/qa/ru.jsonl",
+        "belebele/qa/uz.jsonl",
+        "belebele/qa/tg.jsonl",
+        "belebele/qa/ky.jsonl",
+        "belebele/qa/zh.jsonl"
+      ],
+      "belebele_retrieval": [
+        "belebele/retrieval/ru/queries.jsonl",
+        "belebele/retrieval/uz/queries.jsonl",
+        "belebele/retrieval/tg/queries.jsonl",
+        "belebele/retrieval/ky/queries.jsonl",
+        "belebele/retrieval/zh/queries.jsonl"
+      ],
+      "domain": [
+        "domain/ru.jsonl",
+        "domain/uz.jsonl",
+        "domain/tg.jsonl",
+        "domain/ky.jsonl",
+        "domain/zh.jsonl",
+        "domain/tr.jsonl"
+      ],
+      "mrtydi_retrieval": [
+        "mrtydi/ru/queries.jsonl"
+      ]
+    },
+    "language_field": "language",
+    "license_field": "license",
+    "qrels_field": "qrels",
+    "query_field": "query",
+    "question_field": "question",
+    "split_field": "split",
+    "version": "1"
+  },
+  "benchmark": "answerdesk-bench",
+  "checks": {
+    "answers": {
+      "checked": 990,
+      "ok": true,
+      "problems": []
+    },
+    "counts": {
+      "by_category": {
+        "derived_retrieval": 750,
+        "direct": 48,
+        "injection": 36,
+        "multi_hop": 48,
+        "native_qrels": 2369,
+        "numeric_date": 48,
+        "pii": 36,
+        "reading_comprehension": 750,
+        "unanswerable": 24
+      },
+      "by_language": {
+        "ky": 340,
+        "ru": 2709,
+        "tg": 340,
+        "tr": 40,
+        "uz": 340,
+        "zh": 340
+      },
+      "by_split": {
+        "dev": 1741,
+        "test": 2368
+      },
+      "by_suite": {
+        "belebele_qa": 750,
+        "belebele_retrieval": 750,
+        "domain": 240,
+        "mrtydi_retrieval": 2369
+      },
+      "domain_items": 240,
+      "items": 4109,
+      "ok": true,
+      "qa_items": 750,
+      "retrieval_queries": 3119
+    },
+    "dedup": {
+      "bands": 4,
+      "duplicate_count": 0,
+      "duplicates": [],
+      "groups": 23,
+      "hashes": 16,
+      "ok": true,
+      "shingle_size": 5,
+      "threshold": 0.9
+    },
+    "floors": {
+      "ok": true,
+      "problems": []
+    },
+    "items": {
+      "count": 4109,
+      "duplicate_item_ids": [],
+      "ok": true,
+      "schema_error_count": 0,
+      "schema_errors": []
+    },
+    "ok": true,
+    "passages": {
+      "by_language": {
+        "ky": 488,
+        "ru": 2916,
+        "tg": 488,
+        "uz": 488,
+        "zh": 488
+      },
+      "ok": true,
+      "passages": 4868,
+      "problems": [],
+      "references_checked": 4042
+    },
+    "scripts": {
+      "minimum_share_by_language": {
+        "ky": 0.6329,
+        "ru": 0.3469,
+        "tg": 0.6552,
+        "tr": 1.0,
+        "uz": 1.0,
+        "zh": 0.4444
+      },
+      "ok": true,
+      "problems": []
+    },
+    "splits": {
+      "documents_by_split": {
+        "dev": 60,
+        "test": 156
+      },
+      "ids_by_split": {
+        "dev": 1741,
+        "test": 2368
+      },
+      "ok": true,
+      "policy": "seeded hash split; a passage (Belebele) or document (domain) is gold evidence in exactly one split",
+      "problems": []
+    }
+  },
+  "counts": {
+    "by_category": {
+      "derived_retrieval": 750,
+      "direct": 48,
+      "injection": 36,
+      "multi_hop": 48,
+      "native_qrels": 2369,
+      "numeric_date": 48,
+      "pii": 36,
+      "reading_comprehension": 750,
+      "unanswerable": 24
+    },
+    "by_language": {
+      "ky": 340,
+      "ru": 2709,
+      "tg": 340,
+      "tr": 40,
+      "uz": 340,
+      "zh": 340
+    },
+    "by_split": {
+      "dev": 1741,
+      "test": 2368
+    },
+    "by_suite": {
+      "belebele_qa": 750,
+      "belebele_retrieval": 750,
+      "domain": 240,
+      "mrtydi_retrieval": 2369
+    },
+    "domain_items": 240,
+    "items": 4109,
+    "languages": [
+      "ky",
+      "ru",
+      "tg",
+      "tr",
+      "uz",
+      "zh"
+    ],
+    "ok": true,
+    "passages": {
+      "belebele_retrieval": 2440,
+      "mrtydi_retrieval": 2428
+    },
+    "qa_items": 750,
+    "retrieval_queries": 3119
+  },
+  "data_sha256": "152268ccd7444fe50f6c44f760abcacd57d8f6fae5de31ba23237172037b6222",
+  "files": [
+    {
+      "bytes": 1080,
+      "items": 0,
+      "license": "MIT",
+      "path": "LICENSES/MIT.txt",
+      "sha256": "065d0dd275de3cb251f461a6bcb3a05d9962117cb11c6819cf15316865fa3bdf"
+    },
+    {
+      "bytes": 20138,
+      "items": 0,
+      "license": "CC-BY-SA-4.0",
+      "path": "belebele/LICENSE-CC-BY-SA-4.0.txt",
+      "sha256": "28a9529c7d0bb4dc51f4bf5c116a3d16ef247a052f7591466768ddf563fd1cf5"
+    },
+    {
+      "bytes": 172442,
+      "items": 150,
+      "license": "CC-BY-SA-4.0",
+      "path": "belebele/qa/ky.jsonl",
+      "sha256": "372aff8a933e5688376aa22a418a513e40e0a612e5cd180a77fa561901933396"
+    },
+    {
+      "bytes": 179632,
+      "items": 150,
+      "license": "CC-BY-SA-4.0",
+      "path": "belebele/qa/ru.jsonl",
+      "sha256": "300c19b23467c28d8c1469d3cd4a915419e46c901e80a85883bd7ce714baed33"
+    },
+    {
+      "bytes": 174499,
+      "items": 150,
+      "license": "CC-BY-SA-4.0",
+      "path": "belebele/qa/tg.jsonl",
+      "sha256": "80ca393478fa720e5b60b1f9712405ea5b62eba580507a3f8c85a409f0e8581e"
+    },
+    {
+      "bytes": 151162,
+      "items": 150,
+      "license": "CC-BY-SA-4.0",
+      "path": "belebele/qa/uz.jsonl",
+      "sha256": "52a81d8c0cb1a45c33d1836bb4cf8a1acbba610c8c8b5b6fc3410a6f870907b4"
+    },
+    {
+      "bytes": 146272,
+      "items": 150,
+      "license": "CC-BY-SA-4.0",
+      "path": "belebele/qa/zh.jsonl",
+      "sha256": "4a64c45a508505e18e6c3e97c3b6563ad79810a311d0db1b736fcecca31af671"
+    },
+    {
+      "bytes": 737207,
+      "items": 488,
+      "license": "CC-BY-SA-4.0",
+      "path": "belebele/retrieval/ky/corpus.jsonl",
+      "sha256": "23d9327d5a0a1579ca2418a3bc0744c76cc414a711b5d08d3fd635c51798ae8b"
+    },
+    {
+      "bytes": 143822,
+      "items": 150,
+      "license": "CC-BY-SA-4.0",
+      "path": "belebele/retrieval/ky/queries.jsonl",
+      "sha256": "65773e022cfa6b1cb205bafef90689bb750054888096f47ac7c6aa14bdf11e18"
+    },
+    {
+      "bytes": 762748,
+      "items": 488,
+      "license": "CC-BY-SA-4.0",
+      "path": "belebele/retrieval/ru/corpus.jsonl",
+      "sha256": "51a6801ed7bbc888b35bcfab3bbd5f44680debf02f55541b5262d9d847d369d3"
+    },
+    {
+      "bytes": 145859,
+      "items": 150,
+      "license": "CC-BY-SA-4.0",
+      "path": "belebele/retrieval/ru/queries.jsonl",
+      "sha256": "06229c91c1995ba24150ce71e9077bde6a325b4b6f1aafa343222bb6a79a8ae2"
+    },
+    {
+      "bytes": 767331,
+      "items": 488,
+      "license": "CC-BY-SA-4.0",
+      "path": "belebele/retrieval/tg/corpus.jsonl",
+      "sha256": "e0e0a5f808d079a1f04889131a308fef2239b5b18051f4f8d46fd677ce7e2b3d"
+    },
+    {
+      "bytes": 143342,
+      "items": 150,
+      "license": "CC-BY-SA-4.0",
+      "path": "belebele/retrieval/tg/queries.jsonl",
+      "sha256": "fc27188bcf329072ec6dbc8ea10bc92e5d6a5df0cf5b8c39fedabb2ca762e1e5"
+    },
+    {
+      "bytes": 563416,
+      "items": 488,
+      "license": "CC-BY-SA-4.0",
+      "path": "belebele/retrieval/uz/corpus.jsonl",
+      "sha256": "1b12ae58d077843a8feba7d2688ba4762929c9bd95eb0920e1e2c22b3d084f10"
+    },
+    {
+      "bytes": 134412,
+      "items": 150,
+      "license": "CC-BY-SA-4.0",
+      "path": "belebele/retrieval/uz/queries.jsonl",
+      "sha256": "8bdad56a9b9227f4dec1c225c5439d223b14039c9266a5693e3b0c713e58d9f3"
+    },
+    {
+      "bytes": 513648,
+      "items": 488,
+      "license": "CC-BY-SA-4.0",
+      "path": "belebele/retrieval/zh/corpus.jsonl",
+      "sha256": "aa31c1c452a7d6341a551cd44ef43ce39abb0503abae61203ad5103eac9127d3"
+    },
+    {
+      "bytes": 132428,
+      "items": 150,
+      "license": "CC-BY-SA-4.0",
+      "path": "belebele/retrieval/zh/queries.jsonl",
+      "sha256": "d406bd0341a3673dd5da10a74a3bf0228bcd88e48939d68178e2cd58be75e848"
+    },
+    {
+      "bytes": 7048,
+      "items": 0,
+      "license": "CC0-1.0",
+      "path": "domain/LICENSE-CC0-1.0.txt",
+      "sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499"
+    },
+    {
+      "bytes": 45003,
+      "items": 0,
+      "license": "CC0-1.0",
+      "path": "domain/exclusions.json",
+      "sha256": "0f3a2e4ba2125af14cfc82cf7935d25a807d550cde1c60d00a1361533a5e6b7b"
+    },
+    {
+      "bytes": 52276,
+      "items": 40,
+      "license": "CC0-1.0",
+      "path": "domain/ky.jsonl",
+      "sha256": "57a8009ec42605f2ba237b339072c70147da66f820879fe61f96872b778995ef"
+    },
+    {
+      "bytes": 52636,
+      "items": 40,
+      "license": "CC0-1.0",
+      "path": "domain/ru.jsonl",
+      "sha256": "e140d76368b611a91cd93a7b0450f0ddc45bbc2326804302cafb306266bb0faf"
+    },
+    {
+      "bytes": 52204,
+      "items": 40,
+      "license": "CC0-1.0",
+      "path": "domain/tg.jsonl",
+      "sha256": "baf51fa924fde59d0f6fb7ca26e5c4391633bc6b832dbe40bdb76cbb90a5bb63"
+    },
+    {
+      "bytes": 46726,
+      "items": 40,
+      "license": "CC0-1.0",
+      "path": "domain/tr.jsonl",
+      "sha256": "ad7609b870accd5ee8df147667acd1ee4f6941718eb89b5acda0f0879a94ae14"
+    },
+    {
+      "bytes": 46168,
+      "items": 40,
+      "license": "CC0-1.0",
+      "path": "domain/uz.jsonl",
+      "sha256": "22584665612561bfdd49b8b7fe562c86b10b6b48de9a644ad882c9697435cdce"
+    },
+    {
+      "bytes": 45444,
+      "items": 40,
+      "license": "CC0-1.0",
+      "path": "domain/zh.jsonl",
+      "sha256": "b83d3674bd45b2884b24b3a9a9c2f281a874306677ace8895cbec037431224ac"
+    },
+    {
+      "bytes": 11358,
+      "items": 0,
+      "license": "Apache-2.0",
+      "path": "mrtydi/LICENSE-APACHE-2.0.txt",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    {
+      "bytes": 3596599,
+      "items": 2428,
+      "license": "Apache-2.0",
+      "path": "mrtydi/ru/corpus.jsonl",
+      "sha256": "236cb2d1ee816bf2fb1398c1499fad8f262363a4d81d1b289ffc5d2a8191c480"
+    },
+    {
+      "bytes": 1838817,
+      "items": 2369,
+      "license": "Apache-2.0",
+      "path": "mrtydi/ru/queries.jsonl",
+      "sha256": "5a4c128b35cbdf8895d34741f0e4d842c9d95e13b50e442ca3bb36a50ddc109e"
+    },
+    {
+      "bytes": 11413,
+      "items": 0,
+      "license": "MIT",
+      "path": "schema.json",
+      "sha256": "0f14f86e28803cb13b5b9c77f72d4b589b7d696b899753d390828e30e01afa19"
+    }
+  ],
+  "languages": [
+    "ky",
+    "ru",
+    "tg",
+    "tr",
+    "uz",
+    "zh"
+  ],
+  "license_map": {
+    "LICENSES/MIT.txt": "MIT",
+    "belebele/": "CC-BY-SA-4.0",
+    "domain/": "CC0-1.0",
+    "mrtydi/": "Apache-2.0",
+    "schema.json": "MIT"
+  },
+  "release_date": "2026-10-21",
+  "sampling": {
+    "belebele": {
+      "dev_per_language": 30,
+      "passage_split": "one passage in 5 is dev, by sha256(seed, language, passage_id)",
+      "pool": "every unique FLORES passage of the language variant",
+      "queries_per_language": 150,
+      "question_split": "a question inherits the split of its gold passage",
+      "test_per_language": 120
+    },
+    "domain": {
+      "dev_fraction": "one item in 5, by seeded rank within each category",
+      "quotas": {
+        "direct": 8,
+        "injection": 6,
+        "multi_hop": 8,
+        "numeric_date": 8,
+        "pii": 6,
+        "unanswerable": 4
+      },
+      "unused_documents_only": true
+    },
+    "minhash": {
+      "bands": 4,
+      "hashes": 16,
+      "shingle_size": 5,
+      "threshold": 0.9
+    },
+    "mrtydi": {
+      "pool": "union of the positive passages of those queries",
+      "sampling": "none — the complete ru dev and test splits"
+    },
+    "seed": 20261021
+  },
+  "schema_version": "1.0",
+  "seed": 20261021,
+  "self_sha256": "8ba35490523fae71542b7ec7ebf5f0dbcd30770daa3ecfab54e86fa9b46cf279",
+  "sources": [
+    {
+      "citation": "Bandarkar et al. 2023, The Belebele Benchmark: a Parallel Reading Comprehension Dataset in 122 Language Variants (arXiv:2308.16884)",
+      "dataset": "facebook/belebele",
+      "files": [
+        {
+          "bytes": 3574715,
+          "cache_path": "raw/belebele/rus_Cyrl.jsonl",
+          "language": "ru",
+          "published_path": "data/rus_Cyrl.jsonl",
+          "sha256": "e8b81853605b97e993af07a34ad2c0a48ccd8dab80956b0650a161e8fea00de5"
+        },
+        {
+          "bytes": 904950,
+          "cache_path": "raw/belebele/uzn_Latn.jsonl",
+          "language": "uz",
+          "published_path": "data/uzn_Latn.jsonl",
+          "sha256": "4dfc231dbda70767f5e2e7b033cd0fe7ed23e9b9694d560cc1ce248206519202"
+        },
+        {
+          "bytes": 3526931,
+          "cache_path": "raw/belebele/tgk_Cyrl.jsonl",
+          "language": "tg",
+          "published_path": "data/tgk_Cyrl.jsonl",
+          "sha256": "a6591baa6bb68a7b3acb36bbd84fb71f8398662a042d3c87c8e1bf3d86db3c4f"
+        },
+        {
+          "bytes": 3415404,
+          "cache_path": "raw/belebele/kir_Cyrl.jsonl",
+          "language": "ky",
+          "published_path": "data/kir_Cyrl.jsonl",
+          "sha256": "88712edc7f96b97c52dbe4960269de129a33a7efacc9532e94580c8916d6aa49"
+        },
+        {
+          "bytes": 1285910,
+          "cache_path": "raw/belebele/zho_Hans.jsonl",
+          "language": "zh",
+          "published_path": "data/zho_Hans.jsonl",
+          "sha256": "f3b7915eaa27e44225979ffd38708c5beee63d28bea27a91253e5fe68e2fa147"
+        }
+      ],
+      "homepage": "https://huggingface.co/datasets/facebook/belebele",
+      "id": "belebele",
+      "license": "CC-BY-SA-4.0",
+      "version": "7899cdfa4e1e0d733fd77c848e2c273cb1d32be2"
+    },
+    {
+      "citation": "Zhang et al. 2021, Mr. TyDi: A Multi-lingual Benchmark for Dense Retrieval (arXiv:2108.08787)",
+      "dataset": "castorini/mr-tydi",
+      "files": [
+        {
+          "bytes": 51224,
+          "cache_path": "raw/mrtydi/dev.ru.jsonl.gz",
+          "language": "dev",
+          "published_path": "mrtydi-v1.1-russian/dev.jsonl.gz",
+          "sha256": "778912f4dca8e653cd3c0a4b8a42f78d9f9d2064e4d47a5e7799251e96b6518c"
+        },
+        {
+          "bytes": 40114,
+          "cache_path": "raw/mrtydi/test.ru.jsonl.gz",
+          "language": "test",
+          "published_path": "mrtydi-v1.1-russian/test.jsonl.gz",
+          "sha256": "1f8d5ec77e4cd14ee72997818fb8cb7f57a5abcc61e26be077229cb0b4e720de"
+        }
+      ],
+      "homepage": "https://huggingface.co/datasets/castorini/mr-tydi",
+      "id": "mrtydi",
+      "license": "Apache-2.0",
+      "version": "1d43c80218d06d0ef80f5b172ccabd848b948bc1"
+    },
+    {
+      "citation": "Zhang et al. 2021, Mr. TyDi (corpus release)",
+      "dataset": "castorini/mr-tydi-corpus",
+      "files": [
+        {
+          "bytes": 1588019137,
+          "cache_path": "raw/mrtydi/corpus.ru.jsonl.gz",
+          "language": "ru",
+          "published_path": "mrtydi-v1.1-russian/corpus.jsonl.gz",
+          "sha256": "c468bdb502a2f596469b3bb52448f670a1efd2ab7301beab79753c14cfd5bb79"
+        }
+      ],
+      "homepage": "https://huggingface.co/datasets/castorini/mr-tydi-corpus",
+      "id": "mrtydi-corpus",
+      "license": "Apache-2.0",
+      "version": "3a3aa212bbe94a8cc0dc858710a3dad49d532054"
+    },
+    {
+      "citation": "",
+      "dataset": "license-texts",
+      "files": [
+        {
+          "bytes": 20138,
+          "cache_path": "raw/licenses/CC-BY-SA-4.0.txt",
+          "language": "",
+          "published_path": "",
+          "sha256": "28a9529c7d0bb4dc51f4bf5c116a3d16ef247a052f7591466768ddf563fd1cf5"
+        },
+        {
+          "bytes": 7048,
+          "cache_path": "raw/licenses/CC0-1.0.txt",
+          "language": "",
+          "published_path": "",
+          "sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499"
+        },
+        {
+          "bytes": 11358,
+          "cache_path": "raw/licenses/APACHE-2.0.txt",
+          "language": "",
+          "published_path": "",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        }
+      ],
+      "homepage": "https://creativecommons.org/licenses/",
+      "id": "license-texts",
+      "license": "n/a",
+      "version": "2026-10-21"
+    },
+    {
+      "citation": "answerdesk synthetic support corpus, docs/ingestion.md §7",
+      "dataset": "answerdesk-synthetic",
+      "files": [
+        {
+          "bytes": 1296532,
+          "repo_path": "data/corpus/queries/queries.jsonl",
+          "sha256": "b1a0b4cbd1eeb93282418e49fe76cb8292dec5ea301a96b21aa98c09efba6d6b"
+        },
+        {
+          "bytes": 331168,
+          "repo_path": "data/corpus/manifest.json",
+          "sha256": "d1624360b2eb16a1078287a2ce5a0f83b391dbf838907b08c321830e07254d77"
+        }
+      ],
+      "homepage": "data/corpus/README.md",
+      "id": "answerdesk-synthetic",
+      "license": "CC0-1.0",
+      "version": "answerdesk-synthetic-v2.0.0"
+    }
+  ],
+  "splits": {
+    "domain_documents": {
+      "dev": 60,
+      "test": 156
+    },
+    "ids": {
+      "dev": 1741,
+      "test": 2368
+    },
+    "policy": "seeded hash split; a passage (Belebele) or document (domain) is gold evidence in exactly one split",
+    "t11_disjointness": "domain documents exclude every document of evals/golden/v1 and evals/splits/v1.json"
+  },
+  "suites": {
+    "belebele_qa": {
+      "categories": [
+        "reading_comprehension"
+      ],
+      "items": 750,
+      "languages": [
+        "ru",
+        "uz",
+        "tg",
+        "ky",
+        "zh"
+      ],
+      "license": "CC-BY-SA-4.0",
+      "notes": "Belebele four-option reading-comprehension items; the gold passage is the evidence and the labelled option is the answer.",
+      "paths": [
+        "belebele/qa/ru.jsonl",
+        "belebele/qa/uz.jsonl",
+        "belebele/qa/tg.jsonl",
+        "belebele/qa/ky.jsonl",
+        "belebele/qa/zh.jsonl"
+      ],
+      "task": "multiple_choice"
+    },
+    "belebele_retrieval": {
+      "categories": [
+        "derived_retrieval"
+      ],
+      "items": 750,
+      "languages": [
+        "ru",
+        "uz",
+        "tg",
+        "ky",
+        "zh"
+      ],
+      "license": "CC-BY-SA-4.0",
+      "notes": "Retrieval labels derived from Belebele reading-comprehension triples (question, gold passage, one passage pool per language). Diagnostic: the question was written against a supplied passage, so it contains deictic references and is not an ad-hoc customer query.",
+      "paths": [
+        "belebele/retrieval/ru/queries.jsonl",
+        "belebele/retrieval/uz/queries.jsonl",
+        "belebele/retrieval/tg/queries.jsonl",
+        "belebele/retrieval/ky/queries.jsonl",
+        "belebele/retrieval/zh/queries.jsonl"
+      ],
+      "task": "retrieval"
+    },
+    "domain": {
+      "categories": [
+        "direct",
+        "numeric_date",
+        "multi_hop",
+        "pii",
+        "injection",
+        "unanswerable"
+      ],
+      "items": 240,
+      "languages": [
+        "ru",
+        "uz",
+        "tg",
+        "ky",
+        "zh",
+        "tr"
+      ],
+      "license": "CC0-1.0",
+      "notes": "Support-domain slice derived from the synthetic CC0 corpus: grounded answers, numeric/date, multi-evidence, unanswerable, PII and prompt-injection cases.",
+      "paths": [
+        "domain/ru.jsonl",
+        "domain/uz.jsonl",
+        "domain/tg.jsonl",
+        "domain/ky.jsonl",
+        "domain/zh.jsonl",
+        "domain/tr.jsonl"
+      ],
+      "task": "qa"
+    },
+    "mrtydi_retrieval": {
+      "categories": [
+        "native_qrels"
+      ],
+      "items": 2369,
+      "languages": [
+        "ru"
+      ],
+      "license": "Apache-2.0",
+      "notes": "Native relevance judgments from Mr. TyDi v1.1 (dev + test); the passage pool is the union of the positive passages of those queries.",
+      "paths": [
+        "mrtydi/ru/queries.jsonl"
+      ],
+      "task": "retrieval"
+    }
+  },
+  "version": "0.1.0"
+}

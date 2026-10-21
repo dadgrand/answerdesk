@@ -1,0 +1,125 @@
+# answerdesk default configuration.
+#
+# Precedence (see src/answerdesk/config.py and docs/architecture.md §7):
+#   explicit CLI overrides  >  environment (ANSWERDESK_*)  >  .env  >  this file  >  code defaults
+#
+# Every key here mirrors a section of `answerdesk.config.Settings`; unknown keys are a
+# hard error, so a typo can never be silently ignored.
+
+profile: offline
+
+app:
+  name: answerdesk
+  data_dir: data
+  corpus_dir: data/corpus
+  index_dir: data/index
+  reports_dir: reports
+  log_dir: logs
+
+llm:
+  # Presets: openai | openai_compatible | deepseek | openrouter | vllm | llama_cpp | ollama | fake
+  preset: fake
+  temperature: 0.0
+  max_tokens: 1024
+  timeout_s: 60.0
+  max_retries: 3
+  json_mode: true
+  fallback_presets: []
+  pricing_table: configs/pricing.yaml
+
+embedding:
+  # hashing = deterministic CI double; bge_m3/qwen3 = local real embedder (--extra local);
+  # api = hosted OpenAI-compatible /embeddings (e.g. NeuralDeep bge-m3, 1024-dim)
+  backend: hashing
+  model: BAAI/bge-m3
+  dimension: 64          # width of the hashing embedder; a real model declares its own
+  batch_size: 32
+  device: auto
+  # --- hosted API backend (backend: api) --------------------------------------
+  api_base_url: null     # e.g. https://api.neuraldeep.ru/v1
+  api_model: null        # e.g. bge-m3 (falls back to `model` when null)
+  api_dimension: null    # null = discover from the first response and pin it
+  api_key: null          # prefer api_key_env; a SecretStr here is redacted in every dump
+  api_key_env: OPENAI_COMPATIBLE_API_KEY
+  api_timeout_s: 30.0
+  api_max_retries: 3
+
+retrieval:
+  # RRF is the untuned cold-start default; convex combination is the tuned path (RT-7)
+  fuser: rrf
+  rrf_k: 60
+  cc_alpha: null
+  top_k: 50
+  gate_k: 20
+  dedupe_cosine: 0.95
+  mmr_lambda: null
+  rerank:
+    # backend: cross_encoder (local sentence-transformers) | lexical (offline stand-in) |
+    # api (hosted Cohere-style /rerank, e.g. NeuralDeep bge-reranker)
+    enabled: false
+    backend: cross_encoder
+    model: BAAI/bge-reranker-v2-m3
+    top_in: 50
+    top_out: 12
+    batch_size: 16
+    api_base_url: null     # e.g. https://api.neuraldeep.ru/v1
+    api_model: null        # e.g. bge-reranker (falls back to `model` when null)
+    api_key: null
+    api_key_env: OPENAI_COMPATIBLE_API_KEY
+    api_timeout_s: 30.0
+    api_max_retries: 3
+
+generate:
+  context_k_min: 8
+  context_k_max: 12
+  token_budget: 8000
+  repair_passes: 1
+  verifier: lexical
+
+policy:
+  alpha:
+    informational: 0.05
+    transactional: 0.02
+    account_legal: 0.01
+  costs:
+    c_wrong: 1.0
+    c_abstain: 0.10
+    c_delay: 0.05
+  calibration_artifact: null
+
+cache:
+  enabled: true
+  epsilon: 0.01
+  similarity_threshold: 0.93
+  ttl_class:
+    policy: 3600
+    howto: 604800
+    escalation: 600
+  high_risk_intents:
+    - account
+    - refund
+    - legal
+    - payment
+
+eval:
+  seed: 1337
+  split: evals/splits/v1.json
+  judge_model: fake-judge
+  provider: fake
+  bootstrap_samples: 1000
+  # Cross-family judge (§10.5): a judge is configured independently of the generator.
+  # null = judge on the generator provider (same-family runs are labelled diagnostic).
+  judge_preset: null
+  judge_base_url: null
+  judge_api_key: null
+  judge_api_key_env: null
+  judge_timeout_s: 180.0
+  judge_max_tokens: 512
+  judge_temperature: 0.0
+  judge_family: null
+  # Pacing for free-tier API quotas (seconds between live calls; 0 = as fast as allowed).
+  min_call_interval_s: 0.0
+
+logging:
+  level: INFO
+  json_output: true

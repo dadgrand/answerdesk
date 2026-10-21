@@ -1,0 +1,75 @@
+name: ci
+
+# The offline gate. No network, no API key, no Docker, no GPU — enforced by the
+# autouse socket guard in tests/conftest.py and by the absence of any secret here
+# (docs/requirements.md NFR-DET-01, INV-08).
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  ANSWERDESK_PROFILE: offline
+  PYTHONDONTWRITEBYTECODE: "1"
+  PYTHONUNBUFFERED: "1"
+
+jobs:
+  # Fast gate (target ≤ 3 min): structure, contracts and lint on every push.
+  fast:
+    name: fast gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          python-version: "3.12"
+      - name: Install (dev extra only, no API key)
+        run: uv sync --extra dev --frozen
+      - name: Lint
+        run: uv run ruff check src tests
+      - name: Format check
+        run: uv run ruff format --check src tests
+      - name: Smoke and contract tests
+        run: uv run pytest -q -m smoke
+      - name: Unit tests
+        run: uv run pytest -q tests/unit
+      - name: Contracts import smoke
+        run: uv run python -c "import answerdesk; from answerdesk.contracts import Answer; print('ok')"
+
+  # Full gate (target ≤ 10 min): the whole offline suite on Linux and Windows.
+  test:
+    name: offline gate (${{ matrix.os }}, py${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.12"]
+        include:
+          - os: ubuntu-latest
+            python-version: "3.11"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          python-version: ${{ matrix.python-version }}
+      - name: Install (dev extra only, no API key)
+        run: uv sync --extra dev --frozen
+      - name: Type check
+        run: uv run mypy src/answerdesk
+      - name: Tests (no network, no key)
+        run: uv run pytest -q
+      - name: Contracts import smoke
+        run: uv run python -c "import answerdesk; from answerdesk.contracts import Answer; print('ok')"

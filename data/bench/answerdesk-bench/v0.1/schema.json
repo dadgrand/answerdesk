@@ -1,0 +1,513 @@
+{
+  "$id": "https://answerdesk.dev/bench/answerdesk-bench/v0.1/item.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "One benchmark item. The suite discriminates the payload; see docs/benchmark.md §4 for field semantics and docs/benchmark.md §9 for the t19 adapter contract.",
+  "oneOf": [
+    {
+      "additionalProperties": true,
+      "properties": {
+        "category": {
+          "enum": [
+            "derived_retrieval"
+          ],
+          "type": "string"
+        },
+        "item_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "language": {
+          "enum": [
+            "ru",
+            "uz",
+            "tg",
+            "ky",
+            "zh"
+          ],
+          "type": "string"
+        },
+        "license": {
+          "const": "CC-BY-SA-4.0"
+        },
+        "provenance": {
+          "additionalProperties": true,
+          "properties": {
+            "dataset": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "derivation": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "source_file": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "source_item_id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "source_sha256": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "version": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "required": [
+            "dataset",
+            "version",
+            "source_file",
+            "source_sha256",
+            "source_item_id",
+            "derivation"
+          ],
+          "type": "object"
+        },
+        "qrels": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "query": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "split": {
+          "enum": [
+            "dev",
+            "test"
+          ],
+          "type": "string"
+        },
+        "suite": {
+          "const": "belebele_retrieval"
+        },
+        "task": {
+          "const": "retrieval"
+        }
+      },
+      "required": [
+        "item_id",
+        "suite",
+        "task",
+        "language",
+        "category",
+        "split",
+        "license",
+        "provenance",
+        "query",
+        "qrels"
+      ],
+      "type": "object"
+    },
+    {
+      "additionalProperties": true,
+      "properties": {
+        "category": {
+          "enum": [
+            "native_qrels"
+          ],
+          "type": "string"
+        },
+        "item_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "language": {
+          "enum": [
+            "ru"
+          ],
+          "type": "string"
+        },
+        "license": {
+          "const": "Apache-2.0"
+        },
+        "provenance": {
+          "additionalProperties": true,
+          "properties": {
+            "dataset": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "derivation": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "source_file": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "source_item_id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "source_sha256": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "version": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "required": [
+            "dataset",
+            "version",
+            "source_file",
+            "source_sha256",
+            "source_item_id",
+            "derivation"
+          ],
+          "type": "object"
+        },
+        "qrels": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "query": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "split": {
+          "enum": [
+            "dev",
+            "test"
+          ],
+          "type": "string"
+        },
+        "suite": {
+          "const": "mrtydi_retrieval"
+        },
+        "task": {
+          "const": "retrieval"
+        }
+      },
+      "required": [
+        "item_id",
+        "suite",
+        "task",
+        "language",
+        "category",
+        "split",
+        "license",
+        "provenance",
+        "query",
+        "qrels"
+      ],
+      "type": "object"
+    },
+    {
+      "additionalProperties": true,
+      "properties": {
+        "answer_anchor": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "answer_index": {
+          "maximum": 3,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "answerable": {
+          "const": true
+        },
+        "category": {
+          "enum": [
+            "reading_comprehension"
+          ],
+          "type": "string"
+        },
+        "gold_evidence_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "item_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "language": {
+          "enum": [
+            "ru",
+            "uz",
+            "tg",
+            "ky",
+            "zh"
+          ],
+          "type": "string"
+        },
+        "license": {
+          "const": "CC-BY-SA-4.0"
+        },
+        "options": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 4,
+          "minItems": 4,
+          "type": "array"
+        },
+        "provenance": {
+          "additionalProperties": true,
+          "properties": {
+            "dataset": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "derivation": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "source_file": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "source_item_id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "source_sha256": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "version": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "required": [
+            "dataset",
+            "version",
+            "source_file",
+            "source_sha256",
+            "source_item_id",
+            "derivation"
+          ],
+          "type": "object"
+        },
+        "question": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "split": {
+          "enum": [
+            "dev",
+            "test"
+          ],
+          "type": "string"
+        },
+        "suite": {
+          "const": "belebele_qa"
+        },
+        "task": {
+          "const": "multiple_choice"
+        }
+      },
+      "required": [
+        "item_id",
+        "suite",
+        "task",
+        "language",
+        "category",
+        "split",
+        "license",
+        "provenance",
+        "question",
+        "options",
+        "answer_index",
+        "gold_evidence_ids",
+        "answer_anchor",
+        "answerable"
+      ],
+      "type": "object"
+    },
+    {
+      "additionalProperties": true,
+      "properties": {
+        "answerable": {
+          "type": "boolean"
+        },
+        "attack": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "category": {
+          "enum": [
+            "direct",
+            "numeric_date",
+            "multi_hop",
+            "pii",
+            "injection",
+            "unanswerable"
+          ],
+          "type": "string"
+        },
+        "evidence": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "doc_id": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "quote": {
+                "minLength": 1,
+                "type": "string"
+              }
+            },
+            "required": [
+              "doc_id",
+              "quote"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "expected_behavior": {
+          "enum": [
+            "answer_from_evidence",
+            "escalate",
+            "answer_without_echo"
+          ],
+          "type": "string"
+        },
+        "gold_evidence_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "item_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "language": {
+          "enum": [
+            "ru",
+            "uz",
+            "tg",
+            "ky",
+            "zh",
+            "tr"
+          ],
+          "type": "string"
+        },
+        "license": {
+          "const": "CC0-1.0"
+        },
+        "must_not_echo": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "pii_tokens": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "provenance": {
+          "additionalProperties": true,
+          "properties": {
+            "dataset": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "derivation": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "source_file": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "source_item_id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "source_sha256": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "version": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "required": [
+            "dataset",
+            "version",
+            "source_file",
+            "source_sha256",
+            "source_item_id",
+            "derivation"
+          ],
+          "type": "object"
+        },
+        "question": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "reference_answer": {
+          "type": "string"
+        },
+        "split": {
+          "enum": [
+            "dev",
+            "test"
+          ],
+          "type": "string"
+        },
+        "suite": {
+          "const": "domain"
+        },
+        "task": {
+          "const": "qa"
+        }
+      },
+      "required": [
+        "item_id",
+        "suite",
+        "task",
+        "language",
+        "category",
+        "split",
+        "license",
+        "provenance",
+        "question",
+        "answerable",
+        "expected_behavior",
+        "reference_answer",
+        "evidence",
+        "gold_evidence_ids",
+        "must_not_echo",
+        "pii_tokens",
+        "attack"
+      ],
+      "type": "object"
+    }
+  ],
+  "title": "answerdesk-bench item (v0.1)"
+}

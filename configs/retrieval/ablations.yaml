@@ -1,0 +1,44 @@
+# Retrieval ablation arms (requirements §6.3 step 3, §10.6).
+#
+# Consumed by `python -m answerdesk.retrieval.ablation --arms configs/retrieval/ablations.yaml`
+# (or by the runner's built-in defaults, which are identical). Changing this file changes
+# what the evidence run measures — it never changes the shipped pipeline.
+version: "1.0.0"
+# Cut-offs from requirements §6.2: 20 is the recall gate, 10 is where nDCG/MRR are read.
+recall_k: 20
+narrow_k: 10
+
+arms:
+  - name: bm25
+    fuser: none
+    channels: [bm25]
+    note: sparse only (BM25 over structure-aware chunks)
+
+  - name: dense
+    fuser: none
+    channels: [dense]
+    note: exact cosine only (multilingual embedder)
+
+  - name: hybrid-rrf
+    fuser: rrf
+    channels: [bm25, dense]
+    note: reciprocal rank fusion, k fitted on dev
+
+  - name: hybrid-convex
+    fuser: cc
+    channels: [bm25, dense]
+    note: convex combination, alpha fitted on dev (shipped path, D-03)
+
+  - name: hybrid-convex+rerank
+    fuser: cc
+    channels: [bm25, dense]
+    rerank: true
+    note: >-
+      convex composition followed by the reranker. Offline this is the deterministic
+      lexical stand-in; RT-10 evidence requires the real cross-encoder (local extra).
+
+  - name: hybrid-convex+mmr
+    fuser: cc
+    channels: [bm25, dense]
+    mmr: true
+    note: convex composition followed by MMR diversification (lambda from config)

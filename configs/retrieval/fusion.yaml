@@ -1,0 +1,45 @@
+# Fusion defaults, fitting grids and the artifact pointer (FR-RET-04, FR-RET-05).
+#
+# Two things live here and only two: the *cold-start* parameters a fresh checkout uses,
+# and the *procedure* used to replace them with fitted ones. A fitted artifact is never a
+# literal in this file — it is a JSON document written by the runner
+# (`python -m answerdesk.retrieval.ablation`), and its path is recorded below so a reviewer
+# can find what actually shipped.
+version: "1.0.0"
+
+# Cold start. RRF with k=60 is the untuned default (D-03): it needs no score calibration,
+# which is exactly why it is safe before any dev-split fitting has happened.
+cold_start:
+  fuser: rrf
+  rrf_k: 60
+  cc_alpha: 0.75          # Weaviate's default; used if a run selects CC before fitting
+  normalization: minmax   # see docs/retrieval.md §3.2 for the minmax pitfall
+
+# Fitting procedure. Everything here runs on the dev split only; the test split is
+# read-only for reporting (INV-09), and the runner hard-fails if the two overlap.
+fit:
+  split: dev
+  metric: nDCG@10
+  tie_break: convex_combination_wins
+  method: coordinate_search      # coordinate_search | logistic_regression
+  rrf_k_grid: [10, 20, 40, 60, 80, 100]
+  alpha_grid: [0.25, 0.4, 0.5, 0.6, 0.7, 0.75, 0.8, 0.9]
+  logistic:
+    l2: 0.001
+    learning_rate: 0.5
+    iterations: 400
+
+# Where the runner writes the artifact and the metrics table.
+artifacts:
+  fusion: data/index/ablation/fusion.json
+  report_json: data/index/ablation/retrieval-ablation.json
+  report_markdown: data/index/ablation/retrieval-metrics.md
+
+# Stage budgets the pipeline applies after fusion (FR-RET-07).
+pipeline:
+  top_k: 50
+  gate_k: 20
+  final_k: 12
+  dedupe_cosine: 0.95
+  rerank_top_in: 50
+  rerank_top_out: 12

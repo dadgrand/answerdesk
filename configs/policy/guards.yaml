@@ -1,0 +1,38 @@
+# Guard policy (requirements §8.4, FR-ESC-04/08/09).
+#
+# Guard precedence is total: PII first, then prompt injection, then the hard-policy risk
+# tier. Nothing here can force an *answer* — a guard may only escalate or refuse.
+#
+# `action` is what the product does when the guard fires:
+#   escalate -> a human sees the turn (default: the customer still gets a safe holding reply)
+#   refuse   -> the turn is closed with a refusal reason code
+#
+# It is configuration, not code (requirements §8.3/§8.4), and the guard set is small enough
+# to review in one screen.
+
+pii:
+  action: escalate
+  redact_in_answer: true
+
+injection:
+  action: escalate
+
+high_risk:
+  # ACCOUNT_LEGAL is always hard-policy (a bucket-level rule in code); these labels extend it
+  # to the intent labels the router may emit. Refund stays transactional on purpose: it is
+  # exact-cache-only, not force-escalated (requirements §8.2).
+  intent_labels:
+    - account
+    - account_closure
+    - legal
+    - fraud
+    - complaint
+    - kyc
+    - power_of_attorney
+  buckets:
+    - account_legal
+
+stale_calibration:
+  # §8.6: a stale artifact must never answer "as if calibrated".
+  action: escalate
+  max_age_days: 7
