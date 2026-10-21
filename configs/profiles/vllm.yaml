@@ -1,0 +1,56 @@
+# Profile: vllm — local vLLM server, OpenAI-compatible (docs/latency.md §4).
+#
+#   # 2 × 16 GB (TP=2) — the documented reference for the 35B-class generator:
+#   vllm serve Qwen/Qwen3-32B-Instruct \
+#       --served-model-name answerdesk-generator \
+#       --tensor-parallel-size 2 \
+#       --max-model-len 8192 \
+#       --gpu-memory-utilization 0.90 \
+#       --enable-prefix-caching \
+#       --port 8000
+#
+#   . .\scripts\live-env.ps1 vllm     # or: export ANSWERDESK_LLM__* yourself
+#   uv run answerdesk --profile vllm config check
+#   uv run python -m answerdesk.llm.latency_report --run --live --limit 24 \
+#       --out reports/latency-v2-vllm
+#
+# MEASUREMENT STATUS: **not measured here.** No vLLM server was reachable from the machine
+# this profile was committed on (checked: 127.0.0.1:8000 closed; no CUDA device free for a
+# 2×16 GB TP=2 deployment). The numbers in reports/latency-v2/ are therefore hosted-API
+# numbers; this profile ships so the local run is one command away, and the report records
+# which one was measured.
+#
+# Sizing notes for 2 × 16 GB:
+#   * TP=2 splits each layer across both cards; a 32B-class model in bf16 needs ~64 GB of
+#     weights, which does NOT fit 2 × 16 GB. Use AWQ/GPTQ 4-bit (~18 GB) or a 14B-class model
+#     in bf16 (~28 GB) with TP=2. `max-model-len` trades KV-cache for context: 8192 tokens is
+#     the measured-sane default at ~0.9 GPU memory utilisation on this class of card.
+#   * Keep `--enable-prefix-caching`: the system prompt and the evidence prefix repeat across
+#     turns and the TTFT win is real (measured on hosted endpoints as a cache-hit discount).
+#   * `--max-num-seqs 8` keeps a single-user p95 predictable; raise it only with a queue metric.
+
+profile: vllm
+
+llm:
+  preset: vllm
+  base_url: http://127.0.0.1:8000/v1
+  model: answerdesk-generator
+  api_key_env: OPENAI_COMPATIBLE_API_KEY
+  temperature: 0.0
+  max_tokens: 512
+  timeout_s: 60.0
+  max_retries: 2
+  json_mode: true
+  fallback_presets: []
+
+embedding:
+  backend: hashing
+  dimension: 64
+
+eval:
+  provider: vllm
+  judge_model: answerdesk-generator
+  judge_preset: null
+  judge_api_key_env: null
+  judge_family: null
+  min_call_interval_s: 0.0

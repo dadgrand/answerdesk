@@ -454,11 +454,30 @@ class HttpChatProvider:
         )
 
     # -- streaming ----------------------------------------------------------------
-    def stream(self, messages: Sequence[Message]) -> ChunkStream:
-        """Streaming completion, exposed as a lazily materialised ``ChunkStream``."""
-        return ChunkStream(self._stream_chunks(messages))
+    #: The service-side seam may pass the schema so a streamed draft is JSON-constrained.
+    accepts_stream_schema = True
 
-    def _stream_chunks(self, messages: Sequence[Message]) -> Iterator[CompletionChunk]:
+    def stream(
+        self,
+        messages: Sequence[Message],
+        *,
+        response_schema: Mapping[str, Any] | None = None,
+    ) -> ChunkStream:
+        """Streaming completion, exposed as a lazily materialised ``ChunkStream``.
+
+        ``response_schema`` is forwarded as ``response_format`` (json_schema) when the provider is
+        configured for JSON mode, so a *streamed* turn is constrained exactly like the
+        non-streaming one. Without it the model answers in prose, the draft fails to parse, and a
+        streamed answer could never be grounded — the t49 measurement hit precisely that.
+        """
+        return ChunkStream(self._stream_chunks(messages, response_schema=response_schema))
+
+    def _stream_chunks(
+        self,
+        messages: Sequence[Message],
+        *,
+        response_schema: Mapping[str, Any] | None = None,
+    ) -> Iterator[CompletionChunk]:
         """Yield deltas from an SSE response, then exactly one ``done=True`` chunk.
 
         Fallback semantics (see :class:`ProviderChain`): a failure *before* the first
@@ -467,7 +486,7 @@ class HttpChatProvider:
         """
         self._check_circuit()
         estimated = estimate_messages_tokens(message.content for message in messages)
-        body = self._body(messages, stream=True, response_schema=None)
+        body = self._body(messages, stream=True, response_schema=response_schema)
         started = self._runner.clock()
         model = self.config.model
         try:

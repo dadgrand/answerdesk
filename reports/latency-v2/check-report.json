@@ -1,0 +1,15 @@
+{
+  "checks": {
+    "cascade_drop": -0.45,
+    "cascade_within_budget": true,
+    "quality_drop": -0.8,
+    "quality_within_budget": true,
+    "retrieval_p95_ok": true,
+    "token_target_met": true,
+    "tokens_reduction_pct": 60.74,
+    "ttft_recorded": true
+  },
+  "generated_at": "2026-10-21T16:59:42+00:00",
+  "ok": true,
+  "problems": []
+}

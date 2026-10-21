@@ -1,0 +1,178 @@
+{
+  "arms": [
+    {
+      "arm": "baseline",
+      "chunks_p50": 330.0,
+      "input_tokens_p50": 1618.5,
+      "model": "qwen3.6-35b-a3b-noreason",
+      "n": 20,
+      "note": "",
+      "output_tokens_mean": 268.35,
+      "output_tokens_p50": 219.5,
+      "priced": false,
+      "provider": "http:openai_compatible",
+      "streamed": true,
+      "total": {
+        "max_ms": 8352.18,
+        "mean_ms": 3273.827,
+        "min_ms": 1264.897,
+        "n": 20,
+        "p50_ms": 2382.357,
+        "p95_ms": 7474.458
+      },
+      "ttft": {
+        "max_ms": 3745.503,
+        "mean_ms": 848.707,
+        "min_ms": 573.143,
+        "n": 20,
+        "p50_ms": 673.176,
+        "p95_ms": 965.243
+      },
+      "usd_mean": 0.0,
+      "usd_total": 0.0
+    },
+    {
+      "arm": "budget",
+      "chunks_p50": 149.0,
+      "input_tokens_p50": 1530.0,
+      "model": "qwen3.6-35b-a3b-noreason",
+      "n": 20,
+      "note": "",
+      "output_tokens_mean": 105.35,
+      "output_tokens_p50": 87.5,
+      "priced": false,
+      "provider": "http:openai_compatible",
+      "streamed": true,
+      "total": {
+        "max_ms": 3097.581,
+        "mean_ms": 1881.986,
+        "min_ms": 1177.988,
+        "n": 20,
+        "p50_ms": 1728.354,
+        "p95_ms": 3037.876
+      },
+      "ttft": {
+        "max_ms": 3014.321,
+        "mean_ms": 1002.048,
+        "min_ms": 320.948,
+        "n": 20,
+        "p50_ms": 706.503,
+        "p95_ms": 2409.942
+      },
+      "usd_mean": 0.0,
+      "usd_total": 0.0
+    },
+    {
+      "arm": "cascade",
+      "chunks_p50": 0.0,
+      "input_tokens_p50": 1494.0,
+      "model": "qwen3.6-35b-a3b-noreason",
+      "n": 20,
+      "note": "",
+      "output_tokens_mean": 239.25,
+      "output_tokens_p50": 216.5,
+      "priced": false,
+      "provider": "http:openai_compatible",
+      "streamed": true,
+      "total": {
+        "max_ms": 63235.019,
+        "mean_ms": 7137.617,
+        "min_ms": 1317.625,
+        "n": 20,
+        "p50_ms": 2839.813,
+        "p95_ms": 13947.523
+      },
+      "ttft": {
+        "max_ms": 61076.574,
+        "mean_ms": 4405.267,
+        "min_ms": 549.659,
+        "n": 20,
+        "p50_ms": 637.725,
+        "p95_ms": 12186.555
+      },
+      "usd_mean": 0.0,
+      "usd_total": 0.0
+    }
+  ],
+  "cascade": {
+    "easy_threshold": 0.71,
+    "large": 20,
+    "large_model": "qwen3.6-35b-a3b-noreason",
+    "min_margin": 0.0,
+    "n": 20,
+    "reasons": {
+      "low_confidence": 20
+    },
+    "small": 0,
+    "small_model": "deepseek-chat"
+  },
+  "checks": {
+    "cascade_drop": -0.45,
+    "cascade_within_budget": true,
+    "quality_drop": -0.8,
+    "quality_within_budget": true,
+    "retrieval_p95_ok": true,
+    "token_target_met": true,
+    "tokens_reduction_pct": 60.74,
+    "ttft_recorded": true
+  },
+  "commands": {
+    "check": "python -m answerdesk.llm.latency_report --check",
+    "live": "python -m answerdesk.llm.latency_report --run --live --limit 24"
+  },
+  "generated_at": "2026-10-21T16:32:44+00:00",
+  "generator_model": "qwen3.6-35b-a3b-noreason",
+  "host": "win32 / python 3.12.10",
+  "judge_model": "deepseek-chat",
+  "measured_here": true,
+  "mode": "live",
+  "notes": [
+    "Both arms stream from the same endpoint with the same retrieval; only the output budget (cap, claim limit, compact schema, extractive instruction) differs.",
+    "TTFT is measured inside the stream (first non-empty delta), not derived from total.",
+    "Judge: cross-family rubric judge (deepseek-chat) over 20 items per arm.",
+    "Cascade not exercised: no item cleared the derived threshold on this sample, so the cascade row is a second large-model pass. The router itself is unit-tested; a calibrated p_hat (t8 engine) is required for a meaningful split."
+  ],
+  "profile": "api",
+  "quality": [
+    {
+      "answered": 17,
+      "arm": "baseline",
+      "groundedness": 0.882,
+      "judge_failures": 0,
+      "judge_model": "deepseek-chat",
+      "measured_here": true,
+      "n": 20,
+      "rubric_mean": 3.85,
+      "rubric_p50": 5.0
+    },
+    {
+      "answered": 20,
+      "arm": "budget",
+      "groundedness": 0.95,
+      "judge_failures": 0,
+      "judge_model": "deepseek-chat",
+      "measured_here": true,
+      "n": 20,
+      "rubric_mean": 4.65,
+      "rubric_p50": 5.0
+    },
+    {
+      "answered": 19,
+      "arm": "cascade",
+      "groundedness": 0.895,
+      "judge_failures": 0,
+      "judge_model": "deepseek-chat",
+      "measured_here": true,
+      "n": 20,
+      "rubric_mean": 4.3,
+      "rubric_p50": 5.0
+    }
+  ],
+  "retrieval": {
+    "n": 20,
+    "note": "retrieval stage only; unchanged by this task",
+    "p50_ms": 2.724,
+    "p95_ms": 5.047
+  },
+  "version": "1.0.0"
+}

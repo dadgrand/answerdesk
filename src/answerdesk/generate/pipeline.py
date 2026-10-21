@@ -40,8 +40,9 @@ t11 — ``# AT-GEN-08`` marks the hook, not a claim that CI proves it.
 from __future__ import annotations
 
 import json
-from collections.abc import Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
+from typing import Any, Literal, Protocol, cast
 
 from pydantic import Field, model_validator
 
@@ -53,6 +54,7 @@ from answerdesk.contracts import (
     Claim,
     ClaimVerifier,
     Completion,
+    CompletionChunk,
     Contract,
     Message,
     ReasonCode,
@@ -61,6 +63,7 @@ from answerdesk.contracts import (
     Support,
     Usage,
 )
+from answerdesk.generate.budget import AnswerBudget, budget_schema
 from answerdesk.generate.citations import (
     CitationBuild,
     CitationBuilder,
@@ -81,7 +84,13 @@ from answerdesk.generate.packer import ContextPacker, PackedContext
 from answerdesk.generate.prompts import Prompt, PromptRegistry
 from answerdesk.generate.schema import load_answer_schema
 from answerdesk.generate.verifier import ClaimCheck, LexicalVerifier
-from answerdesk.llm.cost import PriceQuote, PricingTable, estimate_tokens
+from answerdesk.llm.cost import (
+    PriceQuote,
+    PricingTable,
+    estimate_messages_tokens,
+    estimate_tokens,
+)
+from answerdesk.llm.latency import ChunkTimer
 
 #: Prompt ids owned by this module (the registry is versioned; ids are stable).
 ANSWER_PROMPT_ID = "grounded-answer"
@@ -189,6 +198,28 @@ class _UsageAccumulator:
         )
 
 
+class _SchemaStreamingProvider(Protocol):
+    """A provider whose stream accepts the response schema (defence: optional capability)."""
+
+    def stream(
+        self,
+        messages: Sequence[Message],
+        *,
+        response_schema: Mapping[str, Any] | None = None,
+    ) -> Sequence[CompletionChunk]: ...
+
+
+class StreamEvent(Contract):
+    """One item of a streamed answer: a raw draft delta, or the final verified result."""
+
+    kind: Literal["delta", "result"]
+    delta: str = ""
+    index: int = 0
+    ttft_ms: float = 0.0
+    elapsed_ms: float = 0.0
+    result: GenerationResult | None = None
+
+
 class AnswerPipeline:
     """Grounded generation with enforced citations, one repair pass and explicit refusals."""
 
@@ -204,6 +235,7 @@ class AnswerPipeline:
         repair_passes: int = 1,
         max_answer_tokens: int = 512,
         language_notice_enabled: bool = True,
+        budget: AnswerBudget | None = None,
     ) -> None:
         if repair_passes < 0:
             raise ValueError("repair_passes must be >= 0")
@@ -215,6 +247,7 @@ class AnswerPipeline:
         self.schema = schema if schema is not None else load_answer_schema()
         self.repair_passes = repair_passes
         self.max_answer_tokens = max(1, max_answer_tokens)
+        self.budget = budget if budget is not None else AnswerBudget.baseline()
         self.language_notice_enabled = language_notice_enabled
         self.builder = CitationBuilder()
         self.verifier_version = getattr(self.verifier, "version", "")
@@ -237,11 +270,13 @@ class AnswerPipeline:
         passages: Sequence[RetrievedPassage],
         *,
         language: str | None = None,
+        budget: AnswerBudget | None = None,
     ) -> GenerationResult:
         """Answer ``question`` from ``passages``; never raises for a normal failure mode."""
+        arm = self.arm_budget(budget)
         resolved_language = language or detect_language(question)
         prompt = self.registry.get(ANSWER_PROMPT_ID)
-        packed = self.pack(question, passages, prompt=prompt)
+        packed = self.pack(question, passages, prompt=prompt, budget=arm)
         accumulator = _UsageAccumulator(pricing=self.pricing)
         injection = scan(question, passages)
         if injection:
@@ -276,6 +311,7 @@ class AnswerPipeline:
             language=resolved_language,
             packed=packed,
             accumulator=accumulator,
+            budget=arm,
         )
         if draft is None:
             return self._escalate(
@@ -300,6 +336,60 @@ class AnswerPipeline:
                 injection=injection,
             )
 
+        return self._finish(
+            question=question,
+            language=resolved_language,
+            prompt=prompt,
+            packed=packed,
+            accumulator=accumulator,
+            injection=injection,
+            draft=draft,
+            budget=arm,
+        )
+
+    def _account_stream(
+        self,
+        messages: Sequence[Message],
+        text: str,
+        accumulator: _UsageAccumulator,
+    ) -> None:
+        """Record the tokens of a streamed call (estimator: no usage block exists mid-stream)."""
+        if not text:
+            return
+        accumulator.add(
+            Completion(
+                text=text,
+                model=accumulator.model or getattr(self.provider, "name", ""),
+                input_tokens=estimate_messages_tokens(message.content for message in messages),
+                output_tokens=estimate_tokens(text),
+            )
+        )
+
+    def _finish(
+        self,
+        *,
+        question: str,
+        language: str,
+        prompt: Prompt,
+        packed: PackedContext,
+        accumulator: _UsageAccumulator,
+        injection: list[InjectionFinding],
+        draft: AnswerDraft,
+        budget: AnswerBudget | None = None,
+    ) -> GenerationResult:
+        """Everything after a parsed draft: verify, repair once, prune, render (INV-03)."""
+        if draft.is_refusal:
+            return self._escalate(
+                question=question,
+                language=language,
+                code=ReasonCode.NO_EVIDENCE,
+                detail=draft.why or "model declared the evidence insufficient",
+                packed=packed,
+                prompt=prompt,
+                accumulator=accumulator,
+                injection=injection,
+            )
+
         build = self.builder.build(draft, packed)
         checks = self._check(build, packed)
         numeric_violations_pre_repair = sum(1 for check in checks if not check.numeric_ok)
@@ -310,12 +400,13 @@ class AnswerPipeline:
             repair_attempts += 1
             repair_draft = self._repair(
                 question=question,
-                language=resolved_language,
+                language=language,
                 packed=packed,
                 draft=draft,
                 checks=checks,
                 build=build,
                 accumulator=accumulator,
+                budget=budget,
             )
             if repair_draft is not None and not repair_draft.is_refusal:
                 repaired = True
@@ -341,7 +432,7 @@ class AnswerPipeline:
             )
             return self._escalate(
                 question=question,
-                language=resolved_language,
+                language=language,
                 code=code,
                 detail="no claim survived verification",
                 packed=packed,
@@ -358,14 +449,14 @@ class AnswerPipeline:
         spoken = " ".join(claim.text for claim in claims)
         notice = None
         language_notice_used = False
-        if self.language_notice_enabled and not languages_agree(resolved_language, spoken):
-            notice = language_notice(resolved_language)
+        if self.language_notice_enabled and not languages_agree(language, spoken):
+            notice = language_notice(language)
             language_notice_used = True
         text = render_answer_text(claims, notice=notice)
         self._assert_render(text, claims, citations)
         return GenerationResult(
             question=question,
-            language=resolved_language,
+            language=language,
             text=text,
             claims=claims,
             citations=citations,
@@ -388,14 +479,113 @@ class AnswerPipeline:
             model=accumulator.model,
         )
 
+    def stream_answer(
+        self,
+        question: str,
+        passages: Sequence[RetrievedPassage],
+        *,
+        language: str | None = None,
+        budget: AnswerBudget | None = None,
+    ) -> Iterator[StreamEvent]:
+        """Yield draft deltas as they arrive, then the verified result (FR-GEN-02, NFR-LAT-01).
+
+        The first ``delta`` event carries ``ttft_ms``: time from the call to the first chunk with
+        non-empty content, measured by :class:`answerdesk.llm.latency.ChunkTimer`, so the number
+        reported to the caller is the number the stream actually experienced. Deltas are raw model
+        text and are **not** displayable: the final ``result`` event carries the verified answer
+        (INV-03) — a streaming client that renders deltas must still respect the decision in it.
+        """
+        arm = self.arm_budget(budget)
+        resolved_language = language or detect_language(question)
+        prompt = self.registry.get(ANSWER_PROMPT_ID)
+        packed = self.pack(question, passages, prompt=prompt, budget=arm)
+        accumulator = _UsageAccumulator(pricing=self.pricing)
+        injection = scan(question, passages)
+        if injection or packed.is_empty:
+            result = self.answer(question, passages, language=resolved_language, budget=arm)
+            yield StreamEvent(kind="result", result=result, elapsed_ms=0.0)
+            return
+
+        messages = self.build_messages(
+            prompt, question=question, language=resolved_language, packed=packed, budget=arm
+        )
+        schema = self.response_schema(arm)
+        if getattr(self.provider, "accepts_stream_schema", False):
+            # A JSON-constrained stream: without the schema the model answers in prose and the
+            # draft can never become a grounded answer.
+            constrained = cast("_SchemaStreamingProvider", self.provider)
+            timer = ChunkTimer(constrained.stream(messages, response_schema=schema))
+        else:
+            timer = ChunkTimer(self.provider.stream(messages))
+        index = 0
+        for chunk in timer:
+            if not chunk.delta:
+                continue
+            yield StreamEvent(
+                kind="delta",
+                delta=chunk.delta,
+                index=index,
+                ttft_ms=timer.ttft_ms or 0.0,
+                elapsed_ms=timer.total_ms,
+            )
+            index += 1
+
+        # The stream is exhausted: account for it, parse what the model produced and run the same
+        # gate as the non-streaming path. The provider call is *not* repeated. An SSE stream
+        # carries no usage block, so the tokens are estimated from the exact text that crossed the
+        # wire (same estimator the ledger uses before a response arrives).
+        self._account_stream(messages, timer.text, accumulator)
+        try:
+            draft = self._cap_draft(parse_answer_draft(timer.text), arm)
+        except MalformedModelOutput as exc:
+            result = self._escalate(
+                question=question,
+                language=resolved_language,
+                code=ReasonCode.PROVIDER_ERROR,
+                detail=exc.message,
+                packed=packed,
+                prompt=prompt,
+                accumulator=accumulator,
+                injection=injection,
+            )
+            yield StreamEvent(kind="result", result=result, elapsed_ms=timer.total_ms)
+            return
+
+        result = self._finish(
+            question=question,
+            language=resolved_language,
+            prompt=prompt,
+            packed=packed,
+            accumulator=accumulator,
+            injection=injection,
+            draft=draft,
+            budget=arm,
+        )
+        yield StreamEvent(
+            kind="result",
+            result=result,
+            ttft_ms=timer.ttft_ms or 0.0,
+            elapsed_ms=timer.total_ms,
+        )
+
     # -- internals ----------------------------------------------------------------
-    def reserved_tokens(self, prompt: Prompt, question: str) -> int:
+    def arm_budget(self, budget: AnswerBudget | None = None) -> AnswerBudget:
+        """The budget for this call: per-call override, else the pipeline default."""
+        return budget if budget is not None else self.budget
+
+    def output_cap(self, budget: AnswerBudget | None = None) -> int:
+        """The effective output-token cap: the smaller of the two limits."""
+        return max(1, min(self.max_answer_tokens, self.arm_budget(budget).max_output_tokens))
+
+    def reserved_tokens(
+        self, prompt: Prompt, question: str, *, budget: AnswerBudget | None = None
+    ) -> int:
         """Budget held back for the system prompt, the question, and the answer."""
         overhead = (
             estimate_tokens(prompt.system)
             + estimate_tokens(prompt.user)
             + estimate_tokens(question)
-            + self.max_answer_tokens
+            + self.output_cap(budget)
             + 32
         )
         return overhead
@@ -406,11 +596,20 @@ class AnswerPipeline:
         passages: Sequence[RetrievedPassage],
         *,
         prompt: Prompt,
+        budget: AnswerBudget | None = None,
     ) -> PackedContext:
-        return self.packer.pack(passages, reserved_tokens=self.reserved_tokens(prompt, question))
+        return self.packer.pack(
+            passages, reserved_tokens=self.reserved_tokens(prompt, question, budget=budget)
+        )
 
     def build_messages(
-        self, prompt: Prompt, *, question: str, language: str, packed: PackedContext
+        self,
+        prompt: Prompt,
+        *,
+        question: str,
+        language: str,
+        packed: PackedContext,
+        budget: AnswerBudget | None = None,
     ) -> list[Message]:
         values = {
             "question": question,
@@ -418,10 +617,25 @@ class AnswerPipeline:
             "language_name": language_name(language),
             "evidence": packed.render_evidence(),
         }
+        user_text = prompt.render_user(**values)
+        instruction = self.arm_budget(budget).instruction()
+        if instruction:
+            user_text = f"{user_text}\n\n{instruction}"
         return [
             Message(role=Role.SYSTEM, content=prompt.render_system(**values)),
-            Message(role=Role.USER, content=prompt.render_user(**values)),
+            Message(role=Role.USER, content=user_text),
         ]
+
+    def response_schema(self, budget: AnswerBudget | None = None) -> dict[str, object]:
+        """The strict schema this arm sends (compact variant when the arm asks for it)."""
+        return budget_schema(self.schema, budget=self.arm_budget(budget)).payload
+
+    def _cap_draft(self, draft: AnswerDraft, budget: AnswerBudget | None = None) -> AnswerDraft:
+        """Enforce the arm's claim limit on a parsed draft (the cap is a contract, not a hint)."""
+        limit = self.arm_budget(budget).max_claims
+        if len(draft.claims) > limit:
+            return draft.model_copy(update={"claims": draft.claims[:limit]})
+        return draft
 
     def _generate(
         self,
@@ -431,13 +645,17 @@ class AnswerPipeline:
         language: str,
         packed: PackedContext,
         accumulator: _UsageAccumulator,
+        budget: AnswerBudget | None = None,
     ) -> tuple[AnswerDraft | None, str]:
         """One generation call; on malformed output exactly one strict re-ask."""
-        messages = self.build_messages(prompt, question=question, language=language, packed=packed)
-        completion = self.provider.complete(messages, response_schema=self.schema)
+        messages = self.build_messages(
+            prompt, question=question, language=language, packed=packed, budget=budget
+        )
+        schema = self.response_schema(budget)
+        completion = self.provider.complete(messages, response_schema=schema)
         accumulator.add(completion)
         try:
-            return parse_answer_draft(completion.text), ""
+            return self._cap_draft(parse_answer_draft(completion.text), budget), ""
         except MalformedModelOutput as first_error:
             strict_messages = [
                 messages[0],
@@ -450,10 +668,10 @@ class AnswerPipeline:
                     ),
                 ),
             ]
-            completion = self.provider.complete(strict_messages, response_schema=self.schema)
+            completion = self.provider.complete(strict_messages, response_schema=schema)
             accumulator.add(completion)
             try:
-                return parse_answer_draft(completion.text), ""
+                return self._cap_draft(parse_answer_draft(completion.text), budget), ""
             except MalformedModelOutput as second_error:
                 return None, f"{first_error.message}; after strict re-ask: {second_error.message}"
 
@@ -494,9 +712,10 @@ class AnswerPipeline:
         language: str,
         packed: PackedContext,
         draft: AnswerDraft,
-        checks: Sequence[ClaimCheck],
+        checks: list[ClaimCheck],
         build: CitationBuild,
         accumulator: _UsageAccumulator,
+        budget: AnswerBudget | None = None,
     ) -> AnswerDraft | None:
         """Exactly one repair pass (FR-GEN-07); returns ``None`` if it cannot be parsed."""
         prompt = self.registry.get(REPAIR_PROMPT_ID)
@@ -521,14 +740,18 @@ class AnswerPipeline:
             "rejected": "\n".join(rejected_lines) or "- (no supported claim remained)",
             "previous_draft": draft_to_json(draft),
         }
+        user_text = prompt.render_user(**values)
+        instruction = self.arm_budget(budget).instruction()
+        if instruction:
+            user_text = f"{user_text}\n\n{instruction}"
         messages = [
             Message(role=Role.SYSTEM, content=prompt.render_system(**values)),
-            Message(role=Role.USER, content=prompt.render_user(**values)),
+            Message(role=Role.USER, content=user_text),
         ]
-        completion = self.provider.complete(messages, response_schema=self.schema)
+        completion = self.provider.complete(messages, response_schema=self.response_schema(budget))
         accumulator.add(completion)
         try:
-            return parse_answer_draft(completion.text)
+            return self._cap_draft(parse_answer_draft(completion.text), budget)
         except MalformedModelOutput:
             return None
 
