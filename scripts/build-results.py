@@ -51,6 +51,7 @@ def _read_rows(path: Path) -> list[dict[str, str]]:
 
 
 def _sha256(path: Path) -> str:
+    """Raw-byte digest; used only where the bytes themselves matter (never for provenance)."""
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
@@ -1067,7 +1068,7 @@ def _reproduction(summary: Mapping[str, Any], run: Path) -> list[str]:
         "them with the same seed must reproduce the same hashes. Latency and USD are measured "
         "in-process with the provider's own token counts.",
         "",
-        f"Artefact digest: `{_sha256(run / 'summary.json')[:32]}` (summary.json).",
+        f"Artefact digest: `{_canonical_sha256(run / 'summary.json')[:32]}` (summary.json).",
         "",
     ]
     return lines

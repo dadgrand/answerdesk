@@ -504,4 +504,4 @@ uv run python scripts/build-results.py --run reports/bench --out docs/results.md
 
 The golden set and split are frozen and hashed (see the header table); regenerating them with the same seed must reproduce the same hashes. Latency and USD are measured in-process with the provider's own token counts.
 
-Artefact digest: `fce1ae0ddf8b99d4f2bc3abdfb7ee13d` (summary.json).
+Artefact digest: `fe547d78a894d90ea5ccd6f37f7941ad` (summary.json).
