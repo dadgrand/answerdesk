@@ -458,7 +458,7 @@ Recorded token pricing (see `configs/pricing.yaml` for provenance):
 
 ## External validity (separate deliverable)
 
-No external-benchmark document is present in this checkout. Public-benchmark results are owned by the external-validity task and are deliberately not merged into these tables.
+Public-benchmark results live in `docs/external-validity.md` and are **not** merged into the tables above, because they answer a different question (external comparability) on different data with their own licences and sampling.
 
 Concretely: no public retrieval qrels exist for Uzbek, Tajik or Kyrgyz, so this document makes **no** external retrieval claim for those locales; ru and zh do have public retrieval benchmarks (MIRACL, Mr. TyDi), and those belong to the external report. Belebele-derived labels are derived/diagnostic and never presented as public qrels.
 
