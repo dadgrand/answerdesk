@@ -974,7 +974,6 @@ def _risk_v3_block(payload: Mapping[str, Any]) -> list[str]:
     certificate = bench["certificate"]
     targets = bench["targets"]
     required = payload.get("n_required", {})
-    operating = test["certified_operating_point"]
     return [
         "## Risk control v3 (bench population, persisted answer artefacts, Learn-then-Test)",
         "",
