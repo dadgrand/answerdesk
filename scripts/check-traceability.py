@@ -236,7 +236,7 @@ def _print_human(report: dict[str, object], *, quiet: bool) -> None:
     if missing_paths:
         print(f"\nFAIL: {len(missing_paths)} matrix path(s) do not exist:")
         for item in missing_paths:
-            print(f"  - {item['requirement']}: `{item['token']}` → {item['resolved']}")
+            print(f"  - {item['requirement']}: `{item['token']}` -> {item['resolved']}")
         print("  fix: point the row at the real module, or record the correction in §18.5.")
     if unknown:
         print(
