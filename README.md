@@ -9,7 +9,8 @@ passage and checked by a verifier; the system abstains instead of guessing; the 
 answer-quality, escalation, cache, latency and cost measurements are reproducible from one
 command on a laptop — no Docker, no vector database, no API key required for the offline path.
 
-`Python 3.11–3.13` · `MIT (code) · CC0-1.0 (synthetic corpus)` · `Windows / Linux / macOS` ·
+`Python 3.11–3.12 tested in CI (3.13 in the lockfile's range)` · `MIT (code) · CC0-1.0 (synthetic corpus)` ·
+`Windows + Linux in CI; macOS expected but not a CI leg` ·
 `local-first, API-optional (OpenAI-compatible: vLLM, llama.cpp, Ollama)`
 
 > **Honest status (v0.1.0).** The pipeline, service, console and evaluation harness work
@@ -267,7 +268,7 @@ evidence, and the limitation is stated rather than hidden. The reranker arm is r
 | citation recall (ALCE-style) | 0.211 [0.189, 0.233] (n=141) | **the weak spot**: many statements have no citation that fully supports them |
 | citation precision | 0.671 [0.610, 0.727] (n=141) | two thirds of citations support their claim |
 | language agreement | 0.986 [0.952, 0.996] (n=148) | answers in the query language |
-| auto-answer coverage | 0.841 [0.780, 0.888] (n=176) | 84% of turns answered without a human |
+| auto-answer coverage (answerable turns) | 0.841 [0.780, 0.888] (n=176) | 84% of **answerable** turns answered without a human; coverage over *all* turns is lower by construction, because an unsafe or unanswerable turn is escalated by design |
 | must-escalate recall | 1.000 [0.862, 1.000] (n=24) | 0 false negatives on unsafe/unanswerable turns |
 | escalation precision | 0.462 [0.333, 0.595] (n=52) | ~16% of answerable turns escalated (false-escalation 0.159) |
 | **realised risk on answered turns** | **0.223 [0.163, 0.297] (n=148)** | **against α = 0.05 — risk control did not hold** |

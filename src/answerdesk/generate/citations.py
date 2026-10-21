@@ -89,9 +89,6 @@ class CitationBuild(Contract):
     def citation_map(self) -> dict[int, Citation]:
         return {citation.citation_id: citation for citation in self.citations}
 
-    def uncited_claim_indexes(self) -> list[int]:
-        return [index for index, claim in enumerate(self.claims) if not claim.citation_ids]
-
 
 class CitationBuilder:
     """Turns a validated :class:`AnswerDraft` into contract ``Claim``/``Citation`` objects."""

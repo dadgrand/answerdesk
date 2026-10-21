@@ -401,7 +401,7 @@ class ServiceRuntime:
         }
         checks["tracing"] = {
             "status": "ok",
-            "detail": f"{getattr(self.tracer, 'path', 'in-memory')}",
+            "detail": repo_relative(getattr(self.tracer, "path", None)),
         }
 
         degraded = any(check["status"] in ("degraded", "error") for check in checks.values())
@@ -493,6 +493,27 @@ def _demo_index(embedder: Any) -> IndexBundle:
     return IndexBundle.build(store, embedder)
 
 
+#: Repository root: health details report paths relative to it, so an operator reading a
+#: health payload (or a pasted one in a ticket) does not learn the host layout (R-27).
+REPO_ROOT = Path(__file__).resolve().parents[3]
+
+
+def repo_relative(path: object) -> str:
+    """A path as the repository sees it: relative when inside, basename when outside."""
+    if path is None:
+        return "not configured"
+    try:
+        resolved = Path(str(path)).resolve()
+    except (OSError, ValueError):  # pragma: no cover - defensive
+        return str(path)
+    for root in (REPO_ROOT,):
+        try:
+            return resolved.relative_to(root).as_posix()
+        except ValueError:
+            continue
+    return resolved.name
+
+
 def _prompt_version(answerer: AnswerPipeline) -> str:
     try:
         registry = getattr(answerer, "registry", None) or PromptRegistry.load()
@@ -540,7 +561,7 @@ def _load_engine(
         artifact = CalibrationArtifact.load(path)
     except Exception as exc:
         return CalibrationState(
-            source=str(path), error=f"cannot load calibration artifact: {exc}"
+            source=repo_relative(path), error=f"cannot load calibration artifact: {exc}"
         ), None
     try:
         resolved = DecisionEngine.from_artifact(
@@ -551,11 +572,11 @@ def _load_engine(
         )
     except Exception as exc:
         return CalibrationState(
-            source=str(path), error=f"invalid calibration artifact: {exc}"
+            source=repo_relative(path), error=f"invalid calibration artifact: {exc}"
         ), None
     return (
         CalibrationState(
-            source=str(path),
+            source=repo_relative(path),
             threshold_ref=resolved.threshold_ref(),
             artifact_hash=artifact.artifact_hash,
             artifact_corpus_version=artifact.corpus_version,
@@ -582,7 +603,7 @@ def _build_cache(
     if path is not None and Path(path).is_file():
         try:
             thresholds = CacheThresholdTable.load(path)
-            label = str(path)
+            label = repo_relative(path)
         except Exception as exc:  # pragma: no cover - corrupt artifact
             label = f"exact-only (thresholds unreadable: {type(exc).__name__})"
     lookup = (
