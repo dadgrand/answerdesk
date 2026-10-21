@@ -19,9 +19,12 @@ into the fast CI job, `ci-offline.ps1` and the workflow smoke test). The only ma
 R-39 (medium): the enforced coverage gate is the aggregate over the four packages; a per-package
 reading puts `eval` at 68% against the 70% wording of NFR-QUAL-02, to be fixed with tests or an
 explicit aggregate amendment. Lows R-19/R-20/R-22/R-32/R-35/R-41 remain documented; R-08 is the
-networked `pip-audit` release step. **Formal task verdict not yet recorded**: t54 is terminal and no
-t55/t56 exists in the task list (the team loop is escalated), so this report records the audit result
-pending a task assignment.
+networked `pip-audit` release step. **Formal task verdict: PASS, recorded under t55** (kind=review,
+round 9, reviewed task t52; attempt 6f154698). The three contract verify commands were re-run on the
+repository and on the clean `git archive`: `uv run pytest -q` (repo 1,643 passed / 1 skipped; clean
+archive 1,642 / 2 documented skips), `scripts/risk-v3.py --check` (exit 0), and
+`scripts/build-results.py --run reports/bench --check` (exit 0). No blocker/high finding remains;
+R-39 and R-08 are recorded as non-blocking mediums, not hidden.
 
 ---
 
