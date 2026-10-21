@@ -161,7 +161,7 @@ python -m answerdesk.llm.latency_report --run --live --limit 20
 # 3) local vLLM (2 × 16 GB), once a server is up — profile ships, numbers do not
 vllm serve <model> --served-model-name answerdesk-generator --tensor-parallel-size 2 \
     --max-model-len 8192 --gpu-memory-utilization 0.90 --enable-prefix-caching --port 8000
-uv run answerdesk --profile vllm config check
+uv run answerdesk --config configs/profiles/vllm.yaml config check
 python -m answerdesk.llm.latency_report --run --live --limit 20 --out reports/latency-v2-vllm
 
 # 4) CI gate: re-derive every published claim from the artifact

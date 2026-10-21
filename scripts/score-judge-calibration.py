@@ -23,12 +23,11 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-import judge_gate  # noqa: E402
+import judge_gate
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -84,7 +83,8 @@ def main(argv: list[str] | None = None) -> int:
             for item in result["checks"]:
                 print(f"{'PASS' if item['ok'] else 'FAIL'}  {item['check']}: {item['detail']}")
             print(
-                f"\n{sum(1 for item in result['checks'] if item['ok'])}/{len(result['checks'])} checks passed"
+                f"\n{sum(1 for item in result['checks'] if item['ok'])}/"
+                f"{len(result['checks'])} checks passed"
             )
         return 0 if result["ok"] else 1
 
@@ -101,17 +101,20 @@ def main(argv: list[str] | None = None) -> int:
         )
     else:
         print(
-            f"judge gate: status={artefact['status']} judged_metrics_label={artefact['judged_metrics_label']} "
+            f"judge gate: status={artefact['status']} "
+            f"judged_metrics_label={artefact['judged_metrics_label']} "
             f"publishable={artefact['publishable']} synthetic={artefact['synthetic']}"
         )
         print(
             f"items={artefact['pooled']['items']} labelled={artefact['pooled']['labelled']} "
-            f"judge_kappa={artefact['pooled']['judge_kappa']} disagreements={artefact['disagreements']}"
+            f"judge_kappa={artefact['pooled']['judge_kappa']} "
+            f"disagreements={artefact['disagreements']}"
         )
         for language, block in sorted(artefact["per_language"].items()):
             print(
                 f"  {language}: rows={block['items']} labelled={block['labelled']} "
-                f"judge_kappa={block['judge_kappa']} pairwise_agreement={block['pairwise_agreement']} "
+                f"judge_kappa={block['judge_kappa']} "
+                f"pairwise_agreement={block['pairwise_agreement']} "
                 f"status={block['status']}"
             )
         for reason in artefact["reasons"]:

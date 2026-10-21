@@ -554,7 +554,8 @@ def evaluate(
             and score.pairwise_agreement < policy.pairwise_agreement_floor
         ):
             reasons.append(
-                f"{language}: pairwise agreement {score.pairwise_agreement:.3f} < {policy.pairwise_agreement_floor}"
+                f"{language}: pairwise agreement {score.pairwise_agreement:.3f} "
+                f"< {policy.pairwise_agreement_floor}"
             )
         if score.judge_kappa is None:
             reasons.append(f"{language}: judge–human κ undefined (constant labels?)")
@@ -718,7 +719,8 @@ def render_markdown(artefact: Mapping[str, Any]) -> str:
             "",
             "## Per language",
             "",
-            "| language | rows | labelled | judge κ [95% CI] | pairwise agreement | pairwise κ | disagreements | status |",
+            "| language | rows | labelled | judge κ [95% CI] | pairwise agreement | "
+            "pairwise κ | disagreements | status |",
             "|---|---|---|---|---|---|---|---|",
         ]
     )
@@ -738,7 +740,8 @@ def render_markdown(artefact: Mapping[str, Any]) -> str:
         pairwise_text = "—" if pairwise is None else f"{pairwise:.3f}"
         lines.append(
             f"| {language} | {block.get('items', 0)} | {block.get('labelled', 0)} | {judge_text} | "
-            f"{agreement_text} | {pairwise_text} | {block.get('disagreements', 0)} | {block.get('status', '')} |"
+            f"{agreement_text} | {pairwise_text} | {block.get('disagreements', 0)} | "
+            f"{block.get('status', '')} |"
         )
     pooled = artefact.get("pooled") or {}
     lines.extend(
@@ -762,7 +765,8 @@ def render_markdown(artefact: Mapping[str, Any]) -> str:
             "## How to read this",
             "",
             "`judged_metrics_label` is `calibrated` only when status is `open`; a missing,",
-            "corrupt or stale gate is treated as `diagnostic` by `load_judged_label` (fail-closed).",
+            "corrupt or stale gate is treated as "
+            "`diagnostic` by `load_judged_label` (fail-closed).",
             "Synthetic dry-run fixtures can reach `open` to prove the mechanics but are never",
             "`publishable`: real human labels are required for a reportable claim.",
             "",
@@ -935,10 +939,10 @@ __all__ = [
     "DEFAULT_SHEETS_DIR",
     "FIXTURES_DIR",
     "GATE_FILE",
+    "SYNTHETIC_MARKER",
     "GateError",
     "LanguageScore",
     "Policy",
-    "SYNTHETIC_MARKER",
     "bootstrap_kappa",
     "check",
     "cohen_kappa",
