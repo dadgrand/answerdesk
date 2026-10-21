@@ -239,12 +239,31 @@ Adjacent failures that are also tested:
 | oversized body | `413 payload_too_large` before the body is read | `test_oversized_body_is_413` |
 | unknown route / method | `404 not_found` / `405 method_not_allowed` | `test_unknown_route_is_404_and_wrong_method_is_405` |
 | idempotency key reuse with a different body | `409 idempotency_conflict`, the first response stays | `test_same_key_with_a_different_body_is_a_conflict` |
+| concurrent retries with the same key | one turn, one model call, the rest replay the stored JSON (`X-Idempotent-Replay: true`); no `UNIQUE` violation | `test_concurrent_retries_of_one_key_run_the_turn_once` (property) |
+| `Idempotency-Key` longer than 200 chars or with control characters | `400 bad_request`, nothing stored | `test_huge_idempotency_key_is_rejected` (property) |
+| **cache lookup raises** (e.g. a query that normalises to `""`) | the turn continues with `cache.status=bypassed` and a reason in the trace — a cache defect never fails a request (F-02) | `test_torture_corpus_never_breaks_the_stream` (property) |
+| invalid UTF-8 body / unpaired surrogate | `400 bad_request` / `422 validation_error`; an optional field is sanitised, nothing reaches SQLite unencodable (F-01) | `test_invalid_utf8_bytes_are_a_traced_400`, `test_lone_surrogate_in_the_message_is_a_traced_validation_error` |
+| malformed body (empty, `null`, array, deep nesting, `NaN`, duplicate keys) | `400/413/422` with a taxonomy code and a trace id, never a 500 | `test_every_malformed_body_is_a_traced_4xx` (property) |
+| unsafe `X-Trace-Id` (spaces, control characters, >128 chars) | a fresh `tr-<24 hex>` id replaces it; the header is always a safe token (F-08) | `test_client_trace_ids_are_echoed_only_when_safe` |
+| provider transport error escaping the LLM layer (`httpx` timeout/reset/status) | `504 provider_timeout` / `502 provider_unreachable` / `502 provider_error`, `retryable=true` (F-05) | `test_provider_failure_is_a_taxonomised_error` (property) |
+| provider SSE truncated mid-frame | the completion is empty, the generator escalates `PROVIDER_ERROR`, nothing is displayed (limitation L-3) | `test_truncated_provider_sse_is_an_empty_completion_not_a_hang` |
+| client disconnects mid-stream | no exception escapes, the idempotency lock is released, the next request succeeds | `test_client_disconnect_does_not_raise_and_the_service_stays_up` |
+| directive-shaped text in retrieved evidence | `INJECTION_SUSPECTED` escalation with **zero** provider calls | `test_injection_in_retrieved_evidence_is_escalated_without_a_model_call` |
+| PII in retrieved evidence | redacted (`[CARD]`, `[EMAIL]`, `[PHONE]`) before every provider attempt, including retries | `test_pii_in_evidence_is_redacted_before_the_provider` |
+| secret-shaped value pasted into a question | `[SECRET]` in the trace, the log and the provider body (F-06) | `test_secrets_in_the_query_are_redacted_in_traces_and_prompts` |
+| U+2028/U+2029 in a query | escaped in the SSE frame, so strict clients can still parse it (F-07) | `test_torture_corpus_never_breaks_the_stream` |
+| malformed config file / env var | CLI exits 2 with `config error: …`, no traceback, nothing starts | `test_bad_config_exits_two_without_a_traceback` (property) |
 | admin disabled / wrong token | `403 admin_disabled` / `403 forbidden` / `401 unauthorized` | `test_admin_is_disabled_without_a_configured_token`, `test_admin_requires_the_bearer_token` |
 | SQLite write failure | `500 internal_error`; the turn is not reported as persisted | (unit) `tests/integration/service/test_errors.py` covers the mapping |
 
 **The rule behind the table:** a dependency failure never becomes a confident answer. The
 service answers only when the decision engine says `answer`; everything else escalates with
 a reason code and an operator ticket.
+
+The adversarial pass behind these rows — what was fuzzed, every defect it found (F-01…F-08)
+and the limits it does **not** cover — is documented in
+[`docs/robustness.md`](robustness.md). Its suite is `tests/property/` (102 tests; run it with
+`uv run pytest -q tests/property tests/integration/service`).
 
 ---
 

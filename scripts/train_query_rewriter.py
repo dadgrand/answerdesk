@@ -254,6 +254,10 @@ def run_check(args: argparse.Namespace) -> int:
     torch_ok = env.get("torch") != "missing"
     cuda_ok = env.get("cuda_available") == "True"
     four_bit: str = "not attempted"
+    #: Always defined: the report reads it on every path (CUDA absent included), and a
+    #: missing initialisation turned a clean "not attempted" verdict into an UnboundLocalError
+    #: on CPU-only machines.
+    four_bit_stderr: str = ""
     if torch_ok and cuda_ok:
         stderr_capture = io.StringIO()
         try:
@@ -287,7 +291,7 @@ def run_check(args: argparse.Namespace) -> int:
     report["four_bit_stderr"] = four_bit_stderr
     report["four_bit_note"] = (
         "a non-empty stderr here is bitsandbytes' own diagnostic; on Windows 0.50.2 it is "
-        "\"FP4 quantization state not initialized\" immediately before the AssertionError"
+        '"FP4 quantization state not initialized" immediately before the AssertionError'
     )
     report["adapter_present"] = (args.out / "adapter_model.safetensors").is_file()
     report["data_present"] = (args.data_dir / "pairs.jsonl").is_file()

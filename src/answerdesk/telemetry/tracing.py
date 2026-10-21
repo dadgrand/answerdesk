@@ -44,7 +44,12 @@ from typing import Any, Protocol, runtime_checkable
 
 from answerdesk.contracts import TraceRecord
 from answerdesk.logging import get_logger
-from answerdesk.telemetry.redaction import RedactionSummary, redact_payload, redact_value
+from answerdesk.telemetry.redaction import (
+    RedactionSummary,
+    redact_payload,
+    redact_value,
+    sanitise_text,
+)
 
 _LOGGER = get_logger(__name__)
 
@@ -155,9 +160,12 @@ class JsonlTraceWriter:
     # -- protocol ------------------------------------------------------------------
     def write(self, line: Mapping[str, Any]) -> None:
         payload = redact_payload(dict(line)) if self.redact else dict(line)
-        serialised = json.dumps(payload, ensure_ascii=False, sort_keys=True, default=str)
+        serialised = sanitise_text(
+            json.dumps(payload, ensure_ascii=False, sort_keys=True, default=str)
+        )
+        encoded = serialised.encode("utf-8")
         with self._lock:
-            self._rotate_if_needed(len(serialised.encode("utf-8")) + 1)
+            self._rotate_if_needed(len(encoded) + 1)
             handle = self._open()
             handle.write(serialised + "\n")
             handle.flush()

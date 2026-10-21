@@ -54,6 +54,7 @@ from answerdesk.generate.citations import validate_render
 from answerdesk.generate.language import detect_language
 from answerdesk.generate.numeric import numeric_violations
 from answerdesk.generate.pipeline import GenerationResult
+from answerdesk.logging import get_logger
 from answerdesk.policy.decision import PolicyOutcome
 from answerdesk.service.signals import (
     HistoryReplay,
@@ -63,6 +64,8 @@ from answerdesk.service.signals import (
 )
 from answerdesk.telemetry.redaction import redact_text
 from answerdesk.telemetry.tracing import trace_line
+
+_LOGGER = get_logger(__name__)
 
 #: Priority per risk bucket for auto-created escalation tickets.
 _PRIORITY_BY_BUCKET: dict[IntentBucket, Priority] = {
@@ -194,48 +197,57 @@ class TurnRunner:
                     runtime.metrics.observe_cache_status(CacheStatus.BYPASSED.value)
                 else:
                     anchor = time.perf_counter()
-                    lookup = runtime.cache.get(
+                    lookup = _cache_lookup(
+                        runtime,
                         query=replay.query,
                         locale=request.locale or language,
                         intent_bucket=request.intent_bucket,
                         intent_label=request.intent_label,
                     )
                     timings["cache"] = _ms(anchor)
-                    cache_status = lookup.status
-                    cache_entry_id = lookup.entry_id
-                    cache_similarity = (
-                        None
-                        if lookup.similarity is None
-                        else min(1.0, max(0.0, lookup.similarity))
-                    )
-                    cache_reason = lookup.reason
-                    runtime.metrics.observe_cache_status(
-                        lookup.status.value, kind=_cache_kind(lookup)
-                    )
-                    if lookup.hit and lookup.answer is not None:
-                        regenerated = preflight_decision(
-                            runtime.engine,
-                            query=request.message,
-                            bucket=request.intent_bucket,
-                            intent_label=request.intent_label,
+                    if lookup is None:
+                        # A degenerate query (e.g. punctuation only) normalises to an empty
+                        # string, which the cache key contract refuses. The cache is an
+                        # optimisation: degrade to a bypassed lookup, never to a 500.
+                        cache_status = CacheStatus.BYPASSED
+                        cache_reason = "cache lookup failed; the turn ran without the cache"
+                        runtime.metrics.observe_cache_status(CacheStatus.BYPASSED.value)
+                    else:
+                        cache_status = lookup.status
+                        cache_entry_id = lookup.entry_id
+                        cache_similarity = (
+                            None
+                            if lookup.similarity is None
+                            else min(1.0, max(0.0, lookup.similarity))
                         )
-                        if regenerated is None:
-                            answer = _from_cache(
-                                lookup.answer,
-                                identifiers,
-                                entry_id=lookup.entry_id,
-                                similarity=cache_similarity,
+                        cache_reason = lookup.reason
+                        runtime.metrics.observe_cache_status(
+                            lookup.status.value, kind=_cache_kind(lookup)
+                        )
+                        if lookup.hit and lookup.answer is not None:
+                            regenerated = preflight_decision(
+                                runtime.engine,
+                                query=request.message,
+                                bucket=request.intent_bucket,
+                                intent_label=request.intent_label,
                             )
-                            decision = lookup.answer.decision
-                            p_hat = decision.score
-                            cache_status = CacheStatus.HIT
-                            usage = Usage()
-                            runtime.metrics.cache_hit_latency.observe(timings["cache"] / 1000.0)
-                        else:
-                            cache_status = CacheStatus.MISS
-                            cache_reason = "guard demoted a cache hit"
-                            decision = regenerated
-                            p_hat = decision.score
+                            if regenerated is None:
+                                answer = _from_cache(
+                                    lookup.answer,
+                                    identifiers,
+                                    entry_id=lookup.entry_id,
+                                    similarity=cache_similarity,
+                                )
+                                decision = lookup.answer.decision
+                                p_hat = decision.score
+                                cache_status = CacheStatus.HIT
+                                usage = Usage()
+                                runtime.metrics.cache_hit_latency.observe(timings["cache"] / 1000.0)
+                            else:
+                                cache_status = CacheStatus.MISS
+                                cache_reason = "guard demoted a cache hit"
+                                decision = regenerated
+                                p_hat = decision.score
 
                 if answer is None and decision is None:
                     # 4. retrieval
@@ -653,6 +665,36 @@ def _display_problems(generation: GenerationResult | None) -> list[str]:
         ]
         problems.extend(f"numeric guard: {item}" for item in numeric_violations(claim.text, quoted))
     return problems
+
+
+def _cache_lookup(
+    runtime: Any,
+    *,
+    query: str,
+    locale: str,
+    intent_bucket: Any,
+    intent_label: str | None,
+) -> Any:
+    """Look the query up in the semantic cache, or ``None`` when the cache cannot answer.
+
+    Fuzz finding F-02 (docs/robustness.md): a query made only of punctuation or whitespace
+    normalises to ``""`` and ``CacheKey`` refuses it, which used to fail the whole turn. The
+    cache is an optimisation on the answer path, so any cache-side exception degrades to a
+    bypassed lookup; the turn then runs retrieval + generation as if the cache were off.
+    """
+    try:
+        return runtime.cache.get(
+            query=query,
+            locale=locale,
+            intent_bucket=intent_bucket,
+            intent_label=intent_label,
+        )
+    except Exception as exc:
+        _LOGGER.warning(
+            "semantic cache lookup failed (%s); serving without the cache",
+            type(exc).__name__,
+        )
+        return None
 
 
 def _cache_put(

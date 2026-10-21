@@ -15,9 +15,9 @@ a request, calls :class:`~answerdesk.service.turn.TurnRunner`, and serialises th
 
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field
 
 from answerdesk.contracts import (
     Action,
@@ -30,6 +30,15 @@ from answerdesk.contracts import (
     ReasonCode,
     Usage,
 )
+from answerdesk.telemetry.redaction import sanitise_text
+
+#: A request string that has passed the UTF-8 boundary.
+#:
+#: JSON permits unpaired surrogates and NULs; UTF-8 (and therefore SQLite, the trace file and
+#: every log sink) does not. Validating them here means a hostile body is *accepted and
+#: normalised* rather than reaching the store and raising ``UnicodeEncodeError`` halfway
+#: through a turn (fuzz finding F-01, docs/robustness.md).
+SanitisedStr = Annotated[str, AfterValidator(sanitise_text)]
 
 
 class Wire(BaseModel):
@@ -44,20 +53,20 @@ class Wire(BaseModel):
 class ChatRequest(Wire):
     """One customer turn."""
 
-    message: str = Field(
+    message: SanitisedStr = Field(
         min_length=1,
         max_length=8000,
         description="The customer message, in any supported locale (ru, tg, uz, ky, tr, zh, en).",
         examples=["Сколько стоит годовое обслуживание карты «Вектор»?"],
     )
-    session_id: str | None = Field(
+    session_id: SanitisedStr | None = Field(
         default=None,
         min_length=1,
         max_length=64,
         description="Conversation to continue. Omit to start a new session.",
         examples=["s-0123456789abcdef"],
     )
-    locale: str | None = Field(
+    locale: SanitisedStr | None = Field(
         default=None,
         min_length=2,
         max_length=8,
@@ -68,7 +77,7 @@ class ChatRequest(Wire):
         default=IntentBucket.INFORMATIONAL,
         description="Risk tier that selects the conformal alpha (requirements §8.2).",
     )
-    intent_label: str | None = Field(
+    intent_label: SanitisedStr | None = Field(
         default=None,
         max_length=64,
         description="Optional fine-grained intent label used by the high-risk guard.",
@@ -83,26 +92,28 @@ class ChatRequest(Wire):
 class FeedbackRequest(Wire):
     """A thumbs up/down attached to a trace (FR-SVC-05)."""
 
-    trace_id: str = Field(min_length=1, max_length=64, examples=["tr-0123456789abcdef"])
+    trace_id: SanitisedStr = Field(min_length=1, max_length=64, examples=["tr-0123456789abcdef"])
     rating: Literal["up", "down", "neutral"] = Field(description="Customer/operator verdict.")
-    comment: str | None = Field(default=None, max_length=2000)
-    session_id: str | None = Field(default=None, max_length=64)
+    comment: SanitisedStr | None = Field(default=None, max_length=2000)
+    session_id: SanitisedStr | None = Field(default=None, max_length=64)
 
 
 class EscalationTicketRequest(Wire):
     """An explicit handoff to a human (FR-SVC-05, W2.5)."""
 
-    trace_id: str = Field(min_length=1, max_length=64)
-    reason: str = Field(min_length=3, max_length=500, examples=["Customer asked for a human."])
+    trace_id: SanitisedStr = Field(min_length=1, max_length=64)
+    reason: SanitisedStr = Field(
+        min_length=3, max_length=500, examples=["Customer asked for a human."]
+    )
     priority: Priority = Priority.NORMAL
-    note: str | None = Field(default=None, max_length=4000)
-    session_id: str | None = Field(default=None, max_length=64)
+    note: SanitisedStr | None = Field(default=None, max_length=4000)
+    session_id: SanitisedStr | None = Field(default=None, max_length=64)
 
 
 class IngestRequest(Wire):
     """Admin ingestion (FR-SVC-04)."""
 
-    source: str | None = Field(
+    source: SanitisedStr | None = Field(
         default=None,
         max_length=512,
         description="File or directory to ingest. Omit with demo=true for the synthetic corpus.",

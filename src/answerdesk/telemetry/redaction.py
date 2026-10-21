@@ -23,6 +23,7 @@ that a field was redacted (`<EMAIL>`) without being able to recover it.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any
@@ -58,6 +59,29 @@ _SECRET_SUFFIXES = ("_token", "_secret", "_password", "_passwd", "_credential", 
 
 #: The placeholder written instead of a secret value — never the length, never a prefix.
 SECRET_PLACEHOLDER = "***"
+
+#: Replacement for characters no UTF-8 sink can encode (unpaired surrogates, NUL).
+INVALID_CHAR_REPLACEMENT = "\ufffd"
+
+
+def sanitise_text(text: str) -> str:
+    """Make a string safe for every UTF-8 sink (logs, traces, SQLite, JSON bodies).
+
+    JSON allows unpaired surrogates (``"\\ud800"``) and Python carries them happily, but
+    UTF-8 cannot encode them and ``sqlite3`` refuses them. A hostile client could therefore
+    turn a stored turn into an ``UnicodeEncodeError`` — a 500 with no taxonomy code. The
+    request boundary replaces them; telemetry repeats the replacement defensively because a
+    trace write must never fail a turn (INV-05 is about *not leaking*, not about crashing).
+    """
+    if not text:
+        return text
+    if "\x00" in text:
+        text = text.replace("\x00", INVALID_CHAR_REPLACEMENT)
+    try:
+        text.encode("utf-8")
+    except UnicodeEncodeError:
+        text = text.encode("utf-8", "replace").decode("utf-8")
+    return text
 
 
 def is_secret_key(name: str) -> bool:
@@ -102,16 +126,53 @@ class RedactionSummary:
         return {"redacted": self.count, "kinds": list(self.kinds), "fields": list(self.fields)}
 
 
+#: Well-known credential *shapes* found in free text (a customer pasting a key into the
+#: chat, a stack trace quoting a header). Key-name matching cannot see these: the value sits
+#: inside a query string, not behind a mapping key (fuzz finding F-06, docs/robustness.md).
+_SECRET_VALUE_PATTERNS: tuple[re.Pattern[str], ...] = (
+    re.compile(r"sk-[A-Za-z0-9_-]{16,}"),
+    re.compile(r"gh[pousr]_[A-Za-z0-9]{20,}"),
+    re.compile(r"xox[baprs]-[A-Za-z0-9-]{10,}"),
+    re.compile(r"AKIA[0-9A-Z]{16}"),
+    re.compile(r"Bearer\s+[A-Za-z0-9._~+/=-]{16,}"),
+    re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----"),
+    re.compile(r"(?i)\b(?:api[_-]?key|password|passwd|secret|token)\s*[=:]\s*[^\s,;]{8,}"),
+)
+
+#: What a redacted credential becomes. One placeholder for every shape: the operator only
+#: needs to know that something was removed.
+SECRET_VALUE_PLACEHOLDER = "[SECRET]"
+
+
+def _redact_secret_values(text: str) -> tuple[str, int]:
+    """Replace credential-shaped substrings; returns the text and how many were replaced."""
+    count = 0
+    for pattern in _SECRET_VALUE_PATTERNS:
+        text, replaced = pattern.subn(SECRET_VALUE_PLACEHOLDER, text)
+        count += replaced
+    return text, count
+
+
 def redact_text(text: str) -> Redacted:
-    """Redact PII in a single string (no-op for empty input)."""
+    """Redact PII and credential-shaped values in a single string (no-op for empty input)."""
     if not text:
         return Redacted(text="")
+    text = sanitise_text(text)
     body = text[:MAX_REDACT_CHARS]
     result: RedactionResult = redact(body)
-    kinds = tuple(sorted(result.kinds))
+    kinds = set(result.kinds)
     count = result.redacted_count
-    body = result.text + text[MAX_REDACT_CHARS:] if len(text) > MAX_REDACT_CHARS else result.text
-    return Redacted(text=body, kinds=kinds, count=count)
+    body, secrets = _redact_secret_values(result.text)
+    if secrets:
+        kinds.add("secret")
+        count += secrets
+    if len(text) > MAX_REDACT_CHARS:
+        tail, tail_secrets = _redact_secret_values(text[MAX_REDACT_CHARS:])
+        body += tail
+        if tail_secrets:
+            kinds.add("secret")
+            count += tail_secrets
+    return Redacted(text=body, kinds=tuple(sorted(kinds)), count=count)
 
 
 def redact_str(text: str) -> str:
@@ -137,9 +198,11 @@ def redact_messages(
     cleaned: list[Message] = []
     findings: list[PIIFinding] = []
     for message in messages:
-        findings.extend(detect(message.content))
-        result = redact(message.content)
-        cleaned.append(message.model_copy(update={"content": result.text}))
+        content = sanitise_text(message.content)
+        findings.extend(detect(content))
+        result = redact(content)
+        text, _secrets = _redact_secret_values(result.text)
+        cleaned.append(message.model_copy(update={"content": text}))
     return cleaned, findings
 
 
@@ -182,7 +245,9 @@ def redact_value(value: Any, *, key: str = "") -> tuple[Any, RedactionSummary]:
             return redacted.text, RedactionSummary(
                 count=redacted.count, kinds=redacted.kinds, fields=(key,) if key else ()
             )
-        return value, RedactionSummary()
+        # Even an unchanged value is returned through :func:`sanitise_text`, so a surrogate
+        # that survived the request boundary cannot break the JSONL write.
+        return redacted.text, RedactionSummary()
     return value, RedactionSummary()
 
 

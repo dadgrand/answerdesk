@@ -27,7 +27,8 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import time
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Annotated, Any, cast
 
@@ -83,6 +84,91 @@ router = APIRouter()
 CHAT_ENDPOINT = "chat"
 FEEDBACK_ENDPOINT = "feedback"
 ESCALATION_ENDPOINT = "escalations"
+
+#: Longest accepted ``Idempotency-Key``. Header values are attacker-controlled and stored in
+#: SQLite, so an unbounded key is an easy way to grow a table by megabytes per request
+#: (fuzz finding F-04, docs/robustness.md).
+MAX_IDEMPOTENCY_KEY_CHARS = 200
+
+#: Ceiling on concurrently tracked keys; entries are dropped once their last waiter leaves.
+_MAX_IDEMPOTENCY_LOCKS = 512
+
+
+@dataclass
+class _KeyLockEntry:
+    """One in-process mutex plus the number of requests that reference it."""
+
+    lock: asyncio.Lock = field(default_factory=asyncio.Lock)
+    users: int = 0
+
+
+_IDEMPOTENCY_LOCKS: dict[str, _KeyLockEntry] = {}
+
+
+class _KeyLock:
+    """Serialise concurrent requests that share an ``Idempotency-Key``.
+
+    Two retries racing through the same key used to run the turn twice and let the second
+    ``append_turn`` hit the ``UNIQUE`` index on ``turns.idempotency_key`` — a 500 raised by a
+    *well-behaved* client retrying (fuzz finding F-03). The lock is acquired before the
+    replay check, so the loser sees the winner's stored response and replays it.
+    """
+
+    def __init__(self, key: str | None) -> None:
+        self._key = key
+        self._entry: _KeyLockEntry | None = None
+        self._released = False
+
+    async def acquire(self) -> None:
+        if self._key is None:
+            return
+        entry = _IDEMPOTENCY_LOCKS.get(self._key)
+        if entry is None:
+            if len(_IDEMPOTENCY_LOCKS) >= _MAX_IDEMPOTENCY_LOCKS:
+                _evict_idle_locks()
+            entry = _KeyLockEntry()
+            _IDEMPOTENCY_LOCKS[self._key] = entry
+        entry.users += 1
+        self._entry = entry
+        await entry.lock.acquire()
+
+    def release(self) -> None:
+        """Release once; later calls are no-ops (the stream and its error path both call it)."""
+        if self._entry is None or self._released:
+            return
+        self._released = True
+        entry = self._entry
+        entry.lock.release()
+        entry.users -= 1
+        if (
+            entry.users == 0
+            and self._key is not None
+            and _IDEMPOTENCY_LOCKS.get(self._key) is entry
+        ):
+            _IDEMPOTENCY_LOCKS.pop(self._key, None)
+
+
+def _evict_idle_locks() -> None:
+    for key, entry in list(_IDEMPOTENCY_LOCKS.items()):
+        if entry.users == 0:
+            _IDEMPOTENCY_LOCKS.pop(key, None)
+
+
+def _validated_idempotency_key(raw: str | None) -> str | None:
+    """Trim and bound the header value; reject control characters with a typed error."""
+    if raw is None:
+        return None
+    key = raw.strip()
+    if not key:
+        return None
+    if len(key) > MAX_IDEMPOTENCY_KEY_CHARS:
+        raise BadRequest(
+            f"Idempotency-Key must be at most {MAX_IDEMPOTENCY_KEY_CHARS} characters",
+            detail=f"received {len(key)} characters",
+        )
+    if any(ord(char) < 0x20 or ord(char) == 0x7F for char in key):
+        raise BadRequest("Idempotency-Key must not contain control characters")
+    return key
 
 
 # -- dependencies ----------------------------------------------------------------------
@@ -160,81 +246,95 @@ async def chat(
     idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
 ) -> Response:
     runtime.require_answer_path()
-    fingerprint = idempotency.request_fingerprint(
-        {
-            "message": payload.message,
-            "session_id": payload.session_id,
-            "locale": payload.locale,
-            "intent_bucket": payload.intent_bucket.value,
-            "intent_label": payload.intent_label,
-        }
-    )
-    stored = idempotency.replay(
-        runtime.store,
-        key=idempotency_key,
-        endpoint=CHAT_ENDPOINT,
-        fingerprint=fingerprint,
-        ttl_s=runtime.service.idempotency_ttl_s,
-    )
-    if stored is not None:
-        runtime.metrics.idempotent_replays.inc()
-        runtime.metrics.observe_request(
-            method="POST", route="/v1/chat", status=stored.status, duration_s=0.0
+    key = _validated_idempotency_key(idempotency_key)
+    guard = _KeyLock(key)
+    await guard.acquire()
+    try:
+        fingerprint = idempotency.request_fingerprint(
+            {
+                "message": payload.message,
+                "session_id": payload.session_id,
+                "locale": payload.locale,
+                "intent_bucket": payload.intent_bucket.value,
+                "intent_label": payload.intent_label,
+            }
         )
-        return JSONResponse(
-            stored.payload,
-            status_code=stored.status,
-            headers={
-                "X-Trace-Id": stored.trace_id,
-                "X-Idempotent-Replay": "true",
-                "Cache-Control": "no-store",
-            },
-        )
-
-    turn_request = TurnRequest(
-        message=payload.message,
-        session_id=payload.session_id,
-        locale=payload.locale,
-        intent_bucket=payload.intent_bucket,
-        intent_label=payload.intent_label,
-        idempotency_key=idempotency_key,
-    )
-    runner = TurnRunner(runtime)
-
-    if not _wants_stream(payload, request):
-        started = time.perf_counter()
-        result = await asyncio.to_thread(runner.run, turn_request, trace_id=trace_id)
-        body = _chat_response(result).model_dump(mode="json")
-        idempotency.remember(
+        stored = idempotency.replay(
             runtime.store,
-            key=idempotency_key,
+            key=key,
             endpoint=CHAT_ENDPOINT,
             fingerprint=fingerprint,
-            payload=body,
-            trace_id=trace_id,
+            ttl_s=runtime.service.idempotency_ttl_s,
         )
-        runtime.metrics.observe_request(
-            method="POST",
-            route="/v1/chat",
-            status=200,
-            duration_s=time.perf_counter() - started,
-        )
-        return JSONResponse(body, headers={"X-Trace-Id": trace_id, "Cache-Control": "no-store"})
+        if stored is not None:
+            guard.release()
+            runtime.metrics.idempotent_replays.inc()
+            runtime.metrics.observe_request(
+                method="POST", route="/v1/chat", status=stored.status, duration_s=0.0
+            )
+            return JSONResponse(
+                stored.payload,
+                status_code=stored.status,
+                headers={
+                    "X-Trace-Id": stored.trace_id,
+                    "X-Idempotent-Replay": "true",
+                    "Cache-Control": "no-store",
+                },
+            )
 
-    runtime.require_answer_path()
-    generator = _stream_turns(
-        runtime=runtime,
-        runner=runner,
-        turn_request=turn_request,
-        trace_id=trace_id,
-        fingerprint=fingerprint,
-        idempotency_key=idempotency_key,
-    )
-    return StreamingResponse(
-        generator,
-        media_type=SSE_MEDIA_TYPE,
-        headers={**SSE_HEADERS, "X-Trace-Id": trace_id},
-    )
+        turn_request = TurnRequest(
+            message=payload.message,
+            session_id=payload.session_id,
+            locale=payload.locale,
+            intent_bucket=payload.intent_bucket,
+            intent_label=payload.intent_label,
+            idempotency_key=key,
+        )
+        runner = TurnRunner(runtime)
+
+        if not _wants_stream(payload, request):
+            started = time.perf_counter()
+            try:
+                result = await asyncio.to_thread(runner.run, turn_request, trace_id=trace_id)
+                body = _chat_response(result).model_dump(mode="json")
+                idempotency.remember(
+                    runtime.store,
+                    key=key,
+                    endpoint=CHAT_ENDPOINT,
+                    fingerprint=fingerprint,
+                    payload=body,
+                    trace_id=trace_id,
+                )
+                runtime.metrics.observe_request(
+                    method="POST",
+                    route="/v1/chat",
+                    status=200,
+                    duration_s=time.perf_counter() - started,
+                )
+                return JSONResponse(
+                    body, headers={"X-Trace-Id": trace_id, "Cache-Control": "no-store"}
+                )
+            finally:
+                guard.release()
+
+        runtime.require_answer_path()
+        generator = _stream_turns(
+            runtime=runtime,
+            runner=runner,
+            turn_request=turn_request,
+            trace_id=trace_id,
+            fingerprint=fingerprint,
+            idempotency_key=key,
+            release=guard.release,
+        )
+        return StreamingResponse(
+            generator,
+            media_type=SSE_MEDIA_TYPE,
+            headers={**SSE_HEADERS, "X-Trace-Id": trace_id},
+        )
+    except BaseException:
+        guard.release()
+        raise
 
 
 async def _stream_turns(
@@ -245,63 +345,74 @@ async def _stream_turns(
     trace_id: str,
     fingerprint: str,
     idempotency_key: str | None,
+    release: Callable[[], None] | None = None,
 ) -> AsyncIterator[str]:
     started = time.perf_counter()
     try:
-        result = await asyncio.to_thread(runner.run, turn_request, trace_id=trace_id)
-    except BaseException as exc:
-        error = to_service_error(exc)
-        runtime.metrics.observe_error(error.code)
-        payload = error.envelope(trace_id)
-        yield sse_event(
-            "error",
-            ErrorEvent(trace_id=trace_id, error=ErrorEnvelope(**payload)).model_dump(mode="json"),
+        try:
+            result = await asyncio.to_thread(runner.run, turn_request, trace_id=trace_id)
+        except asyncio.CancelledError:
+            # The client went away. There is no connection left to write an error frame to,
+            # and swallowing the cancellation would keep a worker thread alive for nothing.
+            raise
+        except BaseException as exc:
+            error = to_service_error(exc)
+            runtime.metrics.observe_error(error.code)
+            payload = error.envelope(trace_id)
+            yield sse_event(
+                "error",
+                ErrorEvent(trace_id=trace_id, error=ErrorEnvelope(**payload)).model_dump(
+                    mode="json"
+                ),
+            )
+            yield sse_event(
+                "done",
+                {
+                    "event": "done",
+                    "trace_id": trace_id,
+                    "session_id": turn_request.session_id,
+                    "turn_id": "",
+                    "error": payload,
+                    "idempotent_replay": False,
+                },
+            )
+            runtime.metrics.observe_request(
+                method="POST",
+                route="/v1/chat",
+                status=error.http_status,
+                duration_s=time.perf_counter() - started,
+            )
+            return
+
+        yield sse_event("retrieval", _retrieval_event(result).model_dump(mode="json"))
+        for index, delta in enumerate(
+            token_chunks(result.answer.text, runtime.service.sse_token_chars)
+        ):
+            yield sse_event(
+                "tokens",
+                TokenEvent(trace_id=trace_id, delta=delta, index=index).model_dump(mode="json"),
+            )
+        yield sse_event("citations", _citations_event(result).model_dump(mode="json"))
+        yield sse_event("decision", _decision_event(result).model_dump(mode="json"))
+        done = _done_event(result).model_dump(mode="json")
+        idempotency.remember(
+            runtime.store,
+            key=idempotency_key,
+            endpoint=CHAT_ENDPOINT,
+            fingerprint=fingerprint,
+            payload=_chat_response(result).model_dump(mode="json"),
+            trace_id=trace_id,
         )
-        yield sse_event(
-            "done",
-            {
-                "event": "done",
-                "trace_id": trace_id,
-                "session_id": turn_request.session_id,
-                "turn_id": "",
-                "error": payload,
-                "idempotent_replay": False,
-            },
-        )
+        yield sse_event("done", done)
         runtime.metrics.observe_request(
             method="POST",
             route="/v1/chat",
-            status=error.http_status,
+            status=200,
             duration_s=time.perf_counter() - started,
         )
-        return
-
-    yield sse_event("retrieval", _retrieval_event(result).model_dump(mode="json"))
-    for index, delta in enumerate(
-        token_chunks(result.answer.text, runtime.service.sse_token_chars)
-    ):
-        yield sse_event(
-            "tokens",
-            TokenEvent(trace_id=trace_id, delta=delta, index=index).model_dump(mode="json"),
-        )
-    yield sse_event("citations", _citations_event(result).model_dump(mode="json"))
-    yield sse_event("decision", _decision_event(result).model_dump(mode="json"))
-    done = _done_event(result).model_dump(mode="json")
-    idempotency.remember(
-        runtime.store,
-        key=idempotency_key,
-        endpoint=CHAT_ENDPOINT,
-        fingerprint=fingerprint,
-        payload=_chat_response(result).model_dump(mode="json"),
-        trace_id=trace_id,
-    )
-    yield sse_event("done", done)
-    runtime.metrics.observe_request(
-        method="POST",
-        route="/v1/chat",
-        status=200,
-        duration_s=time.perf_counter() - started,
-    )
+    finally:
+        if release is not None:
+            release()
 
 
 # -- sessions --------------------------------------------------------------------------

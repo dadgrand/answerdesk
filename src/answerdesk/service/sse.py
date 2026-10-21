@@ -46,13 +46,27 @@ SSE_HEADERS: dict[str, str] = {
 #: A whitespace-preserving splitter; tokens keep their trailing separator.
 _TOKEN_RE = re.compile(r"\S+\s*")
 
+#: Unicode line/paragraph separators (and NEL) are *not* escaped by ``json.dumps`` and are
+#: treated as line breaks by some SSE clients (Python's ``str.splitlines`` is one). A raw one
+#: inside ``data:`` splits the frame and the client fails to parse the JSON — fuzz finding
+#: F-07, docs/robustness.md. Escaping them keeps every frame on exactly one physical line.
+_UNICODE_LINE_BREAKS = {
+    0x0085: "\\u0085",  # NEXT LINE
+    0x2028: "\\u2028",  # LINE SEPARATOR
+    0x2029: "\\u2029",  # PARAGRAPH SEPARATOR
+}
+
+
+def _escape_line_breaks(payload: str) -> str:
+    return payload.translate(_UNICODE_LINE_BREAKS)
+
 
 def sse_event(event: str, data: Mapping[str, Any]) -> str:
     """Format one SSE frame."""
     if not event or "\n" in event:
         raise ValueError("SSE event names must be a single non-empty line")
     payload = json.dumps(dict(data), ensure_ascii=False, separators=(",", ":"), default=str)
-    return f"event: {event}\ndata: {payload}\n\n"
+    return f"event: {event}\ndata: {_escape_line_breaks(payload)}\n\n"
 
 
 def sse_comment(text: str = "ping") -> str:

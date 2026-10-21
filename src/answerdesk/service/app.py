@@ -30,6 +30,7 @@ from __future__ import annotations
 import contextlib
 import json
 import logging
+import re
 import time
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
@@ -58,6 +59,9 @@ from answerdesk.service.runtime import SERVICE_VERSION, ServiceRuntime
 from answerdesk.service.schemas import HealthResponse
 from answerdesk.service.turn import new_trace_id
 from answerdesk.telemetry.metrics import CONTENT_TYPE, Metrics
+
+#: A trace id travels in a header, a JSONL file and metric labels; keep it a safe token.
+_TRACE_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{7,127}$")
 
 _LOGGER = logging.getLogger("answerdesk.service")
 
@@ -127,7 +131,10 @@ class RequestContextMiddleware:
         headers = {key.lower(): value for key, value in scope.get("headers", [])}
         provided = headers.get(b"x-trace-id")
         trace_id = provided.decode("latin-1").strip() if provided else new_trace_id()
-        if not trace_id or len(trace_id) > 128:
+        # A client-supplied id is echoed into a response header and written to the trace file,
+        # so it must be a safe token: a space or a control character would make an invalid
+        # header (fuzz finding F-08, docs/robustness.md). Anything else is replaced.
+        if not _TRACE_ID_RE.match(trace_id):
             trace_id = new_trace_id()
         state = scope.setdefault("state", {})
         state["trace_id"] = trace_id

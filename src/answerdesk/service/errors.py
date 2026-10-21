@@ -40,9 +40,13 @@ code                             status  retryable
 from __future__ import annotations
 
 import hmac
+import json
+import sqlite3
 from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
+
+import httpx
 
 from answerdesk.errors import AnswerdeskError
 
@@ -208,7 +212,13 @@ _DIRECT_CODES = frozenset(ERROR_TAXONOMY)
 
 
 def to_service_error(exc: BaseException) -> ServiceError:
-    """Translate any module error into the taxonomy (the only mapping point)."""
+    """Translate any module error into the taxonomy (the only mapping point).
+
+    The last three branches are a robustness net for exceptions raised *below* our own
+    wrappers: a provider transport error that escaped the LLM layer, a malformed body that
+    Starlette decoded itself, or a database conflict. None of them may become a bare 500
+    without a taxonomy code — the operator would have no code to act on.
+    """
     if isinstance(exc, ServiceError):
         return exc
     if isinstance(exc, AnswerdeskError):
@@ -216,6 +226,25 @@ def to_service_error(exc: BaseException) -> ServiceError:
         return ServiceError(code, exc.message, detail=exc.detail)
     if isinstance(exc, TimeoutError):
         return ServiceError("provider_timeout", "the upstream call timed out")
+    if isinstance(exc, httpx.TimeoutException):
+        return ServiceError("provider_timeout", "the upstream call timed out")
+    if isinstance(exc, httpx.HTTPStatusError):
+        status = exc.response.status_code if exc.response is not None else 0
+        return ServiceError(
+            "provider_error",
+            f"the upstream provider rejected the call (HTTP {status})",
+            detail=str(status),
+        )
+    if isinstance(exc, httpx.TransportError):
+        return ServiceError("provider_unreachable", "the upstream provider could not be reached")
+    if isinstance(exc, RecursionError):
+        return ServiceError("bad_request", "the request payload is nested too deeply")
+    if isinstance(exc, (json.JSONDecodeError, UnicodeDecodeError, UnicodeEncodeError)):
+        return ServiceError("bad_request", "the request body could not be decoded")
+    if isinstance(exc, sqlite3.IntegrityError):
+        return ServiceError("conflict", "a concurrent write conflicted; retry the request")
+    if isinstance(exc, sqlite3.Error):
+        return ServiceError("service_unavailable", "the session store is unavailable")
     return ServiceError("internal_error", "internal error", detail=type(exc).__name__)
 
 
