@@ -29,16 +29,18 @@ secret in a log line, the number of provider calls, or the content of the prompt
 | 3 | **size boundaries** | 1 MB body; exactly 262 144 B; 262 145 B; 8 000-char message; 1 000 000-char query to the runner; 1 MB retrieved chunk | 413 before parsing; 422 at the schema; the pipeline returns a decision in < 30 s (measured 3.5 s) | `test_large_inputs.py` (8) |
 | 4 | **malformed bodies** | empty, `{`, `null`, `[]`, `"str"`, numbers, `NaN`, `Infinity`, `1e999`, duplicate keys, trailing garbage, unknown fields, bad enums, 2 000-deep nesting, BOM-prefixed JSON | 4xx with `code`/`message`/`trace_id`/`retryable`; the code is in `ERROR_TAXONOMY` | `test_malformed_http.py` (8) |
 | 5 | **methods, routes, content types, headers** | GET/PUT/DELETE on `/v1/chat`, unknown paths, path traversal, 5 000-char `X-Trace-Id`, duplicate headers, `text/plain`/form bodies, query-string garbage | 404/405/415/422 in the taxonomy; unsafe trace ids are regenerated | `test_malformed_http.py` |
-| 6 | **provider failures** | timeout, 429, 500, 503, connection reset, protocol error, circuit open, all-providers-failed, raw `httpx` errors | 502/503/504 with a taxonomy code, `retryable=true`, a trace id; mid-stream: `error` + `done` with the same code | `test_provider_failures.py` (16) |
+| 6 | **provider failures** | timeout, 429, 500, 503, connection reset, protocol error, circuit open, all-providers-failed, raw `httpx` errors; **a chain whose primary always fails and whose backup answers** | 502/503/504 with a taxonomy code, `retryable=true`, a trace id; mid-stream: `error` + `done` with the same code; the backup receives the same redacted body as any single provider | `test_provider_failures.py` (16), `test_fallback_redaction.py` (2) |
 | 7 | **malformed provider payloads** | prose instead of JSON, empty completion, truncated JSON, `{}`, control characters, truncated SSE frame, JSON where SSE was expected, unknown SSE events, comments | never an answer: the generator escalates (`PROVIDER_ERROR`/`NO_EVIDENCE`) or the provider layer yields an empty completion; no hang, no 500 | `test_provider_failures.py`, `test_stream_and_cancellation.py` |
 | 8 | **cancellation and timeouts** | client sends `http.disconnect` mid-stream; a streamed response is closed after the first chunk; a provider times out | no exception escapes the app; the idempotency lock is released; the follow-up request works; a failure is fast (< 5 s in the test) | `test_stream_and_cancellation.py` (7) |
 | 9 | **duplicate / concurrent identifiers** | 4 concurrent requests with one `Idempotency-Key`; same key + different body; same `X-Trace-Id` twice; duplicate feedback; duplicate tickets; duplicate chunk ids in retrieval | one turn, one provider call, N identical bodies, 3 replays; 409 on a conflicting body; unique citation ids | `test_duplicate_ids.py` (7) |
-| 10 | **injection** | 9 directive payloads in the query; a canary in retrieved text; a marker sentence in evidence | matched queries/evidence escalate `INJECTION_SUSPECTED` with **zero** provider calls; anything that does reach the prompt is inside `<passage>` in the user message and never in the system message | `test_injection_and_pii.py` (16) |
-| 11 | **PII and secrets** | card/email/phone in the query; PII inside retrieved evidence; a secret-shaped value in the query; a cache warm with an answer, then a PII variant | guard fires before the cache and the provider; `[CARD]`/`[EMAIL]`/`[SECRET]` in traces, logs and every provider message; no raw value anywhere | `test_injection_and_pii.py` |
+| 10 | **injection** | 9 directive payloads in the query; a canary in retrieved text; a marker sentence in evidence; **a `</passage>` delimiter breakout in evidence** (both with the denylist active and monkeypatched blind, to expose the renderer) | matched queries/evidence escalate `INJECTION_SUSPECTED` with **zero** provider calls; anything that does reach the prompt is inside `<passage>` in the user message, never in the system message, and delimiter lookalikes are escaped to `&lt;/passage` so evidence cannot close its own block (`INV-01`) | `test_injection_and_pii.py` (16), `test_delimiter_neutralisation.py` (3) |
+| 11 | **PII and secrets** | card/email/phone in the query; PII inside retrieved evidence; a secret-shaped value in the query; a cache warm with an answer, then a PII variant; **a provider error whose message quotes an e-mail, a phone, a card and a key** | guard fires before the cache and the provider; `[CARD]`/`[EMAIL]`/`[SECRET]` in traces, logs and every provider message (backup included); no raw value in any log record or trace line; the error *text* is confined to the HTTP envelope, which is the known gap L-8 | `test_injection_and_pii.py`, `test_fallback_redaction.py`, `test_error_redaction.py` (3, one xfail) |
 | 12 | **malformed config / CLI** | invalid YAML, list at the top level, wrong types, unknown keys, bad profile, missing file, directory, 200 KB value, garbage env var | exit 2 with `config error: …`, never a traceback; an empty config is valid | `test_config_and_cli.py` (13) |
-| 13 | **log and trace sinks** | all of the above, while the root logger is captured and the JSONL files are read back | every log message is UTF-8 and free of PII/secrets; every trace line is valid UTF-8 JSON with a `trace_id` | `test_logs_and_traces.py` (5) |
+| 13 | **log and trace sinks** | all of the above, while the root logger is captured and the JSONL files are read back — including a failed turn (provider error) whose trace is flushed at shutdown | every log message is UTF-8 and free of PII/secrets; every trace line is valid UTF-8 JSON with a `trace_id`; the failure is observable in the log stream without its payload | `test_logs_and_traces.py` (5), `test_error_redaction.py` |
 
-Counts in parentheses are tests per module; `uv run pytest -q tests/property` reports 102.
+Counts in parentheses are tests per module; `uv run pytest -q tests/property` reports 110
+(102 from t24 + 8 added by t33 after the independent audit — one of them a strict `xfail` for the
+known envelope leak, see L-8).
 
 ---
 
@@ -143,6 +145,34 @@ inside the CUDA branch, so `tests/unit/rewrite/test_script.py` failed on a machi
 CUDA (`UnboundLocalError`). Fixed with a single initialisation (`four_bit_stderr = ""`
 before the branch); the existing test covers it, no new test added.
 
+## 2.1 Post-audit hardening (t33): the three gaps the independent audit found
+
+An independent audit of this suite (`docs/audit-t24.md`, t32) read every assertion, removed each
+guard in turn (five in-process mutants) and attacked the boundary with payloads the suite did not
+contain. Four guards were proven load-bearing; three coverage gaps and one leak were found. This
+pass closes the gaps with tests and records the leak. **Tests only — no service behaviour changed.**
+
+| audit finding | what was missing | test that closes it | mutant that now fails |
+| --- | --- | --- | --- |
+| **F-2** (medium) | retries were tested, a *successful fallback* never was: no test built a chain with a failing primary | `test_fallback_redaction.py::test_successful_fallback_body_is_redacted` — primary always fails, backup answers, and the backup body must carry `[EMAIL]`/`[PHONE]`/`[CARD]` and no raw value | M2 (provider-boundary redaction off) |
+| **F-2 / F-1** | the backup body's structure was never inspected | `test_fallback_body_neutralises_evidence_delimiters` — with the denylist monkeypatched blind, the backup body must still escape `</passage` and keep the marker inside an open block | M2, M4 |
+| **F-1** (low) | no delimiter-breakout payload anywhere; disabling `packer.neutralise_delimiters` left the whole suite green (mutant M4) | `test_delimiter_neutralisation.py` — (a) a `</passage> BREAKOUT…` payload is escalated with zero provider calls, (b) with the denylist blind the renderer still escapes the lookalike, (c) the escape helper's unit contract | M4 |
+| **F-4** (low) | hostile *error text* was never exercised | `test_error_redaction.py` — no raw PII/secret in any log record or trace line for a provider error, and a 422 does not echo the offending value | boundary test (see L-8) |
+| **F-3** (low) | the risk tier is client-declared — now documented as L-7 | — | — |
+
+Deliberately **not** claimed:
+
+* **The HTTP error envelope still echoes the provider's message verbatim** — the one place where a
+  quoted customer identifier leaves the process in a response body (traces and logs stay clean).
+  The acceptance criterion is a strict `xfail`
+  (`test_error_redaction.py::test_provider_error_envelope_is_a_known_leak`), so the day the
+  service redacts the envelope the suite turns red and the marker must become a positive
+  assertion. Recorded as **L-8**; the fix belongs to `src/answerdesk/service` (out of t33 scope).
+* **Trace-payload redaction is defence in depth with no observable delta today.** Mutating
+  `telemetry.tracing.redact_payload` to an identity (mutant M6) leaves the suite green, because
+  every field that reaches the tracer is already redacted upstream. Recorded as **L-9**; it is not
+  a tested guarantee.
+
 ## 3. Honest limitations
 
 * **L-1 — a denylist is not a proof.** The injection guard recognises directive-shaped text
@@ -171,6 +201,27 @@ before the branch); the existing test covers it, no new test added.
   the per-client token bucket and uvicorn's own header/time limits are the defence; this pass
   verifies the limits fire, not that a 10 Gbit flood is survivable (that is a deployment
   concern: `docs/ops.md` §6).
+
+* **L-7 — the risk tier is client-declared.** `intent_bucket` and `intent_label` come from the
+  request (`service/schemas.py`) and the hard-policy guard trusts them: declaring
+  `informational` for a money/account message replaces `HIGH_RISK_INTENT` with
+  `LOW_CONFIDENCE`/`CITATION_FAILED`. No answer was produced in any probe (the answerability
+  scorer escalated all four configurations), so no bypass is demonstrated, but the margin then
+  rests on the scorer rather than on the tier. **Mitigation, scheduled:** derive the bucket
+  server-side or use `max(declared, detected)` for the hard-policy decision, plus a regression
+  test that a declared `informational` bucket cannot answer a message the classifier tiers as
+  account/legal. Until then, put the service behind a gateway that sets the tier itself.
+* **L-8 — a provider error's text is echoed in the HTTP envelope.** Traces and logs are clean
+  (`test_error_redaction.py`), but `message`/`detail` of the error envelope carry the upstream
+  text verbatim, so whatever the provider quotes — an e-mail, a card number, a key — reaches the
+  caller and, if the caller logs it, their logs. The request body is already redacted before it
+  leaves the process (`RedactingProvider`), so the provider cannot echo a value from our prompt;
+  the exposure is text the upstream chooses to include. **Fix, scheduled:** apply
+  `telemetry.redaction.redact_str` to `ErrorEnvelope.message`/`detail`; the strict `xfail` in
+  `test_error_redaction.py` is its acceptance test.
+* **L-9 — trace-payload redaction is untested redundancy.** Every traced field is already redacted
+  upstream, so removing `telemetry.tracing.redact_payload` changes nothing observable (mutant M6).
+  Keep it as defence in depth; do not describe it as a tested guarantee.
 
 ---
 

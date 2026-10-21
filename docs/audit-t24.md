@@ -4,7 +4,9 @@
 suite). **Reviewed:** t24 (backend-engineer), `tests/property/` — 9 modules, 102 tests.
 **Date:** 2026-10-21. **Verdict: PASS with findings** — four guards are proven load-bearing by
 mutation, no runtime bypass was reproduced, and three coverage gaps are recorded below
-(one medium: the fallback path).
+(one medium: the fallback path). **Status (t33, same day): F-1, F-2 and F-4 are closed with
+tests, F-3 is recorded as a documented limitation, and this pass found one further leak (F-5,
+error envelope) plus one redundancy note (F-6, trace-payload redaction). See §9.**
 
 **Method.** Read the suite line by line; mutate each guard in-process and re-run the test that
 claims to protect it (a test that stays green when its guard is deleted proves nothing); then
@@ -242,4 +244,40 @@ uv run python -m pytest -q -p mutant_m5_no_secret_redaction \
 # 2. independent probes (delimiter breakout, cache re-guard, fallback, routing)
 python _tmp/probe_delimiter.py
 python _tmp/probe_boundaries.py
+
+# 3. after the t33 repair: the same mutants plus M6 (trace-payload redaction off)
+export PYTHONPATH="$PWD/../_tmp/mut"
+uv run python -m pytest -q -p mutant_m2_no_provider_redaction tests/property/test_fallback_redaction.py   # 2 failed
+uv run python -m pytest -q -p mutant_m4_no_delimiter_escape tests/property/test_delimiter_neutralisation.py  # 2 failed, 1 passed
+uv run python -m pytest -q -p mutant_m6_no_trace_redaction tests/property/test_error_redaction.py           # passes → F-6 (L-9)
 ```
+
+## 9. Closure (t33): what changed after this audit, and what it proved
+
+The repair task wrote tests only (no service behaviour changed) and re-ran the mutants in §2 plus a
+new one. Baseline after the repair: `uv run pytest -q tests/property` → **110 passed, 1 xfailed**
+(the xfail is F-5's acceptance test, below).
+
+| finding | closure | mutant that now fails |
+| --- | --- | --- |
+| **F-1** delimiter escaping untested | `tests/property/test_delimiter_neutralisation.py` (3 tests): a `</passage> BREAKOUT…` payload in evidence is escalated with zero provider calls; with the denylist monkeypatched blind the renderer still escapes the lookalike to `&lt;/passage` and the marker stays inside an open block; plus the escape helper's unit contract. | **M4 now fails** (2 of 3 tests) — the gap is closed, not papered over |
+| **F-2** fallback path untested | `tests/property/test_fallback_redaction.py` (2 tests): a `ProviderChain` with an always-failing primary and a recording backup; the backup body must carry `[EMAIL]`/`[PHONE]`/`[CARD]`, no raw value, balanced passage tags; the second test blinds the denylist and asserts the backup body still neutralises delimiters. | **M2 now fails** (both tests) |
+| **F-3** client-declared risk tier | documented as **L-7** in `docs/robustness.md` with the scheduled mitigation (`max(declared, detected)` server-side + a regression test); no bypass was reproduced, so no test pretends otherwise. | — |
+| **F-4** error-path redaction untested | `tests/property/test_error_redaction.py`: a provider error quoting an e-mail, a phone, a card and a key leaves no raw value in any log record or trace line (the failed turn *is* traced — the writer flushes at shutdown, which my probe had missed), and a 422 does not echo the offending value. | boundary test; see F-5 for the one place the text does escape |
+| **F-5** (new, medium) | **the HTTP error envelope echoes the provider message verbatim** — PII and a key reach the caller, while traces and logs stay clean. Recorded as **L-8**; the fix belongs to `src/answerdesk/service`. Acceptance is a **strict `xfail`** (`test_provider_error_envelope_is_a_known_leak`) so the marker turns red the day it is fixed. | — |
+| **F-6** (new, note) | **trace-payload redaction is defence in depth with no observable delta**: disabling `telemetry.tracing.redact_payload` (mutant M6) leaves the suite green because every traced field is already redacted upstream. Recorded as **L-9**; not claimed as a tested guarantee. | M6 passes the suite (documented, not hidden) |
+
+Mutant sweep re-run against the **whole** property suite (baseline: 109 passed, 1 xfailed):
+
+| mutant | guard | failures | what the new tests add |
+| --- | --- | --- | --- |
+| M1 | pre-flight guard chain | 4 | +1 (fallback body re-guard) |
+| M2 | provider-body redaction | 5 | **+2 (both fallback tests) — F-2 closed** |
+| M3 | generation evidence scan | 2 | +1 (delimiter payload escalation) |
+| M4 | delimiter neutralisation | **3** | **+3 (was 0) — F-1 closed** |
+| M5 | request-boundary redaction | 3 | — |
+| M6 | trace-payload redaction | **0** | documented as L-9 (untested redundancy) |
+
+One correction to §4 of this audit: I wrote that the provider-error path writes no trace line. It
+does — the trace writer flushes at application shutdown, which my standalone probe did not trigger.
+The trace half of the F-4 test is therefore a real assertion, not a vacuous one.
