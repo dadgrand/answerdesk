@@ -47,7 +47,7 @@ class PinnedFile:
 def load_lock(path: Path | None = None) -> dict[str, Any]:
     """Read ``sources.lock.json`` (committed) and return the parsed document."""
     lock_path = Path(path) if path is not None else SOURCE_LOCK
-    with open(lock_path, encoding="utf-8") as handle:
+    with lock_path.open(encoding="utf-8") as handle:
         lock = json.load(handle)
     if not isinstance(lock, dict) or not isinstance(lock.get("sources"), list):
         raise ValueError(f"{lock_path}: not an answerdesk-bench source lock")
@@ -103,7 +103,7 @@ def _download(client: Any, url: str, destination: Path) -> None:
     try:
         with client.stream("GET", url) as response:
             response.raise_for_status()
-            with open(temporary_path, "wb") as sink:
+            with temporary_path.open("wb") as sink:
                 for chunk in response.iter_bytes(chunk_size=1024 * 256):
                     sink.write(chunk)
         temporary_path.replace(destination)
@@ -111,7 +111,9 @@ def _download(client: Any, url: str, destination: Path) -> None:
         temporary_path.unlink(missing_ok=True)
 
 
-def fetch(cache_dir: Path, lock: Mapping[str, Any], *, force: bool = False, log: Any = print) -> dict[str, Any]:
+def fetch(
+    cache_dir: Path, lock: Mapping[str, Any], *, force: bool = False, log: Any = print
+) -> dict[str, Any]:
     """Download every pinned file into ``cache_dir`` and verify its hash.
 
     Network access happens here and only here. Returns a small manifest written to
@@ -144,8 +146,12 @@ def fetch(cache_dir: Path, lock: Mapping[str, Any], *, force: bool = False, log:
                     f"pinned {entry.bytes} / {entry.sha256}. The upstream file changed; "
                     "review it and re-pin deliberately."
                 )
-            report["files"].append({"cache_path": entry.cache_path, "status": "downloaded", "sha256": digest})
-    (cache_dir / "fetch.json").write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+            report["files"].append(
+                {"cache_path": entry.cache_path, "status": "downloaded", "sha256": digest}
+            )
+    (cache_dir / "fetch.json").write_text(
+        json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
     return report
 
 
@@ -162,7 +168,9 @@ def _needed_mrtydi_docids(cache_dir: Path) -> set[str]:
     return needed
 
 
-def derive_mrtydi_pool(cache_dir: Path, lock: Mapping[str, Any], *, force: bool = False, log: Any = print) -> Path:
+def derive_mrtydi_pool(
+    cache_dir: Path, lock: Mapping[str, Any], *, force: bool = False, log: Any = print
+) -> Path:
     """Filter the 1.6 GB Mr. TyDi corpus down to the passages this benchmark needs.
 
     The result is a deterministic JSONL file sorted by ``docid``: one line per passage with
@@ -171,7 +179,7 @@ def derive_mrtydi_pool(cache_dir: Path, lock: Mapping[str, Any], *, force: bool 
     destination = cache_dir / MRTYDI_POOL_REL
     needed = _needed_mrtydi_docids(cache_dir)
     if destination.is_file() and not force:
-        with open(destination, encoding="utf-8") as handle:
+        with destination.open(encoding="utf-8") as handle:
             have = {json.loads(line)["docid"] for line in handle if line.strip()}
         if have >= needed:
             log(f"cached  {MRTYDI_POOL_REL} ({len(have)} passages)")
@@ -192,9 +200,11 @@ def derive_mrtydi_pool(cache_dir: Path, lock: Mapping[str, Any], *, force: bool 
                 }
     missing = needed - set(found)
     if missing:
-        raise RuntimeError(f"Mr. TyDi corpus lacks {len(missing)} positive passages, e.g. {sorted(missing)[:3]}")
+        raise RuntimeError(
+            f"Mr. TyDi corpus lacks {len(missing)} positive passages, e.g. {sorted(missing)[:3]}"
+        )
     destination.parent.mkdir(parents=True, exist_ok=True)
-    with open(destination, "w", encoding="utf-8", newline="\n") as handle:
+    with destination.open("w", encoding="utf-8", newline="\n") as handle:
         for docid in sorted(found):
             handle.write(json.dumps(found[docid], ensure_ascii=False, sort_keys=True) + "\n")
     log(f"wrote   {MRTYDI_POOL_REL} ({len(found)} passages)")
@@ -204,7 +214,7 @@ def derive_mrtydi_pool(cache_dir: Path, lock: Mapping[str, Any], *, force: bool 
 def read_mrtydi_pool(path: Path) -> dict[str, dict[str, str]]:
     """Load the derived pool into a ``docid -> {docid,title,text}`` mapping."""
     pool: dict[str, dict[str, str]] = {}
-    with open(path, encoding="utf-8") as handle:
+    with path.open(encoding="utf-8") as handle:
         for line in handle:
             if not line.strip():
                 continue
@@ -222,7 +232,9 @@ def source_records(lock: Mapping[str, Any]) -> list[dict[str, Any]]:
     records: list[dict[str, Any]] = []
     for source in lock["sources"]:
         entries: list[dict[str, Any]] = []
-        for entry in list(source.get("files", [])) + ([source["corpus"]] if source.get("corpus") else []):
+        for entry in list(source.get("files", [])) + (
+            [source["corpus"]] if source.get("corpus") else []
+        ):
             entries.append(
                 {
                     "cache_path": entry["cache_path"],
@@ -301,7 +313,7 @@ def check_local_sources(lock: Mapping[str, Any], repo_root: Path) -> list[str]:
 
 def iter_jsonl(path: Path) -> Iterable[dict[str, Any]]:
     """Yield parsed JSON objects from a JSONL file, ignoring blank lines."""
-    with open(path, encoding="utf-8") as handle:
+    with path.open(encoding="utf-8") as handle:
         for number, line in enumerate(handle, start=1):
             if not line.strip():
                 continue

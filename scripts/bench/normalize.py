@@ -44,7 +44,7 @@ def sha256_text(text: str) -> str:
 def sha256_file(path: Any) -> str:
     """Hex SHA-256 of a file, read in chunks so a 1.5 GB archive is fine."""
     digest = hashlib.sha256()
-    with open(path, "rb") as handle:
+    with path.open("rb") as handle:
         for block in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(block)
     return digest.hexdigest()
@@ -145,11 +145,15 @@ def shingle_set(text: str, size: int = 5) -> frozenset[str]:
         chars = [char for char in normalised if not char.isspace()]
         if len(chars) < size:
             return frozenset(["".join(chars)])
-        return frozenset("".join(chars[index : index + size]) for index in range(len(chars) - size + 1))
+        return frozenset(
+            "".join(chars[index : index + size]) for index in range(len(chars) - size + 1)
+        )
     words = _WORD_RE.findall(normalised)
     if len(words) < size:
         return frozenset([" ".join(words)]) if words else frozenset()
-    return frozenset(" ".join(words[index : index + size]) for index in range(len(words) - size + 1))
+    return frozenset(
+        " ".join(words[index : index + size]) for index in range(len(words) - size + 1)
+    )
 
 
 def _hash32(value: str, seed: int) -> int:
@@ -162,7 +166,9 @@ def minhash_signature(text: str, num_hashes: int = 16, size: int = 5) -> tuple[i
     shingles = shingle_set(text, size=size)
     if not shingles:
         return tuple(0xFFFFFFFF for _ in range(num_hashes))
-    return tuple(min(_hash32(shingle, index) for shingle in shingles) for index in range(num_hashes))
+    return tuple(
+        min(_hash32(shingle, index) for shingle in shingles) for index in range(num_hashes)
+    )
 
 
 def near_duplicate_pairs(

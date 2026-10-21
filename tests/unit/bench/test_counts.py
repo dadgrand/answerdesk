@@ -47,9 +47,13 @@ def test_counts_match_the_manifest(manifest: dict[str, Any], items: list[dict[st
     counts = manifest["counts"]
     assert counts["items"] == len(items)
     assert counts["by_suite"] == dict(sorted(Counter(item["suite"] for item in items).items()))
-    assert counts["by_language"] == dict(sorted(Counter(item["language"] for item in items).items()))
+    assert counts["by_language"] == dict(
+        sorted(Counter(item["language"] for item in items).items())
+    )
     assert counts["by_split"] == dict(sorted(Counter(item["split"] for item in items).items()))
-    assert counts["by_category"] == dict(sorted(Counter(item["category"] for item in items).items()))
+    assert counts["by_category"] == dict(
+        sorted(Counter(item["category"] for item in items).items())
+    )
     assert counts["retrieval_queries"] == (
         counts["by_suite"]["belebele_retrieval"] + counts["by_suite"]["mrtydi_retrieval"]
     )

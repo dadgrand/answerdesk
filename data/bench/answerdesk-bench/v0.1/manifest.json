@@ -193,7 +193,7 @@
     "qa_items": 750,
     "retrieval_queries": 3119
   },
-  "data_sha256": "152268ccd7444fe50f6c44f760abcacd57d8f6fae5de31ba23237172037b6222",
+  "data_sha256": "fe944eaaba52802d7e315e75e3387b07d34d2694d3112f1f27d43dd3332a509b",
   "files": [
     {
       "bytes": 1080,
@@ -252,11 +252,11 @@
       "sha256": "23d9327d5a0a1579ca2418a3bc0744c76cc414a711b5d08d3fd635c51798ae8b"
     },
     {
-      "bytes": 143822,
+      "bytes": 149222,
       "items": 150,
       "license": "CC-BY-SA-4.0",
       "path": "belebele/retrieval/ky/queries.jsonl",
-      "sha256": "65773e022cfa6b1cb205bafef90689bb750054888096f47ac7c6aa14bdf11e18"
+      "sha256": "565faec01cfaecf378e965c3fca70b83fa15cbe528ca23391702e1b1bd8e4c8f"
     },
     {
       "bytes": 762748,
@@ -266,11 +266,11 @@
       "sha256": "51a6801ed7bbc888b35bcfab3bbd5f44680debf02f55541b5262d9d847d369d3"
     },
     {
-      "bytes": 145859,
+      "bytes": 151259,
       "items": 150,
       "license": "CC-BY-SA-4.0",
       "path": "belebele/retrieval/ru/queries.jsonl",
-      "sha256": "06229c91c1995ba24150ce71e9077bde6a325b4b6f1aafa343222bb6a79a8ae2"
+      "sha256": "7c8ed32aa649e17e273c6dc25a248acd622fa259c67ba155178e8a83ed1fb0dc"
     },
     {
       "bytes": 767331,
@@ -280,11 +280,11 @@
       "sha256": "e0e0a5f808d079a1f04889131a308fef2239b5b18051f4f8d46fd677ce7e2b3d"
     },
     {
-      "bytes": 143342,
+      "bytes": 148742,
       "items": 150,
       "license": "CC-BY-SA-4.0",
       "path": "belebele/retrieval/tg/queries.jsonl",
-      "sha256": "fc27188bcf329072ec6dbc8ea10bc92e5d6a5df0cf5b8c39fedabb2ca762e1e5"
+      "sha256": "048085067938b6603c20233a3b1df0b7bb19034e85c7749e6d7c78b569656a60"
     },
     {
       "bytes": 563416,
@@ -294,11 +294,11 @@
       "sha256": "1b12ae58d077843a8feba7d2688ba4762929c9bd95eb0920e1e2c22b3d084f10"
     },
     {
-      "bytes": 134412,
+      "bytes": 139812,
       "items": 150,
       "license": "CC-BY-SA-4.0",
       "path": "belebele/retrieval/uz/queries.jsonl",
-      "sha256": "8bdad56a9b9227f4dec1c225c5439d223b14039c9266a5693e3b0c713e58d9f3"
+      "sha256": "9943977c28a666ce7175d6e0a49ed9f159a2623b59f9ab4221276d62f98137ea"
     },
     {
       "bytes": 513648,
@@ -308,11 +308,11 @@
       "sha256": "aa31c1c452a7d6341a551cd44ef43ce39abb0503abae61203ad5103eac9127d3"
     },
     {
-      "bytes": 132428,
+      "bytes": 137828,
       "items": 150,
       "license": "CC-BY-SA-4.0",
       "path": "belebele/retrieval/zh/queries.jsonl",
-      "sha256": "d406bd0341a3673dd5da10a74a3bf0228bcd88e48939d68178e2cd58be75e848"
+      "sha256": "7ec89d64090dfe4519ef6ef534b76a616f0cdf30c562dc2266833bc6ef497a73"
     },
     {
       "bytes": 7048,
@@ -322,53 +322,53 @@
       "sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499"
     },
     {
-      "bytes": 45003,
+      "bytes": 62692,
       "items": 0,
       "license": "CC0-1.0",
       "path": "domain/exclusions.json",
-      "sha256": "0f3a2e4ba2125af14cfc82cf7935d25a807d550cde1c60d00a1361533a5e6b7b"
+      "sha256": "d4c9def1683afcea8c08f4810d8dd8cd82a817b535bdf5ea205a2ce47de01d9e"
     },
     {
-      "bytes": 52276,
+      "bytes": 51832,
       "items": 40,
       "license": "CC0-1.0",
       "path": "domain/ky.jsonl",
-      "sha256": "57a8009ec42605f2ba237b339072c70147da66f820879fe61f96872b778995ef"
+      "sha256": "9aac44b7410323c7bd9837220d40342e6a3ae4c8189d03bcf77ea4733dab70f1"
     },
     {
-      "bytes": 52636,
+      "bytes": 52518,
       "items": 40,
       "license": "CC0-1.0",
       "path": "domain/ru.jsonl",
-      "sha256": "e140d76368b611a91cd93a7b0450f0ddc45bbc2326804302cafb306266bb0faf"
+      "sha256": "d969701533ba7abdde417fd9bbd62cc40bcfbab5270a8defb2916e78cf56d42b"
     },
     {
-      "bytes": 52204,
+      "bytes": 51901,
       "items": 40,
       "license": "CC0-1.0",
       "path": "domain/tg.jsonl",
-      "sha256": "baf51fa924fde59d0f6fb7ca26e5c4391633bc6b832dbe40bdb76cbb90a5bb63"
+      "sha256": "6b46431c67ba038aaffa70252d42e1249083fff34d5fb98de5930be8b82352a1"
     },
     {
-      "bytes": 46726,
+      "bytes": 46172,
       "items": 40,
       "license": "CC0-1.0",
       "path": "domain/tr.jsonl",
-      "sha256": "ad7609b870accd5ee8df147667acd1ee4f6941718eb89b5acda0f0879a94ae14"
+      "sha256": "4a6ecf0ad28aa9968ae64eee75371e71090f205825e89faa307a58ec0298662b"
     },
     {
-      "bytes": 46168,
+      "bytes": 45989,
       "items": 40,
       "license": "CC0-1.0",
       "path": "domain/uz.jsonl",
-      "sha256": "22584665612561bfdd49b8b7fe562c86b10b6b48de9a644ad882c9697435cdce"
+      "sha256": "14884c53186e8d3ef1c3ac0cb443e1b3e7c0a1b6d007d888eb86790e7789e520"
     },
     {
-      "bytes": 45444,
+      "bytes": 45034,
       "items": 40,
       "license": "CC0-1.0",
       "path": "domain/zh.jsonl",
-      "sha256": "b83d3674bd45b2884b24b3a9a9c2f281a874306677ace8895cbec037431224ac"
+      "sha256": "8614b5e0b70941a1a5940bc9bbbbdad6b237e8ec3b0ce370b0b90d031be1ab7b"
     },
     {
       "bytes": 11358,
@@ -385,18 +385,18 @@
       "sha256": "236cb2d1ee816bf2fb1398c1499fad8f262363a4d81d1b289ffc5d2a8191c480"
     },
     {
-      "bytes": 1838817,
+      "bytes": 1944718,
       "items": 2369,
       "license": "Apache-2.0",
       "path": "mrtydi/ru/queries.jsonl",
-      "sha256": "5a4c128b35cbdf8895d34741f0e4d842c9d95e13b50e442ca3bb36a50ddc109e"
+      "sha256": "2aee9beda1228542d00eafeca984ef75c3daf2c37cdd494eed34a97c39429b48"
     },
     {
-      "bytes": 11413,
+      "bytes": 11839,
       "items": 0,
       "license": "MIT",
       "path": "schema.json",
-      "sha256": "0f14f86e28803cb13b5b9c77f72d4b589b7d696b899753d390828e30e01afa19"
+      "sha256": "3b6b918496f16b280686294dff25f04a700c89d10235e52c2d29dbcfd075439e"
     }
   ],
   "languages": [
@@ -450,7 +450,7 @@
   },
   "schema_version": "1.0",
   "seed": 20261021,
-  "self_sha256": "8ba35490523fae71542b7ec7ebf5f0dbcd30770daa3ecfab54e86fa9b46cf279",
+  "self_sha256": "86d2fab0a5444dcc9823181ed2cea037d37057b15391d824076367c1f557cbc3",
   "sources": [
     {
       "citation": "Bandarkar et al. 2023, The Belebele Benchmark: a Parallel Reading Comprehension Dataset in 122 Language Variants (arXiv:2308.16884)",
@@ -574,20 +574,20 @@
       "dataset": "answerdesk-synthetic",
       "files": [
         {
-          "bytes": 1296532,
+          "bytes": 1668025,
           "repo_path": "data/corpus/queries/queries.jsonl",
-          "sha256": "b1a0b4cbd1eeb93282418e49fe76cb8292dec5ea301a96b21aa98c09efba6d6b"
+          "sha256": "8a9b2a7398e4f2789bbe088e652597ad9cedbb80705bb4503adb42b617f31723"
         },
         {
-          "bytes": 331168,
+          "bytes": 414323,
           "repo_path": "data/corpus/manifest.json",
-          "sha256": "d1624360b2eb16a1078287a2ce5a0f83b391dbf838907b08c321830e07254d77"
+          "sha256": "da33968a0d0087ecc0c4e8d966c1cdc47d40699dec139a00694818c0e583af69"
         }
       ],
       "homepage": "data/corpus/README.md",
       "id": "answerdesk-synthetic",
       "license": "CC0-1.0",
-      "version": "answerdesk-synthetic-v2.0.0"
+      "version": "answerdesk-synthetic-v2.1.0"
     }
   ],
   "splits": {
@@ -600,7 +600,7 @@
       "test": 2368
     },
     "policy": "seeded hash split; a passage (Belebele) or document (domain) is gold evidence in exactly one split",
-    "t11_disjointness": "domain documents exclude every document of evals/golden/v1 and evals/splits/v1.json"
+    "t11_disjointness": "domain documents exclude every document that appears as evidence of a t11 golden item (evals/golden/v1 test, dev and adversarial); the split assigns all corpus documents by construction, so split membership is recorded but not used for exclusion"
   },
   "suites": {
     "belebele_qa": {

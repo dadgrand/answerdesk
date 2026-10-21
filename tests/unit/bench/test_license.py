@@ -52,9 +52,13 @@ def test_mrtydi_subset_carries_apache_attribution(bench_dir: Path) -> None:
     assert "Wikipedia" in attribution  # the residual licence risk is stated, not hidden
 
 
-def test_dataset_card_names_every_source_and_version(bench_dir: Path, manifest: dict[str, Any]) -> None:
+def test_dataset_card_names_every_source_and_version(
+    bench_dir: Path, manifest: dict[str, Any]
+) -> None:
     card = (bench_dir / "DATASET_CARD.md").read_text(encoding="utf-8")
     for source in manifest["sources"]:
+        if source["license"] == "n/a":  # the licence-text bundle is not a dataset
+            continue
         assert source["dataset"] in card or source["id"] in card
         assert source["version"] in card, (source["id"], source["version"])
     for requirement in (
@@ -72,7 +76,7 @@ def test_dataset_card_names_every_source_and_version(bench_dir: Path, manifest: 
 def test_dataset_card_does_not_misrepresent_the_repository_licence(bench_dir: Path) -> None:
     card = (bench_dir / "DATASET_CARD.md").read_text(encoding="utf-8")
     assert "The repository is MIT; this dataset is not" in card
-    assert "The repository's MIT licence applies to the *code*" in card
+    assert "only the synthetic domain slice is CC0-1.0" in card
     assert "data is MIT" not in card
     license_map = (bench_dir / "LICENSES" / "README.md").read_text(encoding="utf-8")
     assert "the data is not uniformly MIT" in license_map

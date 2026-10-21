@@ -81,7 +81,7 @@ items — across 1,741 `dev` and 2,368 `test` items. Languages: `ru`, `uz`, `tg`
 | `facebook/belebele` | `7899cdfa4e1e0d733fd77c848e2c273cb1d32be2` (`ds=2023-05-20`) | CC BY-SA 4.0 | `data/{rus_Cyrl,uzn_Latn,tgk_Cyrl,kir_Cyrl,zho_Hans}.jsonl` | derived passages, 150 questions/lang, options, derived qrels |
 | `castorini/mr-tydi` | `1d43c80218d06d0ef80f5b172ccabd848b948bc1` (v1.1) | Apache-2.0 | `mrtydi-v1.1-russian/{dev,test}.jsonl.gz` | queries, qrels, splits |
 | `castorini/mr-tydi-corpus` | `3a3aa212bbe94a8cc0dc858710a3dad49d532054` | Apache-2.0 | `mrtydi-v1.1-russian/corpus.jsonl.gz` (1.6 GB) | only the 2,428 positive passages |
-| `answerdesk-synthetic` | `answerdesk-synthetic-v2.0.0`, `corpus-e592ba7323366d6b`, seed `20261020` | CC0-1.0 | `data/corpus/{queries/queries.jsonl,manifest.json}`, `docs/<lang>/*.md` | 240 derived domain items + verbatim quotes |
+| `answerdesk-synthetic` | `answerdesk-synthetic-v2.1.0`, `corpus-96f93db4f7f648b5`, seed `20261020` | CC0-1.0 | `data/corpus/{queries/queries.jsonl,manifest.json}`, `docs/<lang>/*.md` | 240 derived domain items + verbatim quotes |
 
 `--fetch` is the only command that opens a socket. It downloads into the git-ignored cache
 `.cache/answerdesk-bench/`, verifies each download against `sources.lock.json`, and fails if
@@ -146,8 +146,11 @@ golden/frozen split**:
 
 1. Read `data/corpus/queries/queries.jsonl` and the article texts.
 2. Build the exclusion set from `evals/golden/v1/*.jsonl` (`metadata.doc_id`,
-   `metadata.document_ids`) and `evals/splits/v1.json` (`dev_doc_ids`, `test_doc_ids`):
-   360 documents, plus every question text that occurs in the golden split.
+   `metadata.document_ids`): 429 documents that some golden item uses as evidence, plus the
+   736 question texts that occur in the golden files. The frozen split
+   (`evals/splits/v1.json`) assigns every corpus document to dev or test by construction, so
+   split membership is recorded in `domain/exclusions.json` but is not used for exclusion —
+   the contract is item-level disjointness.
 3. For each locale, walk categories in a fixed order, keeping a `used_docs` set and a
    `seen_questions` set so no article and no question text repeats.
 4. Categories:
@@ -180,7 +183,7 @@ current t11 split.
 ```bash
 uv run python scripts/build_bench.py --fetch    # network; cache only
 uv run python scripts/build_bench.py --build    # offline; writes the release dir
-uv run python scripts/build_bench.py --verify   # offline; 27 checks
+uv run python scripts/build_bench.py --verify   # offline; 26 checks
 ```
 
 * **No network outside `--fetch`.** `--build` reads the cache and the repository; `--verify`
@@ -227,8 +230,10 @@ to `schema.json` at build time. Core envelope for every item:
 `provenance` always has `dataset`, `version`, `source_file`, `source_sha256` (64 lowercase
 hex), `source_item_id` and `derivation`. Payload per suite: `query`+`qrels` (retrieval),
 `question`+`options`+`answer_index`+`gold_evidence_ids`+`answer_anchor` (MCQ), and
-`question`+`answerable`+`expected_behavior`+`reference_answer`+`evidence`+`must_not_echo`+
-`pii_tokens`+`attack` (domain).
+`question`+`answerable`+`expected_behavior`+`reference_answer`+`evidence`+
+`gold_evidence_ids`+`must_not_echo`+`pii_tokens`+`attack` (domain). `gold_evidence_ids` is
+present on every item; for retrieval it is an alias of `qrels`, so a consumer has one
+evidence field name across suites.
 
 Invariants enforced at build time and re-checked by `--verify`:
 
@@ -241,7 +246,7 @@ Invariants enforced at build time and re-checked by `--verify`:
 | Near-duplicate free | MinHash (16 hashes, 4 bands of 4, word/char 5-grams) over questions per suite+language and over passages per corpus file; Jaccard ≥ 0.90 fails |
 | Script sanity | ≥ 30 % of a question's letters in the language's expected script (`ru/ky/tg` Cyrillic, `uz/tr` Latin, `zh` Han); reports the per-language minimum |
 | Split disjointness | a Belebele passage is gold in exactly one split; a domain document appears in exactly one split; no item id in both |
-| t11 disjointness | domain documents ∩ live `evals/golden/v1` + `evals/splits/v1.json` documents = ∅; recorded exclusions match the live split |
+| t11 disjointness | domain documents ∩ documents used by live `evals/golden/v1` items = ∅; recorded exclusions match the live golden items |
 | Counts / floors | ≥ 1,200 items; ≥ 100 retrieval queries and ≥ 100 MCQ items per Belebele language; ≥ 200 domain items; ≥ 20 per domain category |
 | Licence integrity | licence texts present and identifiable; attribution files name the source; the card does not claim MIT for data |
 | No raw archives | no `.gz`/`.zip`/`.tar*`, no file > 8 MB, no raw Belebele file |
@@ -249,9 +254,18 @@ Invariants enforced at build time and re-checked by `--verify`:
 
 ## 7. `--verify`: what it proves and what it cannot
 
-`--verify` is the single command a reviewer needs. It exits 0 only when all 27 checks pass;
+`--verify` is the single command a reviewer needs. It exits 0 only when every check passes;
 a corrupted manifest (hash, count, self-hash) or a tampered JSONL line fails it. The
 negative case is covered by `tests/unit/bench/test_verify_negative.py`.
+
+**Snapshot semantics.** The release is frozen against a corpus manifest hash and a
+t11-golden snapshot hash, both recorded in `domain/exclusions.json`. A benchmark is a
+snapshot, so if the synthetic corpus or the golden split is regenerated after the release,
+`--verify` downgrades the dependent checks (`domain_evidence`, `golden_disjointness`,
+`exclusions_recorded`) to warnings that name the pinned and live hashes and say "rebuild to
+refresh". It still fails on a real document overlap with t11, a corrupted release file or a
+missing licence. This keeps CI honest in a repository where the corpus is a generated
+artifact that other tasks may rebuild, without ever hiding a genuine leak.
 
 What it cannot prove: that a label is *semantically* right. It proves that a Belebele answer
 is the upstream labelled option, that a domain answer is a verbatim slice of its article,
@@ -292,8 +306,8 @@ listed there and `--verify` checks that every mapped file exists.
 * Load `<suite>/<language>/corpus.jsonl` (Belebele) or `mrtydi/ru/corpus.jsonl` into a
   passage-id → text mapping.
 * Load the suite's item files (`manifest.adapter.item_files[suite]`), filter
-  `item["split"] == split`, and use `item["query"]` as the query and `item["qrels"]` as the
-  relevance set.
+  `item["split"] == split`, and use `item["query"]` as the query and `item["qrels"]` (or its
+  alias `item["gold_evidence_ids"]`) as the relevance set.
 * Metric definitions are the harness's (`docs/eval-methodology.md`, `docs/requirements.md`
   RT-1…RT-10): `recall_any@k`, `recall_all@k` (identical for single-qrel items),
   `nDCG@k` with binary gains, `MRR@k`. Report per language, with paired-bootstrap CIs over

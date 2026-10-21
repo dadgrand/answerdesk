@@ -17,7 +17,7 @@ came from.
 | **Code licence** | MIT (`../../../LICENSE`, `LICENSES/MIT.txt`) |
 | **Data licences** | CC BY-SA 4.0 (`belebele/`), Apache-2.0 (`mrtydi/`), CC0-1.0 (`domain/`) |
 | **Built by** | `scripts/build_bench.py` (`--fetch`, `--build`, `--verify`) |
-| **Verified by** | `scripts/build_bench.py --verify` (27 checks; see §9) |
+| **Verified by** | `scripts/build_bench.py --verify` (26 checks; see §9) |
 
 > **The repository is MIT; this dataset is not.** The code that fetches, builds and
 > verifies the benchmark is MIT. The Belebele-derived files are CC BY-SA 4.0 and the
@@ -52,7 +52,7 @@ builder checks the cache against.
 | **Belebele** — `facebook/belebele` (Bandarkar et al., 2023) | HF commit `7899cdfa4e1e0d733fd77c848e2c273cb1d32be2`, `ds=2023-05-20` | CC BY-SA 4.0 | `data/{rus_Cyrl,uzn_Latn,tgk_Cyrl,kir_Cyrl,zho_Hans}.jsonl`: passages, questions, four options, correct option, source link | 150 of 900 questions per language (120 test + 30 dev); passage pool = all 488 unique passages of the language variant |
 | **Mr. TyDi** — `castorini/mr-tydi` (Zhang et al., 2021) | HF commit `1d43c80218d06d0ef80f5b172ccabd848b948bc1` (v1.1) | Apache-2.0 | `mrtydi-v1.1-russian/{dev,test}.jsonl.gz`: queries + positive passage ids | none — the complete ru dev and test splits (2,371 queries; 2 duplicate question strings dropped) |
 | **Mr. TyDi corpus** — `castorini/mr-tydi-corpus` | HF commit `3a3aa212bbe94a8cc0dc858710a3dad49d532054` | Apache-2.0 | `mrtydi-v1.1-russian/corpus.jsonl.gz`: the text of the 2,428 positive passages | derived: only passages that are positive evidence of a dev/test query |
-| **answerdesk synthetic corpus** — this repository | `answerdesk-synthetic-v2.0.0`, `corpus-e592ba7323366d6b`, seed `20261020` | CC0-1.0 | `data/corpus/queries/queries.jsonl` + `docs/<lang>/*.md` | 240 items from 216 documents that t11's golden split does **not** use |
+| **answerdesk synthetic corpus** — this repository | `answerdesk-synthetic-v2.1.0`, `corpus-96f93db4f7f648b5`, seed `20261020` | CC0-1.0 | `data/corpus/queries/queries.jsonl` + `docs/<lang>/*.md` | 240 items from 216 documents that **no t11 golden item uses** |
 
 Upstream files are pinned by SHA-256 in `sources.lock.json`; the raw archives are **not**
 committed (the Mr. TyDi corpus alone is 1.6 GB). `--fetch` fills the git-ignored cache
@@ -99,11 +99,13 @@ no derived labels.
 * Mr. TyDi: the dataset's native dev/test split, question-deduplicated.
 * Domain: within each category, items are ranked by a seeded hash and one in five becomes
   `dev`; each article contributes at most one item per locale, so no document crosses splits.
-* **t11 disjointness**: the domain slice may only use documents that do **not** appear in
-  `evals/golden/v1/` or `evals/splits/v1.json`. `domain/exclusions.json` records the 360
-  excluded document ids and the hashes of the files that produced them; `--verify`
-  re-checks the live golden split. Questions whose exact text occurs in the golden split
-  are excluded too.
+* **t11 disjointness**: the domain slice may only use documents that no item in
+  `evals/golden/v1/` (test, dev and the five adversarial files) uses as evidence.
+  `domain/exclusions.json` records the 429 excluded document ids, the 736 excluded question
+  texts, the corpus manifest hash and the hashes of the golden files that produced them; `--verify` re-checks the live golden
+  items. The frozen split file (`evals/splits/v1.json`) assigns **every** corpus document to
+  dev or test by construction, so split membership is recorded in the exclusions file but is
+  not used for exclusion — the disjointness contract is at item level.
 
 ## 4. Item schema
 
@@ -133,9 +135,12 @@ Every item has the same envelope, then a suite payload (JSON Schema: `schema.jso
 
 | Suite | Payload fields |
 |---|---|
-| `belebele_retrieval`, `mrtydi_retrieval` | `query`, `qrels[]` (passage ids in the suite's `corpus.jsonl`) |
+| `belebele_retrieval`, `mrtydi_retrieval` | `query`, `qrels[]` (passage ids in the suite's `corpus.jsonl`) and its alias `gold_evidence_ids[]` |
 | `belebele_qa` | `question`, `options[4]`, `answer_index` (0-based), `gold_evidence_ids[]`, `answer_anchor`, `answerable` |
 | `domain` | `question`, `answerable`, `expected_behavior`, `reference_answer`, `evidence[{doc_id, quote}]`, `gold_evidence_ids[]`, `must_not_echo[]`, `pii_tokens[]`, `attack` |
+
+`gold_evidence_ids` is present on **every** item: for retrieval it is the same list as
+`qrels` (the alias exists so a consumer has one evidence field name across suites).
 
 `expected_behavior` is one of `answer_from_evidence`, `escalate`, `answer_without_echo`.
 Domain evidence quotes are verbatim slices of `data/corpus/docs/<lang>/<doc_id>.md`;
@@ -249,9 +254,17 @@ languages the slice does not cover.
 cd answerdesk
 uv run python scripts/build_bench.py --fetch    # network; fills .cache/answerdesk-bench/
 uv run python scripts/build_bench.py --build    # offline; deterministic
-uv run python scripts/build_bench.py --verify   # offline; 27 checks, exit code 0/1
+uv run python scripts/build_bench.py --verify   # offline; 26 checks, exit code 0/1
 uv run pytest -q tests/unit/bench               # offline; schema/counts/licence/dedup/leakage
 ```
+
+**Snapshot semantics.** The release is frozen against the corpus manifest and the t11
+golden-item snapshot recorded in `domain/exclusions.json`. If the synthetic corpus or the
+golden split advances after the release (another task regenerates them), `--verify`
+downgrades the affected checks to warnings that name both hashes and say "rebuild to
+refresh"; it still fails on a real document overlap, a corrupted release, or a missing
+licence. The committed quotes remain self-consistent — they describe the pinned corpus
+manifest, not the moving working tree.
 
 `--verify` checks: manifest schema and self-hash, per-file SHA-256, file inventory, item
 schema, unique ids, counts against the manifest, acceptance floors, passage/qrel

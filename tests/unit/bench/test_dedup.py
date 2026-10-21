@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 from collections import Counter
-from pathlib import Path
-from typing import Any
 
 from bench.checks import dedup_checks
 from bench.config import MINHASH_BANDS, MINHASH_HASHES, MINHASH_THRESHOLD, SHINGLE_SIZE
@@ -22,7 +20,12 @@ def _pairs(texts: list[str]) -> list[tuple[int, int, float]]:
 
 
 def test_identical_texts_are_duplicates() -> None:
-    pairs = _pairs(["The refund window is fourteen days from approval.", "The refund window is fourteen days from approval."])
+    pairs = _pairs(
+        [
+            "The refund window is fourteen days from approval.",
+            "The refund window is fourteen days from approval.",
+        ]
+    )
     assert pairs and pairs[0][0] == 0 and pairs[0][1] == 1
     assert pairs[0][2] == 1.0
 

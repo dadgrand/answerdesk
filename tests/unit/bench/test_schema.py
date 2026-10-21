@@ -24,7 +24,10 @@ def test_core_envelope_is_complete(items: list[dict[str, Any]]) -> None:
             assert field in item, (item["item_id"], field)
         provenance = item["provenance"]
         for field in schema.PROVENANCE_FIELDS:
-            assert isinstance(provenance[field], str) and provenance[field], (item["item_id"], field)
+            assert isinstance(provenance[field], str) and provenance[field], (
+                item["item_id"],
+                field,
+            )
         assert len(provenance["source_sha256"]) == 64
         assert item["split"] in schema.SPLITS
         assert item["license"] == SUITE_LICENSES[item["suite"]]
@@ -34,7 +37,12 @@ def test_core_envelope_is_complete(items: list[dict[str, Any]]) -> None:
 def test_item_ids_are_unique_and_namespaced(items: list[dict[str, Any]]) -> None:
     counts = Counter(str(item["item_id"]) for item in items)
     assert [item_id for item_id, count in counts.items() if count > 1] == []
-    prefixes = {"belebele_retrieval": "bb-ret-", "belebele_qa": "bb-qa-", "mrtydi_retrieval": "mrtydi-ru-", "domain": "dom-"}
+    prefixes = {
+        "belebele_retrieval": "bb-ret-",
+        "belebele_qa": "bb-qa-",
+        "mrtydi_retrieval": "mrtydi-ru-",
+        "domain": "dom-",
+    }
     for item in items:
         assert str(item["item_id"]).startswith(prefixes[item["suite"]]), item["item_id"]
 
@@ -45,6 +53,7 @@ def test_retrieval_qrels_resolve_to_pool_passages(items, passages) -> None:
         if item["suite"] not in ("belebele_retrieval", "mrtydi_retrieval"):
             continue
         assert item["qrels"], item["item_id"]
+        assert item["gold_evidence_ids"] == item["qrels"]
         for qrel in item["qrels"]:
             assert qrel in passages, (item["item_id"], qrel)
             assert passages[qrel]["language"] == item["language"]

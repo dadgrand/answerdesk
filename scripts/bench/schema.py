@@ -119,9 +119,15 @@ def validate_item(item: Mapping[str, Any]) -> list[str]:
         return [f"{label}: unknown suite {suite!r}"]
     spec = SUITES[suite]
     _require(item["task"] == spec["task"], f"{label}: task must be {spec['task']!r}", errors)
-    _require(item["license"] == spec["license"], f"{label}: license must be {spec['license']!r}", errors)
-    _require(item["language"] in spec["languages"], f"{label}: language not allowed for {suite}", errors)
-    _require(item["category"] in spec["categories"], f"{label}: category not allowed for {suite}", errors)
+    _require(
+        item["license"] == spec["license"], f"{label}: license must be {spec['license']!r}", errors
+    )
+    _require(
+        item["language"] in spec["languages"], f"{label}: language not allowed for {suite}", errors
+    )
+    _require(
+        item["category"] in spec["categories"], f"{label}: category not allowed for {suite}", errors
+    )
     _require(item["split"] in SPLITS, f"{label}: split must be one of {SPLITS}", errors)
     _require(_is_text(item["item_id"]), f"{label}: item_id must be a non-empty string", errors)
 
@@ -138,27 +144,41 @@ def validate_item(item: Mapping[str, Any]) -> list[str]:
 
     if suite in ("belebele_retrieval", "mrtydi_retrieval"):
         _require(_is_text(item.get("query")), f"{label}: query missing", errors)
-        _require(_is_id_list(item.get("qrels")), f"{label}: qrels must be a non-empty id list", errors)
+        _require(
+            _is_id_list(item.get("qrels")), f"{label}: qrels must be a non-empty id list", errors
+        )
 
     if suite == "belebele_qa":
         options = item.get("options")
         _require(_is_text(item.get("question")), f"{label}: question missing", errors)
-        _require(isinstance(options, list) and len(options) == 4, f"{label}: need exactly 4 options", errors)
+        _require(
+            isinstance(options, list) and len(options) == 4,
+            f"{label}: need exactly 4 options",
+            errors,
+        )
         if isinstance(options, list) and len(options) == 4:
             distinct = {str(option).strip().casefold() for option in options}
             _require(len(distinct) == 4, f"{label}: options must be distinct", errors)
             _require(all(_is_text(option) for option in options), f"{label}: empty option", errors)
         answer_index = item.get("answer_index")
         _require(
-            isinstance(answer_index, int) and not isinstance(answer_index, bool) and 0 <= answer_index <= 3,
+            isinstance(answer_index, int)
+            and not isinstance(answer_index, bool)
+            and 0 <= answer_index <= 3,
             f"{label}: answer_index must be an int in 0..3",
             errors,
         )
-        _require(_is_id_list(item.get("gold_evidence_ids")), f"{label}: gold_evidence_ids missing", errors)
+        _require(
+            _is_id_list(item.get("gold_evidence_ids")),
+            f"{label}: gold_evidence_ids missing",
+            errors,
+        )
         _require(item.get("answerable") is True, f"{label}: qa items are answerable", errors)
         anchor = item.get("answer_anchor")
         _require(
-            isinstance(anchor, (int, float)) and not isinstance(anchor, bool) and 0.0 <= float(anchor) <= 1.0,
+            isinstance(anchor, (int, float))
+            and not isinstance(anchor, bool)
+            and 0.0 <= float(anchor) <= 1.0,
             f"{label}: answer_anchor must be a float in 0..1",
             errors,
         )
@@ -183,8 +203,14 @@ def _validate_domain_item(item: Mapping[str, Any], label: str, errors: list[str]
     _require(isinstance(reference, str), f"{label}: reference_answer must be a string", errors)
     _require(isinstance(evidence, list), f"{label}: evidence must be a list", errors)
     _require(isinstance(gold, list), f"{label}: gold_evidence_ids must be a list", errors)
-    _require(isinstance(item.get("must_not_echo"), list), f"{label}: must_not_echo must be a list", errors)
-    _require(isinstance(item.get("pii_tokens"), list), f"{label}: pii_tokens must be a list", errors)
+    _require(
+        isinstance(item.get("must_not_echo"), list),
+        f"{label}: must_not_echo must be a list",
+        errors,
+    )
+    _require(
+        isinstance(item.get("pii_tokens"), list), f"{label}: pii_tokens must be a list", errors
+    )
 
     if isinstance(evidence, list):
         for entry in evidence:
@@ -196,37 +222,78 @@ def _validate_domain_item(item: Mapping[str, Any], label: str, errors: list[str]
                 break
 
     if answerable is False:
-        _require(behaviour == "escalate", f"{label}: unanswerable items must expect escalation", errors)
+        _require(
+            behaviour == "escalate", f"{label}: unanswerable items must expect escalation", errors
+        )
         _require(reference == "", f"{label}: unanswerable items carry no reference answer", errors)
         _require(evidence == [], f"{label}: unanswerable items carry no evidence", errors)
         _require(gold == [], f"{label}: unanswerable items carry no gold evidence ids", errors)
-        _require(category == "unanswerable", f"{label}: only unanswerable items are unanswerable", errors)
+        _require(
+            category == "unanswerable", f"{label}: only unanswerable items are unanswerable", errors
+        )
     elif answerable is True:
         _require(_is_text(reference), f"{label}: answerable item needs a reference answer", errors)
         _require(bool(gold), f"{label}: answerable item needs gold evidence ids", errors)
 
     if category == "multi_hop":
-        _require(isinstance(evidence, list) and len(evidence) >= 2, f"{label}: multi_hop needs 2+ evidence entries", errors)
+        _require(
+            isinstance(evidence, list) and len(evidence) >= 2,
+            f"{label}: multi_hop needs 2+ evidence entries",
+            errors,
+        )
     if category in ("direct", "numeric_date"):
-        _require(isinstance(evidence, list) and len(evidence) >= 1, f"{label}: needs an evidence quote", errors)
+        _require(
+            isinstance(evidence, list) and len(evidence) >= 1,
+            f"{label}: needs an evidence quote",
+            errors,
+        )
     if category == "pii":
-        _require(item.get("pii_tokens") not in ([], None), f"{label}: pii item needs pii_tokens", errors)
-        _require(item.get("must_not_echo") not in ([], None), f"{label}: pii item needs must_not_echo", errors)
-        _require(behaviour == "answer_without_echo", f"{label}: pii items expect answer_without_echo", errors)
+        _require(
+            item.get("pii_tokens") not in ([], None), f"{label}: pii item needs pii_tokens", errors
+        )
+        _require(
+            item.get("must_not_echo") not in ([], None),
+            f"{label}: pii item needs must_not_echo",
+            errors,
+        )
+        _require(
+            behaviour == "answer_without_echo",
+            f"{label}: pii items expect answer_without_echo",
+            errors,
+        )
     if category == "injection":
         attack = item.get("attack")
-        _require(isinstance(attack, Mapping) and _is_text(attack.get("instruction")), f"{label}: injection needs attack.instruction", errors)
+        _require(
+            isinstance(attack, Mapping) and _is_text(attack.get("instruction")),
+            f"{label}: injection needs attack.instruction",
+            errors,
+        )
         if isinstance(attack, Mapping):
-            _require(attack.get("must_not_comply") is True, f"{label}: injection needs attack.must_not_comply", errors)
-        _require(behaviour == "answer_from_evidence", f"{label}: injection items expect answer_from_evidence", errors)
+            _require(
+                attack.get("must_not_comply") is True,
+                f"{label}: injection needs attack.must_not_comply",
+                errors,
+            )
+        _require(
+            behaviour == "answer_from_evidence",
+            f"{label}: injection items expect answer_from_evidence",
+            errors,
+        )
 
 
 def item_fields(suite: str) -> tuple[str, ...]:
     """Required fields for a suite (core envelope plus payload)."""
     payload = {
-        "belebele_retrieval": ("query", "qrels"),
-        "mrtydi_retrieval": ("query", "qrels"),
-        "belebele_qa": ("question", "options", "answer_index", "gold_evidence_ids", "answer_anchor", "answerable"),
+        "belebele_retrieval": ("query", "qrels", "gold_evidence_ids"),
+        "mrtydi_retrieval": ("query", "qrels", "gold_evidence_ids"),
+        "belebele_qa": (
+            "question",
+            "options",
+            "answer_index",
+            "gold_evidence_ids",
+            "answer_anchor",
+            "answerable",
+        ),
         "domain": (
             "question",
             "answerable",
@@ -291,7 +358,7 @@ def json_schema() -> dict[str, Any]:
             "properties": {"doc_id": string, "quote": string},
         },
     }
-    retrieval_required = [*CORE_FIELDS, "query", "qrels"]
+    retrieval_required = [*CORE_FIELDS, "query", "qrels", "gold_evidence_ids"]
     qa_required = [
         *CORE_FIELDS,
         "question",
@@ -324,8 +391,16 @@ def json_schema() -> dict[str, Any]:
             "t19 adapter contract."
         ),
         "oneOf": [
-            variant("belebele_retrieval", {"query": string, "qrels": id_list}, retrieval_required),
-            variant("mrtydi_retrieval", {"query": string, "qrels": id_list}, retrieval_required),
+            variant(
+                "belebele_retrieval",
+                {"query": string, "qrels": id_list, "gold_evidence_ids": id_list},
+                retrieval_required,
+            ),
+            variant(
+                "mrtydi_retrieval",
+                {"query": string, "qrels": id_list, "gold_evidence_ids": id_list},
+                retrieval_required,
+            ),
             variant(
                 "belebele_qa",
                 {

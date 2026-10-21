@@ -18,14 +18,14 @@ from typing import Any
 
 from . import schema
 from .config import (
-    MINHASH_BANDS,
-    MINHASH_HASHES,
-    MINHASH_THRESHOLD,
     MIN_DOMAIN_ITEMS_PER_CATEGORY,
     MIN_QA_ITEMS_PER_LANG,
     MIN_RETRIEVAL_QUERIES_PER_LANG,
     MIN_SCRIPT_SHARE,
     MIN_TOTAL_ITEMS,
+    MINHASH_BANDS,
+    MINHASH_HASHES,
+    MINHASH_THRESHOLD,
     SHINGLE_SIZE,
 )
 from .normalize import answer_anchor, near_duplicate_pairs, script_share
@@ -33,7 +33,9 @@ from .normalize import answer_anchor, near_duplicate_pairs, script_share
 MAX_REPORTED = 10
 
 
-def read_bench(files: Mapping[str, bytes]) -> tuple[list[dict[str, Any]], dict[str, dict[str, Any]], dict[str, list[dict[str, Any]]]]:
+def read_bench(
+    files: Mapping[str, bytes],
+) -> tuple[list[dict[str, Any]], dict[str, dict[str, Any]], dict[str, list[dict[str, Any]]]]:
     """Split the release files into items, passages and passages grouped by file."""
     items: list[dict[str, Any]] = []
     passages: dict[str, dict[str, Any]] = {}
@@ -61,7 +63,11 @@ def item_checks(items: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
     errors: list[str] = []
     for item in items:
         errors.extend(schema.validate_item(item))
-    duplicates = [item_id for item_id, count in Counter(str(item.get("item_id")) for item in items).items() if count > 1]
+    duplicates = [
+        item_id
+        for item_id, count in Counter(str(item.get("item_id")) for item in items).items()
+        if count > 1
+    ]
     return {
         "ok": not errors and not duplicates,
         "count": len(items),
@@ -95,7 +101,7 @@ def floor_checks(items: Sequence[Mapping[str, Any]], counts: Mapping[str, Any]) 
     problems: list[str] = []
     if int(counts["items"]) < MIN_TOTAL_ITEMS:
         problems.append(f"only {counts['items']} items, need >= {MIN_TOTAL_ITEMS}")
-    for suite, field, floor in (
+    for suite, _label, floor in (
         ("belebele_retrieval", "retrieval", MIN_RETRIEVAL_QUERIES_PER_LANG),
         ("belebele_qa", "qa", MIN_QA_ITEMS_PER_LANG),
     ):
@@ -115,7 +121,9 @@ def floor_checks(items: Sequence[Mapping[str, Any]], counts: Mapping[str, Any]) 
     return {"ok": not problems, "problems": problems[:MAX_REPORTED]}
 
 
-def passage_checks(items: Sequence[Mapping[str, Any]], passages: Mapping[str, Mapping[str, Any]]) -> dict[str, Any]:
+def passage_checks(
+    items: Sequence[Mapping[str, Any]], passages: Mapping[str, Mapping[str, Any]]
+) -> dict[str, Any]:
     problems: list[str] = []
     referenced = 0
     for item in items:
@@ -140,7 +148,9 @@ def passage_checks(items: Sequence[Mapping[str, Any]], passages: Mapping[str, Ma
     }
 
 
-def answer_checks(items: Sequence[Mapping[str, Any]], passages: Mapping[str, Mapping[str, Any]]) -> dict[str, Any]:
+def answer_checks(
+    items: Sequence[Mapping[str, Any]], passages: Mapping[str, Mapping[str, Any]]
+) -> dict[str, Any]:
     problems: list[str] = []
     checked = 0
 
@@ -152,9 +162,16 @@ def answer_checks(items: Sequence[Mapping[str, Any]], passages: Mapping[str, Map
             if len(evidence) != 1 or evidence[0] not in passages:
                 problems.append(f"{item['item_id']}: gold evidence does not resolve")
                 continue
-            recomputed = answer_anchor(str(item["options"][item["answer_index"]]), str(passages[evidence[0]]["text"]))
+            if not 0 <= int(item["answer_index"]) < len(item["options"]):
+                problems.append(f"{item['item_id']}: answer_index outside the option list")
+                continue
+            recomputed = answer_anchor(
+                str(item["options"][item["answer_index"]]), str(passages[evidence[0]]["text"])
+            )
             if abs(recomputed - float(item["answer_anchor"])) > 1e-6:
-                problems.append(f"{item['item_id']}: answer_anchor {item['answer_anchor']} != recomputed {recomputed}")
+                problems.append(
+                    f"{item['item_id']}: answer_anchor {item['answer_anchor']} != recomputed {recomputed}"
+                )
         elif suite == "domain":
             checked += 1
             quotes = [str(entry["quote"]) for entry in item.get("evidence", [])]
@@ -162,21 +179,30 @@ def answer_checks(items: Sequence[Mapping[str, Any]], passages: Mapping[str, Map
             if item.get("answerable"):
                 if item["category"] == "multi_hop":
                     if reference != " ".join(quotes):
-                        problems.append(f"{item['item_id']}: multi_hop reference is not the quote concatenation")
+                        problems.append(
+                            f"{item['item_id']}: multi_hop reference is not the quote concatenation"
+                        )
                 elif quotes and reference != quotes[0]:
-                    problems.append(f"{item['item_id']}: reference answer is not the evidence quote")
+                    problems.append(
+                        f"{item['item_id']}: reference answer is not the evidence quote"
+                    )
                 if not any(str(gold) for gold in item.get("gold_evidence_ids", [])):
                     problems.append(f"{item['item_id']}: answerable item without gold evidence")
             for token in item.get("must_not_echo", []):
                 if str(token) in reference:
-                    problems.append(f"{item['item_id']}: reference echoes forbidden token {token!r}")
-            if item["category"] == "pii":
-                if not any(str(token) in str(item["question"]) for token in item.get("pii_tokens", [])):
-                    problems.append(f"{item['item_id']}: pii token absent from the question")
+                    problems.append(
+                        f"{item['item_id']}: reference echoes forbidden token {token!r}"
+                    )
+            if item["category"] == "pii" and not any(
+                str(token) in str(item["question"]) for token in item.get("pii_tokens", [])
+            ):
+                problems.append(f"{item['item_id']}: pii token absent from the question")
             if item["category"] == "injection":
                 attack = item.get("attack") or {}
                 if str(attack.get("instruction", "")) not in str(item["question"]):
-                    problems.append(f"{item['item_id']}: attack instruction absent from the question")
+                    problems.append(
+                        f"{item['item_id']}: attack instruction absent from the question"
+                    )
     return {"ok": not problems, "checked": checked, "problems": problems[:MAX_REPORTED]}
 
 
@@ -259,7 +285,11 @@ def script_checks(items: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
         minimum_by_language[language] = min(minimum_by_language.get(language, 1.0), share)
         if share < MIN_SCRIPT_SHARE:
             problems.append(f"{item['item_id']}: {language} text is only {share:.2f} {expected}")
-    return {"ok": not problems, "minimum_share_by_language": dict(sorted(minimum_by_language.items())), "problems": problems[:MAX_REPORTED]}
+    return {
+        "ok": not problems,
+        "minimum_share_by_language": dict(sorted(minimum_by_language.items())),
+        "problems": problems[:MAX_REPORTED],
+    }
 
 
 def split_checks(
@@ -297,13 +327,19 @@ def split_checks(
         "ok": not problems,
         "policy": "seeded hash split; a passage (Belebele) or document (domain) is gold evidence in exactly one split",
         "ids_by_split": {split: len(values) for split, values in sorted(ids_by_split.items())},
-        "documents_by_split": {split: len(values) for split, values in sorted(docs_by_split.items())},
+        "documents_by_split": {
+            split: len(values) for split, values in sorted(docs_by_split.items())
+        },
         "problems": problems[:MAX_REPORTED],
     }
 
 
 def domain_category_counts(items: Sequence[Mapping[str, Any]]) -> dict[str, int]:
-    return dict(sorted(Counter(str(item["category"]) for item in items if item["suite"] == "domain").items()))
+    return dict(
+        sorted(
+            Counter(str(item["category"]) for item in items if item["suite"] == "domain").items()
+        )
+    )
 
 
 def all_checks(
@@ -323,5 +359,7 @@ def all_checks(
         "scripts": script_checks(items),
         "splits": split_checks(items, passages),
     }
-    report["ok"] = all(section.get("ok", False) for section in report.values() if isinstance(section, dict))
+    report["ok"] = all(
+        section.get("ok", False) for section in report.values() if isinstance(section, dict)
+    )
     return report

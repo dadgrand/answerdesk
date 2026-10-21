@@ -12,6 +12,14 @@
           ],
           "type": "string"
         },
+        "gold_evidence_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
         "item_id": {
           "minLength": 1,
           "type": "string"
@@ -103,7 +111,8 @@
         "license",
         "provenance",
         "query",
-        "qrels"
+        "qrels",
+        "gold_evidence_ids"
       ],
       "type": "object"
     },
@@ -115,6 +124,14 @@
             "native_qrels"
           ],
           "type": "string"
+        },
+        "gold_evidence_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array"
         },
         "item_id": {
           "minLength": 1,
@@ -203,7 +220,8 @@
         "license",
         "provenance",
         "query",
-        "qrels"
+        "qrels",
+        "gold_evidence_ids"
       ],
       "type": "object"
     },

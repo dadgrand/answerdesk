@@ -6,20 +6,20 @@
       "dataset": "answerdesk-synthetic",
       "files": [
         {
-          "bytes": 1296532,
+          "bytes": 1668025,
           "repo_path": "data/corpus/queries/queries.jsonl",
-          "sha256": "b1a0b4cbd1eeb93282418e49fe76cb8292dec5ea301a96b21aa98c09efba6d6b"
+          "sha256": "8a9b2a7398e4f2789bbe088e652597ad9cedbb80705bb4503adb42b617f31723"
         },
         {
-          "bytes": 331168,
+          "bytes": 414323,
           "repo_path": "data/corpus/manifest.json",
-          "sha256": "d1624360b2eb16a1078287a2ce5a0f83b391dbf838907b08c321830e07254d77"
+          "sha256": "da33968a0d0087ecc0c4e8d966c1cdc47d40699dec139a00694818c0e583af69"
         }
       ],
       "homepage": "data/corpus/README.md",
       "id": "answerdesk-synthetic",
       "license": "CC0-1.0",
-      "version": "answerdesk-synthetic-v2.0.0"
+      "version": "answerdesk-synthetic-v2.1.0"
     }
   ],
   "note": "Pinned upstream sources. Bytes are never committed; run --fetch to fill .cache/answerdesk-bench/.",

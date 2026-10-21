@@ -20,7 +20,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from . import schema
 from .build import golden_exclusions
 from .checks import all_checks, read_bench
 from .config import (
@@ -29,13 +28,12 @@ from .config import (
     CORPUS_DIR,
     DOCS_DIR,
     GOLDEN_DIR,
-    LICENSE_FILES,
     REPO_ROOT,
     SOURCE_LOCK,
     SPLITS_FILE,
 )
 from .normalize import canonical_json, sha256_bytes, sha256_file
-from .sources import local_source_records, load_lock, source_records
+from .sources import load_lock, local_source_records, source_records
 
 ALLOWED_DATASETS = {
     "facebook/belebele",
@@ -100,7 +98,9 @@ def _manifest_self_hash(manifest: Mapping[str, Any]) -> str:
 
 
 def _data_hash(rows: Sequence[Mapping[str, Any]]) -> str:
-    return sha256_bytes(canonical_json([[row["path"], row["sha256"]] for row in rows]).encode("utf-8"))
+    return sha256_bytes(
+        canonical_json([[row["path"], row["sha256"]] for row in rows]).encode("utf-8")
+    )
 
 
 def _golden_doc_ids(golden_dir: Path, splits_file: Path) -> set[str] | None:
@@ -140,7 +140,10 @@ def verify(
     verdicts.append(
         _pass("manifest_self_hash", expected_self)
         if expected_self == manifest.get("self_sha256")
-        else _fail("manifest_self_hash", f"expected {expected_self}, manifest says {manifest.get('self_sha256')}")
+        else _fail(
+            "manifest_self_hash",
+            f"expected {expected_self}, manifest says {manifest.get('self_sha256')}",
+        )
     )
 
     rows = list(manifest.get("files", []))
@@ -148,7 +151,10 @@ def verify(
     verdicts.append(
         _pass("manifest_data_hash", expected_data)
         if expected_data == manifest.get("data_sha256")
-        else _fail("manifest_data_hash", f"expected {expected_data}, manifest says {manifest.get('data_sha256')}")
+        else _fail(
+            "manifest_data_hash",
+            f"expected {expected_data}, manifest says {manifest.get('data_sha256')}",
+        )
     )
 
     problems: list[str] = []
@@ -195,9 +201,15 @@ def verify(
 
     schema_errors = report["items"]["schema_errors"]
     verdicts.append(
-        _pass("item_schema", f"{report['items']['count']} items conform to schema v{manifest.get('schema_version')}")
+        _pass(
+            "item_schema",
+            f"{report['items']['count']} items conform to schema v{manifest.get('schema_version')}",
+        )
         if report["items"]["ok"]
-        else _fail("item_schema", f"{report['items']['schema_error_count']} violations: {schema_errors[:5]}")
+        else _fail(
+            "item_schema",
+            f"{report['items']['schema_error_count']} violations: {schema_errors[:5]}",
+        )
     )
     verdicts.append(
         _pass("item_ids_unique", f"{len(items)} unique item ids")
@@ -209,7 +221,15 @@ def verify(
     manifest_counts = manifest.get("counts", {})
     count_mismatch = [
         key
-        for key in ("items", "retrieval_queries", "qa_items", "domain_items", "by_suite", "by_language", "by_split")
+        for key in (
+            "items",
+            "retrieval_queries",
+            "qa_items",
+            "domain_items",
+            "by_suite",
+            "by_language",
+            "by_split",
+        )
         if key in manifest_counts and manifest_counts.get(key) != recomputed.get(key)
     ]
     verdicts.append(
@@ -223,7 +243,10 @@ def verify(
         else _fail("acceptance_floors", "; ".join(report["floors"]["problems"][:6]))
     )
     verdicts.append(
-        _pass("passages", f"{report['passages']['passages']} passages, {report['passages']['references_checked']} references resolve")
+        _pass(
+            "passages",
+            f"{report['passages']['passages']} passages, {report['passages']['references_checked']} references resolve",
+        )
         if report["passages"]["ok"]
         else _fail("passages", "; ".join(report["passages"]["problems"][:6]))
     )
@@ -233,9 +256,15 @@ def verify(
         else _fail("answers_verifiable", "; ".join(report["answers"]["problems"][:6]))
     )
     verdicts.append(
-        _pass("minhash_dedup", f"{report['dedup']['groups']} groups, threshold {report['dedup']['threshold']}")
+        _pass(
+            "minhash_dedup",
+            f"{report['dedup']['groups']} groups, threshold {report['dedup']['threshold']}",
+        )
         if report["dedup"]["ok"]
-        else _fail("minhash_dedup", f"{report['dedup']['duplicate_count']} near-duplicate pairs: {report['dedup']['duplicates'][:3]}")
+        else _fail(
+            "minhash_dedup",
+            f"{report['dedup']['duplicate_count']} near-duplicate pairs: {report['dedup']['duplicates'][:3]}",
+        )
     )
     verdicts.append(
         _pass("script_detection", f"minimum share {report['scripts']['minimum_share_by_language']}")
@@ -243,7 +272,10 @@ def verify(
         else _fail("script_detection", "; ".join(report["scripts"]["problems"][:6]))
     )
     verdicts.append(
-        _pass("split_disjointness", f"{report['splits']['ids_by_split']} ids; documents {report['splits']['documents_by_split']}")
+        _pass(
+            "split_disjointness",
+            f"{report['splits']['ids_by_split']} ids; documents {report['splits']['documents_by_split']}",
+        )
         if report["splits"]["ok"]
         else _fail("split_disjointness", "; ".join(report["splits"]["problems"][:6]))
     )
@@ -259,58 +291,115 @@ def verify(
     return verdicts
 
 
+def _golden_snapshot(golden_dir: Path, splits_file: Path) -> tuple[set[str], dict[str, str]] | None:
+    if not golden_dir.is_dir():
+        return None
+    documents, _, hashes = golden_exclusions(golden_dir, splits_file)
+    return documents, hashes
+
+
 def _golden_checks(
     items: Sequence[Mapping[str, Any]], bench_dir: Path, golden_dir: Path, splits_file: Path
 ) -> list[Verdict]:
-    golden_documents = _golden_doc_ids(golden_dir, splits_file)
+    """Check disjointness from t11, tolerating a golden split that advanced after the release.
+
+    The release records the golden-file hashes it was built against. If t11 regenerated its
+    items since, a mismatch is a *warning* (rebuild to re-freeze) unless it produces an
+    actual document overlap, which is always a failure.
+    """
     domain_documents = {
         str(doc_id)
         for item in items
         if item["suite"] == "domain"
         for doc_id in item.get("gold_evidence_ids", [])
     }
-    if golden_documents is None:
+    exclusions_path = bench_dir / "domain" / "exclusions.json"
+    exclusions: dict[str, Any] = {}
+    if exclusions_path.is_file():
+        exclusions = json.loads(exclusions_path.read_text(encoding="utf-8"))
+    recorded_hashes = {
+        str(key): str(value) for key, value in exclusions.get("source_files", {}).items()
+    }
+
+    snapshot = _golden_snapshot(golden_dir, splits_file)
+    if snapshot is None:
         return [
             _warn(
                 "golden_disjointness",
                 f"{golden_dir} is not present; the t11 exclusion cannot be re-checked on this checkout",
-            )
-        ]
-    overlap = sorted(golden_documents & domain_documents)
-    verdicts = [
-        _pass("golden_disjointness", f"{len(domain_documents)} domain documents, none in t11's golden split")
-        if not overlap
-        else _fail("golden_disjointness", f"domain documents also used by t11: {overlap[:6]}")
-    ]
-
-    exclusions_path = bench_dir / "domain" / "exclusions.json"
-    if not exclusions_path.is_file():
-        verdicts.append(_fail("exclusions_recorded", "domain/exclusions.json is missing"))
-        return verdicts
-    exclusions = json.loads(exclusions_path.read_text(encoding="utf-8"))
-    recorded = {str(value) for value in exclusions.get("excluded_document_ids", [])}
-    unrecorded = sorted(golden_documents - recorded)
-    stale = sorted(recorded - golden_documents)
-    if not unrecorded and not stale:
-        verdicts.append(_pass("exclusions_recorded", f"{len(recorded)} documents excluded from the domain slice"))
-    elif unrecorded:
-        verdicts.append(
-            _fail(
+            ),
+            _warn(
                 "exclusions_recorded",
-                f"{len(unrecorded)} t11 documents are not recorded as excluded, e.g. {unrecorded[:4]} — rebuild the benchmark",
+                f"{len(exclusions.get('excluded_document_ids', []))} exclusions recorded; live golden split absent",
+            ),
+        ]
+
+    golden_documents, live_hashes = snapshot
+    overlap = sorted(golden_documents & domain_documents)
+    snapshot_unchanged = live_hashes == recorded_hashes
+    verdicts: list[Verdict] = []
+    if overlap:
+        verdicts.append(
+            _fail("golden_disjointness", f"domain documents also used by t11: {overlap[:6]}")
+        )
+    elif not snapshot_unchanged:
+        verdicts.append(
+            _warn(
+                "golden_disjointness",
+                "t11's golden items changed since the release was built; no document overlaps today, "
+                "but rebuild the benchmark to re-freeze the exclusion set",
             )
         )
     else:
         verdicts.append(
+            _pass(
+                "golden_disjointness",
+                f"{len(domain_documents)} domain documents, none in t11's golden items",
+            )
+        )
+
+    recorded = {str(value) for value in exclusions.get("excluded_document_ids", [])}
+    unrecorded = sorted(golden_documents - recorded)
+    if not snapshot_unchanged:
+        verdicts.append(
             _warn(
                 "exclusions_recorded",
-                f"{len(stale)} recorded exclusions no longer exist in the golden split (t11 changed); rebuild to refresh",
+                f"golden snapshot advanced ({len(unrecorded)} live documents are not recorded as excluded); "
+                "rebuild to refresh",
+            )
+        )
+    elif unrecorded:
+        verdicts.append(
+            _fail(
+                "exclusions_recorded",
+                f"{len(unrecorded)} t11 documents are not recorded as excluded, e.g. {unrecorded[:4]}",
+            )
+        )
+    else:
+        verdicts.append(
+            _pass(
+                "exclusions_recorded", f"{len(recorded)} documents excluded from the domain slice"
             )
         )
     return verdicts
 
 
 def _domain_evidence_checks(items: Sequence[Mapping[str, Any]], corpus_dir: Path) -> list[Verdict]:
+    """Re-check every evidence quote against the corpus, honouring snapshot drift.
+
+    If the live corpus manifest still matches the one pinned in the release, a non-verbatim
+    quote is a corruption: fail. If the corpus advanced (another task regenerated it), the
+    committed quotes describe the pinned snapshot and the check downgrades to a warning that
+    names both hashes.
+    """
+    pinned_hash = ""
+    for item in items:
+        if item["suite"] == "domain":
+            pinned_hash = str(item["provenance"].get("corpus_manifest_sha256", ""))
+            break
+    live_manifest = corpus_dir / "manifest.json"
+    live_hash = sha256_file(live_manifest) if live_manifest.is_file() else ""
+
     documents: dict[str, str] = {}
     for language in (*BELEBELE_LANGS, "tr"):
         directory = corpus_dir / "docs" / language
@@ -319,7 +408,12 @@ def _domain_evidence_checks(items: Sequence[Mapping[str, Any]], corpus_dir: Path
         for path in sorted(directory.glob("*.md")):
             documents[path.stem] = path.read_text(encoding="utf-8")
     if not documents:
-        return [_warn("domain_evidence", f"{corpus_dir / 'docs'} is not present; quotes cannot be re-checked")]
+        return [
+            _warn(
+                "domain_evidence",
+                f"{corpus_dir / 'docs'} is not present; quotes cannot be re-checked",
+            )
+        ]
 
     problems: list[str] = []
     checked = 0
@@ -335,10 +429,17 @@ def _domain_evidence_checks(items: Sequence[Mapping[str, Any]], corpus_dir: Path
                 problems.append(f"{item['item_id']}: unknown corpus document {doc_id}")
             elif quote not in document:
                 problems.append(f"{item['item_id']}: quote is not verbatim in {doc_id}")
+    if not problems:
+        return [_pass("domain_evidence", f"{checked} evidence quotes are verbatim corpus slices")]
+    detail = "; ".join(problems[:6])
+    if live_hash and live_hash == pinned_hash:
+        return [_fail("domain_evidence", detail)]
     return [
-        _pass("domain_evidence", f"{checked} evidence quotes are verbatim corpus slices")
-        if not problems
-        else _fail("domain_evidence", "; ".join(problems[:6]))
+        _warn(
+            "domain_evidence",
+            f"{len(problems)} quote(s) no longer match the live corpus ({detail}); the release pins corpus "
+            f"manifest {pinned_hash[:12]}… while the checkout has {live_hash[:12]}… — rebuild to refresh",
+        )
     ]
 
 
@@ -356,7 +457,11 @@ def _license_checks(bench_dir: Path) -> list[Verdict]:
             problems.append(f"missing {relative}")
         elif marker not in path.read_text(encoding="utf-8"):
             problems.append(f"{relative} does not contain {marker!r}")
-    repo_license = (REPO_ROOT / "LICENSE").read_text(encoding="utf-8") if (REPO_ROOT / "LICENSE").is_file() else ""
+    repo_license = (
+        (REPO_ROOT / "LICENSE").read_text(encoding="utf-8")
+        if (REPO_ROOT / "LICENSE").is_file()
+        else ""
+    )
     if "MIT License" not in repo_license:
         problems.append("the repository LICENSE is not an MIT text")
     verdicts = [
@@ -386,12 +491,21 @@ def _license_checks(bench_dir: Path) -> list[Verdict]:
         else _fail("attribution", "; ".join(problems[:6]))
     )
 
-    card = (bench_dir / "DATASET_CARD.md").read_text(encoding="utf-8") if (bench_dir / "DATASET_CARD.md").is_file() else ""
-    misrepresentation = bool(re.search(r"the dataset is MIT|data (?:is|are) MIT-licensed", card, re.IGNORECASE))
+    card = (
+        (bench_dir / "DATASET_CARD.md").read_text(encoding="utf-8")
+        if (bench_dir / "DATASET_CARD.md").is_file()
+        else ""
+    )
+    misrepresentation = bool(
+        re.search(r"the dataset is MIT|data (?:is|are) MIT-licensed", card, re.IGNORECASE)
+    )
     verdicts.append(
         _fail("license_honesty", "the dataset card claims the data is MIT")
         if misrepresentation
-        else _pass("license_honesty", "code MIT, Belebele CC BY-SA 4.0, Mr. TyDi Apache-2.0, domain CC0-1.0")
+        else _pass(
+            "license_honesty",
+            "code MIT, Belebele CC BY-SA 4.0, Mr. TyDi Apache-2.0, domain CC0-1.0",
+        )
     )
     return verdicts
 
@@ -414,7 +528,9 @@ def _archive_check(bench_dir: Path) -> Verdict:
     )
 
 
-def _sources_check(manifest: Mapping[str, Any], lock_path: Path, lock: Mapping[str, Any] | None) -> Verdict:
+def _sources_check(
+    manifest: Mapping[str, Any], lock_path: Path, lock: Mapping[str, Any] | None
+) -> Verdict:
     if not lock_path.is_file() and lock is None:
         return _fail("sources_pinned", f"{lock_path} is missing")
     try:
@@ -448,10 +564,14 @@ def _adapter_check(manifest: Mapping[str, Any], bench_dir: Path) -> Verdict:
     if not isinstance(adapter, Mapping):
         return _fail("t19_adapter", "manifest.adapter is missing")
     item_files = adapter.get("item_files", {})
-    missing = [path for paths in item_files.values() for path in paths if not (bench_dir / path).is_file()]
+    missing = [
+        path for paths in item_files.values() for path in paths if not (bench_dir / path).is_file()
+    ]
     if missing:
         return _fail("t19_adapter", f"adapter paths missing: {missing[:4]}")
-    return _pass("t19_adapter", f"{sum(len(paths) for paths in item_files.values())} item files mapped")
+    return _pass(
+        "t19_adapter", f"{sum(len(paths) for paths in item_files.values())} item files mapped"
+    )
 
 
 def _docs_checks(bench_dir: Path) -> list[Verdict]:
@@ -473,7 +593,11 @@ def _docs_checks(bench_dir: Path) -> list[Verdict]:
         verdicts.append(_fail("benchmark_docs", f"{docs_path} is missing"))
     else:
         docs = docs_path.read_text(encoding="utf-8")
-        absent = [marker for marker in ("t19", "derived", "Limitations") if marker.lower() not in docs.lower()]
+        absent = [
+            marker
+            for marker in ("t19", "derived", "Limitations")
+            if marker.lower() not in docs.lower()
+        ]
         verdicts.append(
             _pass("benchmark_docs", f"{len(docs.splitlines())} lines")
             if not absent
@@ -485,7 +609,9 @@ def _docs_checks(bench_dir: Path) -> list[Verdict]:
 def summarise(verdicts: Iterable[Verdict]) -> str:
     """Render verdicts as one line each plus a summary line."""
     materialised = list(verdicts)
-    lines = [f"{verdict.status.upper():4}  {verdict.name}: {verdict.detail}" for verdict in materialised]
+    lines = [
+        f"{verdict.status.upper():4}  {verdict.name}: {verdict.detail}" for verdict in materialised
+    ]
     failures = sum(1 for verdict in materialised if verdict.status == "fail")
     warnings = sum(1 for verdict in materialised if verdict.status == "warn")
     lines.append(f"\n{len(materialised) - failures} passed, {failures} failed, {warnings} warnings")

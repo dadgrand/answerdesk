@@ -13,7 +13,6 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-
 from bench.config import SOURCE_LOCK
 from bench.normalize import canonical_json
 from bench.verify import verify
@@ -78,7 +77,9 @@ def test_corrupted_file_hash_is_rejected(copied: Path) -> None:
 def test_corrupted_self_hash_is_rejected(copied: Path) -> None:
     manifest = json.loads((copied / "manifest.json").read_text(encoding="utf-8"))
     manifest["self_sha256"] = "f" * 64
-    (copied / "manifest.json").write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    (copied / "manifest.json").write_text(
+        json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
     assert _verdicts(copied)["manifest_self_hash"].status == "fail"
 
 

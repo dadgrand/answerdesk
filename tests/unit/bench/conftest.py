@@ -32,16 +32,18 @@ if str(SCRIPTS_DIR) not in sys.path:
 
 BENCH_DIR = REPO_ROOT / "data" / "bench" / "answerdesk-bench" / "v0.1"
 
+from bench.build import SamplingLimits, assemble  # noqa: E402
 from bench.checks import read_bench  # noqa: E402
 from bench.config import (  # noqa: E402
     BELEBELE_LANGS,
     DOMAIN_QUOTAS,
     LICENSE_FILES,
 )
-from bench.build import SamplingLimits, assemble  # noqa: E402
 from bench.templates import PHONE_RANGES, RESERVED_EMAIL  # noqa: E402
 
-MINI_LIMITS = SamplingLimits(belebele_test=2, belebele_dev=1, domain_quotas={key: 1 for key in DOMAIN_QUOTAS})
+MINI_LIMITS = SamplingLimits(
+    belebele_test=2, belebele_dev=1, domain_quotas={key: 1 for key in DOMAIN_QUOTAS}
+)
 
 
 def _sha(payload: bytes) -> str:
@@ -64,17 +66,23 @@ def data_files(bench_dir: Path, manifest: dict[str, Any]) -> dict[str, bytes]:
 
 
 @pytest.fixture(scope="session")
-def bench(data_files: dict[str, bytes]) -> tuple[list[dict[str, Any]], dict[str, dict[str, Any]], dict[str, list[dict[str, Any]]]]:
+def bench(
+    data_files: dict[str, bytes],
+) -> tuple[list[dict[str, Any]], dict[str, dict[str, Any]], dict[str, list[dict[str, Any]]]]:
     return read_bench(data_files)
 
 
 @pytest.fixture(scope="session")
-def items(bench: tuple[list[dict[str, Any]], dict[str, dict[str, Any]], dict[str, list[dict[str, Any]]]]) -> list[dict[str, Any]]:
+def items(
+    bench: tuple[list[dict[str, Any]], dict[str, dict[str, Any]], dict[str, list[dict[str, Any]]]],
+) -> list[dict[str, Any]]:
     return bench[0]
 
 
 @pytest.fixture(scope="session")
-def passages(bench: tuple[list[dict[str, Any]], dict[str, dict[str, Any]], dict[str, list[dict[str, Any]]]]) -> dict[str, dict[str, Any]]:
+def passages(
+    bench: tuple[list[dict[str, Any]], dict[str, dict[str, Any]], dict[str, list[dict[str, Any]]]],
+) -> dict[str, dict[str, Any]]:
     return bench[1]
 
 
@@ -88,7 +96,9 @@ def _write_belebele(cache: Path, language: str, variant: str) -> dict[str, Any]:
         rows.append(
             {
                 "question_number": index + 1,
-                "flores_passage": f"Passage number {passage} in {variant} with enough words to look like text.",
+                "flores_passage": (
+                    f"Passage number {passage} in {variant} with enough words to look like text."
+                ),
                 "question": f"Question number {index + 1} for {language}?",
                 "mc_answer1": f"alpha {index}",
                 "mc_answer2": f"beta {index}",
@@ -100,7 +110,9 @@ def _write_belebele(cache: Path, language: str, variant: str) -> dict[str, Any]:
                 "ds": "2023-05-20",
             }
         )
-    payload = ("\n".join(json.dumps(row, ensure_ascii=False) for row in rows) + "\n").encode("utf-8")
+    payload = ("\n".join(json.dumps(row, ensure_ascii=False) for row in rows) + "\n").encode(
+        "utf-8"
+    )
     relative = f"raw/belebele/{variant}.jsonl"
     (cache / relative).parent.mkdir(parents=True, exist_ok=True)
     (cache / relative).write_bytes(payload)
@@ -126,7 +138,8 @@ def _write_mrtydi(cache: Path) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     pool_path = cache / "derived/mrtydi-ru/passages.jsonl"
     pool_path.parent.mkdir(parents=True, exist_ok=True)
     pool_path.write_text(
-        "\n".join(json.dumps(row, ensure_ascii=False, sort_keys=True) for row in passages) + "\n", encoding="utf-8"
+        "\n".join(json.dumps(row, ensure_ascii=False, sort_keys=True) for row in passages) + "\n",
+        encoding="utf-8",
     )
     files = []
     for split, indexes in (("dev", [0, 1]), ("test", [2, 3])):
@@ -215,14 +228,17 @@ def _write_corpus(corpus: Path) -> dict[str, Any]:
                 }
             )
     (corpus / "queries" / "queries.jsonl").write_text(
-        "\n".join(json.dumps(row, ensure_ascii=False, sort_keys=True) for row in queries) + "\n", encoding="utf-8"
+        "\n".join(json.dumps(row, ensure_ascii=False, sort_keys=True) for row in queries) + "\n",
+        encoding="utf-8",
     )
     manifest = {
         "generator": {"name": "answerdesk-synthetic", "version": "2.0.0"},
         "corpus_version": "corpus-test",
         "license": "CC0-1.0",
     }
-    (corpus / "manifest.json").write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    (corpus / "manifest.json").write_text(
+        json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
     return manifest
 
 
@@ -234,7 +250,9 @@ def mini_build(tmp_path_factory: pytest.TempPathFactory) -> Iterator[dict[str, A
     corpus = root / "corpus"
     golden = root / "golden"
     corpus_manifest = _write_corpus(corpus)
-    belebele_files = [_write_belebele(cache, language, variant) for language, variant in BELEBELE_LANGS.items()]
+    belebele_files = [
+        _write_belebele(cache, language, variant) for language, variant in BELEBELE_LANGS.items()
+    ]
     mrtydi_files, mrtydi_corpus = _write_mrtydi(cache)
     license_entries = []
     for cache_relative, _release_relative in LICENSE_FILES:
@@ -255,7 +273,14 @@ def mini_build(tmp_path_factory: pytest.TempPathFactory) -> Iterator[dict[str, A
     (golden / "v1").mkdir(parents=True, exist_ok=True)
     used_doc = "syn-ru-0005"
     (golden / "v1" / "test.jsonl").write_text(
-        json.dumps({"case_id": "v1-ru-test-001", "question": "golden question", "metadata": {"doc_id": used_doc}}) + "\n",
+        json.dumps(
+            {
+                "case_id": "v1-ru-test-001",
+                "question": "golden question",
+                "metadata": {"doc_id": used_doc},
+            }
+        )
+        + "\n",
         encoding="utf-8",
     )
     splits = {"dev_doc_ids": [], "test_doc_ids": [used_doc]}

@@ -23,10 +23,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from bench.build import assemble  # noqa: E402
-from bench.config import BENCH_DIR, CACHE_DIR, CORPUS_DIR, GOLDEN_DIR, SOURCE_LOCK, SPLITS_FILE  # noqa: E402
-from bench.sources import check_cache, check_local_sources, fetch, load_lock  # noqa: E402
-from bench.verify import summarise, verify  # noqa: E402
+from bench.build import assemble
+from bench.config import BENCH_DIR, CACHE_DIR, CORPUS_DIR, GOLDEN_DIR, SOURCE_LOCK, SPLITS_FILE
+from bench.sources import check_cache, check_local_sources, fetch, load_lock
+from bench.verify import summarise, verify
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -35,15 +35,29 @@ def _parser() -> argparse.ArgumentParser:
         description="answerdesk-bench v0.1: fetch, build or verify the curated multilingual benchmark.",
     )
     action = parser.add_mutually_exclusive_group(required=True)
-    action.add_argument("--fetch", action="store_true", help="download the pinned sources into the cache (network)")
-    action.add_argument("--build", action="store_true", help="build the release from the cache (offline)")
-    action.add_argument("--verify", action="store_true", help="verify the committed release (offline)")
-    parser.add_argument("--force", action="store_true", help="re-download or re-derive even when the cache is warm")
-    parser.add_argument("--cache-dir", type=Path, default=CACHE_DIR, help="download cache (git-ignored)")
+    action.add_argument(
+        "--fetch", action="store_true", help="download the pinned sources into the cache (network)"
+    )
+    action.add_argument(
+        "--build", action="store_true", help="build the release from the cache (offline)"
+    )
+    action.add_argument(
+        "--verify", action="store_true", help="verify the committed release (offline)"
+    )
+    parser.add_argument(
+        "--force", action="store_true", help="re-download or re-derive even when the cache is warm"
+    )
+    parser.add_argument(
+        "--cache-dir", type=Path, default=CACHE_DIR, help="download cache (git-ignored)"
+    )
     parser.add_argument("--bench-dir", type=Path, default=BENCH_DIR, help="release directory")
     parser.add_argument("--corpus-dir", type=Path, default=CORPUS_DIR, help="synthetic corpus root")
-    parser.add_argument("--golden-dir", type=Path, default=GOLDEN_DIR, help="t11 golden split directory")
-    parser.add_argument("--splits-file", type=Path, default=SPLITS_FILE, help="t11 frozen split file")
+    parser.add_argument(
+        "--golden-dir", type=Path, default=GOLDEN_DIR, help="t11 golden split directory"
+    )
+    parser.add_argument(
+        "--splits-file", type=Path, default=SPLITS_FILE, help="t11 frozen split file"
+    )
     parser.add_argument("--lock", type=Path, default=SOURCE_LOCK, help="pinned source lock")
     parser.add_argument(
         "--lax-cache",
@@ -60,7 +74,10 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.fetch:
         fetch(args.cache_dir, lock, force=args.force)
-        problems = [*check_cache(args.cache_dir, lock), *check_local_sources(lock, args.corpus_dir.parent)]
+        problems = [
+            *check_cache(args.cache_dir, lock),
+            *check_local_sources(lock, args.corpus_dir.parent),
+        ]
         if problems:
             print("\n".join(problems), file=sys.stderr)
             return 1
@@ -68,7 +85,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.build:
-        files, manifest = assemble(
+        _files, manifest = assemble(
             cache_dir=args.cache_dir,
             corpus_dir=args.corpus_dir,
             golden_dir=args.golden_dir,

@@ -20,7 +20,6 @@ from __future__ import annotations
 import gzip
 import json
 import re
-from collections import Counter
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -34,12 +33,9 @@ from .config import (
     BELEBELE_SPLIT_MODULUS,
     BELEBELE_TEST_PER_LANG,
     BENCH_NAME,
-    CACHE_DIR,
-    CORPUS_DIR,
     DOMAIN_DEV_MODULUS,
     DOMAIN_LANGS,
     DOMAIN_QUOTAS,
-    GOLDEN_DIR,
     LICENSE_FILES,
     MINHASH_BANDS,
     MINHASH_HASHES,
@@ -49,9 +45,7 @@ from .config import (
     SCHEMA_VERSION,
     SEED,
     SHINGLE_SIZE,
-    SOURCE_LOCK,
     SOURCE_MRTYDI,
-    SPLITS_FILE,
     SUITE_LICENSES,
     VERSION,
 )
@@ -85,7 +79,9 @@ def _rank(*parts: object) -> str:
 
 
 def _jsonl(rows: Iterable[Mapping[str, Any]]) -> bytes:
-    lines = [json.dumps(row, ensure_ascii=False, sort_keys=True, separators=(",", ":")) for row in rows]
+    lines = [
+        json.dumps(row, ensure_ascii=False, sort_keys=True, separators=(",", ":")) for row in rows
+    ]
     return ("\n".join(lines) + "\n").encode("utf-8")
 
 
@@ -174,7 +170,11 @@ def build_belebele(
     for language, variant in BELEBELE_LANGS.items():
         entry = _source_file(lock, "belebele", language)
         source_path = cache_dir / str(entry["cache_path"])
-        rows = [json.loads(line) for line in source_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+        rows = [
+            json.loads(line)
+            for line in source_path.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
         passages = _belebele_passages(rows)
 
         passage_id_by_text: dict[str, str] = {}
@@ -184,7 +184,8 @@ def build_belebele(
             numbers = sorted(passage["numbers"])
             split = (
                 "dev"
-                if int(_rank("bb-passage", language, passage_id)[:8], 16) % BELEBELE_SPLIT_MODULUS == 0
+                if int(_rank("bb-passage", language, passage_id)[:8], 16) % BELEBELE_SPLIT_MODULUS
+                == 0
                 else "test"
             )
             passage_id_by_text[passage["text"]] = passage_id
@@ -216,9 +217,13 @@ def build_belebele(
         skipped_total += skipped
         for split, target in (("test", limits.belebele_test), ("dev", limits.belebele_dev)):
             eligible = [row for row in usable if split_by_text[str(row["flores_passage"])] == split]
-            ranked = sorted(eligible, key=lambda row: _rank("bb-question", language, row["question_number"]))
+            ranked = sorted(
+                eligible, key=lambda row: _rank("bb-question", language, row["question_number"])
+            )
             if len(ranked) < target:
-                raise RuntimeError(f"Belebele {language}/{split}: only {len(ranked)} questions, need {target}")
+                raise RuntimeError(
+                    f"Belebele {language}/{split}: only {len(ranked)} questions, need {target}"
+                )
             chosen = sorted(ranked[:target], key=lambda row: int(row["question_number"]))
             for offset, row in enumerate(chosen, start=1):
                 number = int(row["question_number"])
@@ -277,6 +282,7 @@ def build_belebele(
                         },
                         "query": str(row["question"]),
                         "qrels": [passage_id],
+                        "gold_evidence_ids": [passage_id],
                     }
                 )
 
@@ -331,7 +337,9 @@ def build_mrtydi(cache_dir: Path, lock: Mapping[str, Any]) -> SuiteData:
             qrels = [f"mrtydi-ru:{passage['docid']}" for passage in row["positive_passages"]]
             missing = [qrel for qrel in qrels if qrel.split(":", 1)[1] not in pool]
             if missing:
-                raise RuntimeError(f"Mr. TyDi {split}: qrels missing from the derived pool: {missing[:3]}")
+                raise RuntimeError(
+                    f"Mr. TyDi {split}: qrels missing from the derived pool: {missing[:3]}"
+                )
             items.append(
                 {
                     "item_id": f"mrtydi-ru-{split}-{int(row['query_id']):05d}",
@@ -354,6 +362,7 @@ def build_mrtydi(cache_dir: Path, lock: Mapping[str, Any]) -> SuiteData:
                     },
                     "query": str(row["query"]),
                     "qrels": qrels,
+                    "gold_evidence_ids": list(qrels),
                 }
             )
 
@@ -406,8 +415,16 @@ def contact_values(text: str, language: str) -> dict[str, str]:
     }
 
 
-def golden_exclusions(golden_dir: Path, splits_file: Path) -> tuple[set[str], set[str], dict[str, str]]:
-    """Documents and question texts used by t11's golden/frozen split, with file hashes."""
+def golden_exclusions(
+    golden_dir: Path, splits_file: Path
+) -> tuple[set[str], set[str], dict[str, str]]:
+    """Documents and question texts that t11's golden items use, with file hashes.
+
+    Only documents that appear as evidence of a golden *item* are excluded. The frozen
+    split file assigns every corpus document to ``dev`` or ``test`` by construction, so
+    excluding split membership would exclude the whole corpus; the disjointness contract is
+    at item level (``docs/benchmark.md`` §4.3).
+    """
     documents: set[str] = set()
     questions: set[str] = set()
     hashes: dict[str, str] = {}
@@ -424,7 +441,7 @@ def golden_exclusions(golden_dir: Path, splits_file: Path) -> tuple[set[str], se
         path = golden_dir / relative
         if not path.is_file():
             continue
-        hashes[str(path.relative_to(golden_dir.parent.parent.parent))] = sha256_file(path)
+        hashes[path.relative_to(golden_dir.parent.parent.parent).as_posix()] = sha256_file(path)
         for record in iter_jsonl(path):
             metadata = record.get("metadata") if isinstance(record.get("metadata"), Mapping) else {}
             for key in ("doc_id", "document_id"):
@@ -438,12 +455,9 @@ def golden_exclusions(golden_dir: Path, splits_file: Path) -> tuple[set[str], se
             if isinstance(question, str) and question.strip():
                 questions.add(normalise_question(question))
     if splits_file.is_file():
-        hashes[str(splits_file.relative_to(splits_file.parent.parent.parent))] = sha256_file(splits_file)
-        splits = json.loads(splits_file.read_text(encoding="utf-8"))
-        for key in ("dev_doc_ids", "test_doc_ids"):
-            for value in splits.get(key, []):
-                if isinstance(value, str) and value:
-                    documents.add(value)
+        hashes[splits_file.relative_to(splits_file.parent.parent.parent).as_posix()] = sha256_file(
+            splits_file
+        )
     return documents, questions, hashes
 
 
@@ -462,7 +476,9 @@ def build_domain(
     corpus_manifest_path = corpus_dir / "manifest.json"
     for path, relative in ((queries_path, queries_rel), (corpus_manifest_path, manifest_rel)):
         if sha256_file(path) != pinned[relative]:
-            raise RuntimeError(f"{path} does not match the pinned synthetic corpus hash ({relative})")
+            raise RuntimeError(
+                f"{path} does not match the pinned synthetic corpus hash ({relative})"
+            )
     version = str(synthetic["version"])
     queries = list(iter_jsonl(queries_path))
     excluded_docs, excluded_questions, golden_hashes = golden_exclusions(golden_dir, splits_file)
@@ -488,15 +504,31 @@ def build_domain(
         eligible = {doc_id for doc_id in documents if doc_id not in excluded_docs}
         language_queries = [query for query in queries if query["locale"] == language]
         items = _domain_items(
-            language, language_queries, documents, eligible, excluded_questions, provenance_base, limits.domain_quotas
+            language,
+            language_queries,
+            documents,
+            eligible,
+            excluded_questions,
+            provenance_base,
+            limits.domain_quotas,
         )
         per_language[language] = items
 
     all_items = [item for language in DOMAIN_LANGS for item in per_language[language]]
     exclusions = {
-        "policy": "domain items must not share a document with t11's golden/frozen split",
+        "corpus_version": str(synthetic["version"]),
+        "corpus_manifest_sha256": pinned[manifest_rel],
+        "golden_snapshot_sha256": sha256_text(canonical_json(dict(sorted(golden_hashes.items())))),
+        "policy": (
+            "domain items must not share a document with a t11 golden item "
+            "(evals/golden/v1 test, dev and adversarial files); the split file assigns every "
+            "corpus document to dev or test by construction, so split membership is recorded "
+            "but not used for exclusion"
+        ),
         "excluded_document_ids": sorted(excluded_docs),
-        "excluded_question_sha256": sorted(sha256_text(question) for question in excluded_questions),
+        "excluded_question_sha256": sorted(
+            sha256_text(question) for question in excluded_questions
+        ),
         "source_files": golden_hashes,
         "excluded_documents": len(excluded_docs),
         "excluded_questions": len(excluded_questions),
@@ -544,7 +576,9 @@ def _domain_items(
         candidates = [
             query
             for query in language_queries
-            if query["category"] == category and q_docs(query) <= eligible and not (q_docs(query) & used_docs)
+            if query["category"] == category
+            and q_docs(query) <= eligible
+            and not (q_docs(query) & used_docs)
         ]
         candidates.sort(key=lambda query: _rank("domain", language, category, query["query_id"]))
         picked: list[Mapping[str, Any]] = []
@@ -558,7 +592,9 @@ def _domain_items(
             if len(picked) == quota:
                 break
         if len(picked) < quota:
-            raise RuntimeError(f"domain {language}/{category}: found {len(picked)} usable queries, need {quota}")
+            raise RuntimeError(
+                f"domain {language}/{category}: found {len(picked)} usable queries, need {quota}"
+            )
         for position, query in enumerate(picked):
             doc_id = str(query["doc_id"])
             reference = str(query["operator_reply"])
@@ -574,7 +610,10 @@ def _domain_items(
                         **provenance_base,
                         "source_item_id": str(query["query_id"]),
                         "derivation": "corpus_query_row",
-                        "modifications": ["question and reference reply kept verbatim", "split assigned by seeded rank"],
+                        "modifications": [
+                            "question and reference reply kept verbatim",
+                            "split assigned by seeded rank",
+                        ],
                     },
                     "question": str(query["text"]),
                     "answerable": True,
@@ -594,7 +633,11 @@ def _domain_items(
     # --- multi-hop: two FAQ pairs of one article ------------------------------------
     quota = quotas["multi_hop"]
     faq_docs = sorted(
-        (doc_id for doc_id in eligible if doc_id not in used_docs and len(parse_faqs(documents[doc_id])) >= 2),
+        (
+            doc_id
+            for doc_id in eligible
+            if doc_id not in used_docs and len(parse_faqs(documents[doc_id])) >= 2
+        ),
         key=lambda doc_id: _rank("domain", language, "multi_hop", doc_id),
     )
     picked_pairs: list[tuple[str, list[tuple[str, str]]]] = []
@@ -608,7 +651,9 @@ def _domain_items(
         if len(picked_pairs) == quota:
             break
     if len(picked_pairs) < quota:
-        raise RuntimeError(f"domain {language}/multi_hop: found {len(picked_pairs)} articles, need {quota}")
+        raise RuntimeError(
+            f"domain {language}/multi_hop: found {len(picked_pairs)} articles, need {quota}"
+        )
     for position, (doc_id, pairs) in enumerate(picked_pairs):
         answer = f"{pairs[0][1]} {pairs[1][1]}"
         _require_verbatim(pairs[0][1], documents[doc_id], language, doc_id)
@@ -650,7 +695,11 @@ def _domain_items(
 
     # --- PII and prompt injection: template bank applied to a sampled article -------
     security_docs = sorted(
-        (doc_id for doc_id in eligible if doc_id not in used_docs and parse_faqs(documents[doc_id])),
+        (
+            doc_id
+            for doc_id in eligible
+            if doc_id not in used_docs and parse_faqs(documents[doc_id])
+        ),
         key=lambda doc_id: _rank("domain", language, "template_docs", doc_id),
     )
     cursor = 0
@@ -681,7 +730,9 @@ def _domain_items(
             answer = answers[0]
             used_docs.add(doc_id)
             _require_verbatim(answer, documents[doc_id], language, doc_id)
-            order_ref = f"{values['order_label']}: {values['order_id']}" if values["order_id"] else ""
+            order_ref = (
+                f"{values['order_label']}: {values['order_id']}" if values["order_id"] else ""
+            )
             if category == "pii":
                 question = template.format(phone=values["phone"], email=values["email"])
                 if order_ref:
@@ -716,7 +767,9 @@ def _domain_items(
                     },
                 }
             if not accept(str(item["question"])):
-                raise RuntimeError(f"domain {language}/{category}: constructed question duplicates an earlier one")
+                raise RuntimeError(
+                    f"domain {language}/{category}: constructed question duplicates an earlier one"
+                )
             add(
                 {
                     "suite": "domain",
@@ -749,7 +802,9 @@ def _domain_items(
         for query in language_queries
         if query["category"] == "unanswerable" and query["answerable"] is False
     ]
-    unanswerable.sort(key=lambda query: _rank("domain", language, "unanswerable", query["query_id"]))
+    unanswerable.sort(
+        key=lambda query: _rank("domain", language, "unanswerable", query["query_id"])
+    )
     picked_unanswerable: list[Mapping[str, Any]] = []
     for query in unanswerable:
         if not accept(str(query["text"])):
@@ -773,7 +828,11 @@ def _domain_items(
                     **provenance_base,
                     "source_item_id": str(query["query_id"]),
                     "derivation": "corpus_unanswerable_query",
-                    "modifications": ["question kept verbatim", "no evidence by design", "split assigned by seeded rank"],
+                    "modifications": [
+                        "question kept verbatim",
+                        "no evidence by design",
+                        "split assigned by seeded rank",
+                    ],
                 },
                 "question": str(query["text"]),
                 "answerable": False,
@@ -796,7 +855,9 @@ def _domain_items(
 def _require_verbatim(quote: str, document: str, language: str, identifier: str) -> None:
     """Every reference answer must be a verbatim slice of its own article."""
     if quote not in document:
-        raise RuntimeError(f"domain {language}: reference not verbatim in {identifier}: {quote[:80]!r}")
+        raise RuntimeError(
+            f"domain {language}: reference not verbatim in {identifier}: {quote[:80]!r}"
+        )
 
 
 # --------------------------------------------------------------------------- assembly
@@ -812,10 +873,14 @@ def _license_for(path: str) -> str:
     return "MIT"
 
 
-def _suite_paths(belebele_items: Mapping[str, list[dict[str, Any]]], domain_languages: Sequence[str]) -> dict[str, list[str]]:
+def _suite_paths(
+    belebele_items: Mapping[str, list[dict[str, Any]]], domain_languages: Sequence[str]
+) -> dict[str, list[str]]:
     belebele_languages = list(BELEBELE_LANGS)
     return {
-        "belebele_retrieval": [f"belebele/retrieval/{language}/queries.jsonl" for language in belebele_languages],
+        "belebele_retrieval": [
+            f"belebele/retrieval/{language}/queries.jsonl" for language in belebele_languages
+        ],
         "belebele_qa": [f"belebele/qa/{language}.jsonl" for language in belebele_languages],
         "mrtydi_retrieval": ["mrtydi/ru/queries.jsonl"],
         "domain": [f"domain/{language}.jsonl" for language in domain_languages],
@@ -841,14 +906,20 @@ def assemble(
     if not lax_cache:
         problems = check_cache(cache_dir, lock)
         if problems:
-            raise RuntimeError("download cache is incomplete or corrupt — run --fetch:\n- " + "\n- ".join(problems))
+            raise RuntimeError(
+                "download cache is incomplete or corrupt — run --fetch:\n- " + "\n- ".join(problems)
+            )
         local_problems = check_local_sources(lock, REPO_ROOT)
         if local_problems:
-            raise RuntimeError("local sources no longer match their pins:\n- " + "\n- ".join(local_problems))
+            raise RuntimeError(
+                "local sources no longer match their pins:\n- " + "\n- ".join(local_problems)
+            )
     if not (cache_dir / MRTYDI_POOL_REL).is_file():
         derive_mrtydi_pool(cache_dir, lock, log=log)
 
-    synthetic = {record["id"]: record for record in local_source_records(lock)}["answerdesk-synthetic"]
+    synthetic = {record["id"]: record for record in local_source_records(lock)}[
+        "answerdesk-synthetic"
+    ]
     belebele = build_belebele(cache_dir, lock, limits)
     mrtydi = build_mrtydi(cache_dir, lock)
     domain, exclusions = build_domain(corpus_dir, golden_dir, splits_file, synthetic, limits)
@@ -857,7 +928,9 @@ def assemble(
     for language in BELEBELE_LANGS:
         corpus_rows = [row for row in belebele.corpus["belebele"] if row["language"] == language]
         files[f"belebele/retrieval/{language}/corpus.jsonl"] = _jsonl(corpus_rows)
-        query_rows = [item for item in belebele.items["belebele_retrieval"] if item["language"] == language]
+        query_rows = [
+            item for item in belebele.items["belebele_retrieval"] if item["language"] == language
+        ]
         files[f"belebele/retrieval/{language}/queries.jsonl"] = _jsonl(query_rows)
     for language in BELEBELE_LANGS:
         files[f"belebele/qa/{language}.jsonl"] = _jsonl(
@@ -866,18 +939,26 @@ def assemble(
     files["mrtydi/ru/corpus.jsonl"] = _jsonl(mrtydi.corpus["mrtydi"])
     files["mrtydi/ru/queries.jsonl"] = _jsonl(mrtydi.items["mrtydi_retrieval"])
     for language in DOMAIN_LANGS:
-        files[f"domain/{language}.jsonl"] = _jsonl([item for item in domain.items["domain"] if item["language"] == language])
+        files[f"domain/{language}.jsonl"] = _jsonl(
+            [item for item in domain.items["domain"] if item["language"] == language]
+        )
 
-    files["domain/exclusions.json"] = (json.dumps(exclusions, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode("utf-8")
+    files["domain/exclusions.json"] = (
+        json.dumps(exclusions, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+    ).encode("utf-8")
     for cache_relative, release_relative in LICENSE_FILES:
         files[release_relative] = (cache_dir / cache_relative).read_bytes()
     files["LICENSES/MIT.txt"] = (REPO_ROOT / "LICENSE").read_bytes()
-    files["schema.json"] = (json.dumps(schema.json_schema(), ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode("utf-8")
+    files["schema.json"] = (
+        json.dumps(schema.json_schema(), ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+    ).encode("utf-8")
 
     items, passages, passage_files = read_bench(files)
     report = all_checks(items, passages, passage_files)
     if enforce_checks and not report["ok"]:
-        raise RuntimeError(f"build produced a release that fails its own checks: {json.dumps(report, ensure_ascii=False)[:2000]}")
+        raise RuntimeError(
+            f"build produced a release that fails its own checks: {json.dumps(report, ensure_ascii=False)[:2000]}"
+        )
 
     file_rows = [
         {
@@ -946,7 +1027,11 @@ def assemble(
             "policy": report["splits"]["policy"],
             "ids": report["splits"]["ids_by_split"],
             "domain_documents": report["splits"]["documents_by_split"],
-            "t11_disjointness": "domain documents exclude every document of evals/golden/v1 and evals/splits/v1.json",
+            "t11_disjointness": (
+                "domain documents exclude every document that appears as evidence of a t11 golden item "
+                "(evals/golden/v1 test, dev and adversarial); the split assigns all corpus documents by "
+                "construction, so split membership is recorded but not used for exclusion"
+            ),
         },
         "license_map": {
             "belebele/": "CC-BY-SA-4.0",
@@ -978,10 +1063,14 @@ def assemble(
             ),
         },
     }
-    manifest["data_sha256"] = sha256_text(canonical_json([[row["path"], row["sha256"]] for row in file_rows]))
+    manifest["data_sha256"] = sha256_text(
+        canonical_json([[row["path"], row["sha256"]] for row in file_rows])
+    )
     manifest["self_sha256"] = ""
     manifest["self_sha256"] = sha256_text(canonical_json(manifest))
-    files["manifest.json"] = (json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode("utf-8")
+    files["manifest.json"] = (
+        json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+    ).encode("utf-8")
 
     if write:
         _write_tree(out_dir, files, log=log)
@@ -1008,5 +1097,3 @@ def _write_tree(out_dir: Path, files: Mapping[str, bytes], log: Any = print) -> 
         destination.parent.mkdir(parents=True, exist_ok=True)
         destination.write_bytes(files[relative])
     log(f"wrote   {len(files)} files to {out_dir}")
-
-
