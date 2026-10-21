@@ -5,7 +5,9 @@
 
 from __future__ import annotations
 
+import inspect
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -17,6 +19,80 @@ from answerdesk.cli import app
 from answerdesk.contracts import SCHEMA_VERSION
 
 runner = CliRunner()
+
+_ANSI = re.compile(
+    r"(?:\x1b\][^\x07\x1b]*(?:\x07|\x1b\\))"  # OSC: hyperlinks, window titles
+    r"|(?:\x1b\[[0-9;?]*[ -/]*[@-~])"  # CSI: colours, cursor movement
+)
+
+#: Wider than any flag line in this CLI, so neither rich nor click wraps an option name.
+HELP_WIDTH = 200
+
+
+def _plain(text: str) -> str:
+    """Strip terminal control sequences and normalise line endings.
+
+    Typer renders help with rich when it is importable, so raw output carries colour sequences
+    *inside* option names (``\x1b[33m--fake\x1b[0m``) and wraps to the reported terminal width —
+    which differs between a Windows console and a CI pipe. Both are rendering concerns, not CLI
+    contracts, so the flag assertions read a deliberately wide, uncoloured render (ANSI stripped)
+    *and* the command's declared parameter list.
+    """
+    without_ansi = _ANSI.sub("", text)
+    return without_ansi.replace("\r\n", "\n").replace("\r", "\n")
+
+
+def _help_text(command: str) -> str:
+    """Render ``<command> --help`` in a fixed, wide, uncoloured terminal."""
+    result = runner.invoke(
+        app,
+        [command, "--help"],
+        env={"COLUMNS": str(HELP_WIDTH), "TERM": "dumb", "NO_COLOR": "1"},
+        color=False,
+    )
+    assert result.exit_code == 0, _combined(result)
+    text = _plain(_combined(result))
+    # If the width override ever stops working (a rich/click change, a stripped environment),
+    # rich truncates option names to "--synt…" instead of wrapping them, which would make the
+    # flag assertions below fail for a reason unrelated to the CLI contract. Fail loudly with
+    # the real cause: no help string in this CLI contains an ellipsis, so any "…" means the page
+    # was cut to the terminal width.
+    assert "…" not in text, (
+        "the help page was truncated, so the wide-terminal override (COLUMNS="
+        f"{HELP_WIDTH}) did not take effect; the flag assertions would be meaningless"
+    )
+    return text
+
+
+def _declared_flags(command: str) -> set[str]:
+    """Option tokens the command actually declares, read from Typer's own registration.
+
+    ``app.registered_commands`` is the source the help page is built from, so a flag that is
+    removed or renamed in the CLI fails here *and* in the rendered text — this is the structural
+    half of the assertion, independent of any terminal rendering.
+    """
+    for info in app.registered_commands:
+        callback = info.callback
+        if callback is None:
+            continue
+        if (info.name or callback.__name__.replace("_", "-")) != command:
+            continue
+        tokens: set[str] = set()
+        for parameter in inspect.signature(callback).parameters.values():
+            declarations = getattr(parameter.default, "param_decls", None) or ()
+            for declaration in declarations:
+                tokens.update(part for part in str(declaration).split("/") if part.startswith("-"))
+        return tokens
+    raise AssertionError(f"`{command}` is not a registered Typer command")
+
+
+def _assert_flags(command: str, *, flags: tuple[str, ...]) -> None:
+    """Each flag is declared by the command *and* documented in its help page."""
+    text = _help_text(command)
+    declared = _declared_flags(command)
+    for flag in flags:
+        assert flag in declared, f"{flag} is not declared by `{command}`"
+        assert flag in text, f"{flag} is missing from `{command} --help`"
 
 
 @pytest.fixture(autouse=True)
@@ -213,11 +289,10 @@ def test_index_reports_a_missing_corpus_actionably(
 
 def test_eval_help_documents_the_harness_flags() -> None:
     """FR-EVL-08: the eval command is implemented, and its flags are the documented ones."""
-    result = runner.invoke(app, ["eval", "--help"])
-    assert result.exit_code == 0, _combined(result)
-    text = _combined(result)
-    for flag in ("--synthetic", "--provider", "--report", "--all", "--retrieval-only"):
-        assert flag in text, f"{flag} missing from `eval --help`"
+    _assert_flags(
+        "eval",
+        flags=("--synthetic", "--provider", "--report", "--all", "--retrieval-only"),
+    )
 
 
 def test_eval_delegates_and_reports_a_missing_corpus(
