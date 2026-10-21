@@ -103,6 +103,17 @@ non-regression gate). Summary of the honest position:
 * 1.5B parameters was chosen for a 16 GiB card and a short wall-clock; a 3B QLoRA run is the
   same script with `--base-model Qwen/Qwen2.5-3B-Instruct`.
 
+## Open hypothesis (t11, not tested here)
+
+All measurements used the hashing-embedder index. A **dense BGE-M3 index** may tolerate
+paraphrase-induced lexical change far better, which is the one scenario where this adapter could
+still pay off. That experiment belongs to t11 and is specified in
+[`query-rewriter.md`](query-rewriter.md) §4.1; until it runs, this adapter is **not recommended
+for enablement** (`configs/rewrite/default.yaml` keeps `enabled: false`).
+
+The machine-checked environment verdict lives in `data/training/environment-check.json`
+(`verdict: fp16-lora`, `four_bit_stderr: "FP4 quantization state not initialized …"`).
+
 ## Limitations (explicit)
 
 1. **Synthetic training data** — no human-written noisy queries, no HITL correction loop.

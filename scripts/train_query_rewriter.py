@@ -32,7 +32,9 @@ function that needs it.
 from __future__ import annotations
 
 import argparse
+import contextlib
 import hashlib
+import io
 import json
 import os
 import random
@@ -253,6 +255,7 @@ def run_check(args: argparse.Namespace) -> int:
     cuda_ok = env.get("cuda_available") == "True"
     four_bit: str = "not attempted"
     if torch_ok and cuda_ok:
+        stderr_capture = io.StringIO()
         try:
             import torch
             from transformers import BitsAndBytesConfig
@@ -264,19 +267,28 @@ def run_check(args: argparse.Namespace) -> int:
                 bnb_4bit_use_double_quant=True,
             )
             # The config object alone does not prove the kernels load; a one-layer probe does.
+            # bitsandbytes writes its diagnostic to stderr before raising, so capture it: the
+            # recorded artefact must carry the real Windows error, not just "AssertionError".
             import bitsandbytes as bnb
 
-            linear = bnb.nn.Linear4bit(
-                16, 16, compute_dtype=torch.bfloat16, quant_type="nf4", device="cuda"
-            )
-            out = linear(torch.randn(2, 16, device="cuda", dtype=torch.bfloat16))
-            torch.cuda.synchronize()
+            with contextlib.redirect_stderr(stderr_capture):
+                linear = bnb.nn.Linear4bit(
+                    16, 16, compute_dtype=torch.bfloat16, quant_type="nf4", device="cuda"
+                )
+                out = linear(torch.randn(2, 16, device="cuda", dtype=torch.bfloat16))
+                torch.cuda.synchronize()
             del out, linear
             torch.cuda.empty_cache()
             four_bit = "ok"
         except Exception as exc:
             four_bit = f"failed: {type(exc).__name__}: {exc}"
+        four_bit_stderr = stderr_capture.getvalue().strip()
     report["four_bit"] = four_bit
+    report["four_bit_stderr"] = four_bit_stderr
+    report["four_bit_note"] = (
+        "a non-empty stderr here is bitsandbytes' own diagnostic; on Windows 0.50.2 it is "
+        "\"FP4 quantization state not initialized\" immediately before the AssertionError"
+    )
     report["adapter_present"] = (args.out / "adapter_model.safetensors").is_file()
     report["data_present"] = (args.data_dir / "pairs.jsonl").is_file()
     verdict = (

@@ -1,5 +1,5 @@
 {
-  "adapter_present": false,
+  "adapter_present": true,
   "data_present": true,
   "environment": {
     "accelerate": "1.15.0",
@@ -17,7 +17,9 @@
     "transformers": "4.57.6"
   },
   "four_bit": "failed: AssertionError: ",
-  "generated_at": "2026-10-21T03:27:12+00:00",
+  "four_bit_note": "a non-empty stderr here is bitsandbytes' own diagnostic; on Windows 0.50.2 it is \"FP4 quantization state not initialized\" immediately before the AssertionError",
+  "four_bit_stderr": "FP4 quantization state not initialized. Please call .cuda() or .to(device) on the LinearFP4 layer first.",
+  "generated_at": "2026-10-21T04:11:01+00:00",
   "mode": "check",
   "verdict": "fp16-lora"
 }

@@ -132,6 +132,35 @@ That is the finding: on this corpus, with this retrieval stack, **query rewritin
 lever** — the ceiling was already reached inside the pipeline. This is exactly the outcome the
 task asked to be reported instead of a fabricated win.
 
+## 4.1 The one hypothesis this study could not test — and where it must be tested (t11)
+
+Every number above was measured on the **hashing bag-of-words embedder** index
+(`index-dc9909c648367626`). On that index a paraphrase-induced lexical change is directly
+expensive: BM25 and the hashed dense channel both key on the exact tokens the adapter removes.
+That is why the clean and held-out slices collapse.
+
+The hypothesis that remains open:
+
+> **On a real dense index (BGE-M3, `configs/default.yaml` `embedding.backend: local` or the t11
+> index), a paraphrase that preserves meaning but changes wording costs much less retrieval
+> quality — so the rewriter's top-10 gain might survive at @20, and the clean regression might
+> shrink or disappear.**
+
+It is **not** claimed, measured, or implied by anything in this document. It is falsifiable with
+the harness that already exists:
+
+```bash
+# t11 owns the dense index; this is the exact experiment to run once it exists
+python scripts/train_query_rewriter.py --eval-only --out data/training/adapter \
+    --index-dir data/index/<t11-dense-index>
+python scripts/train_query_rewriter.py --eval-only --rewrite-backend deterministic \
+    --index-dir data/index/<t11-dense-index>
+```
+
+Acceptance stays identical: the clean-slice gate (Δ@20 ≥ −0.01) and a positive Δ@20 with a CI
+excluding zero on the noisy slice. If either arm still fails there, the conclusion becomes
+"rewriting does not help this product", not "rewriting does not help this corpus".
+
 ## 5. How to reproduce (or skip) the training
 
 ```bash
