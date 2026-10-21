@@ -1172,16 +1172,16 @@
     "ff7e9369a4ad1570cd2de459c4d0aaff2df15bde51fd5a7ae1a3c7b9c77aad9b"
   ],
   "excluded_questions": 736,
-  "golden_snapshot_sha256": "e2e904b28273ad4f10e4478ac258b17a195574d95deffc74d45400cd819e02d7",
+  "golden_snapshot_sha256": "d4734611aef8b7d8a254b35ce8fa56108599215897e72f4b8444e62a9a5cc06f",
   "policy": "domain items must not share a document with a t11 golden item (evals/golden/v1 test, dev and adversarial files); the split file assigns every corpus document to dev or test by construction, so split membership is recorded but not used for exclusion",
   "source_files": {
-    "evals/golden/v1/adversarial/claims.jsonl": "53c96462035e7086e1709977b2ec89420e2b405703521558126d4d99caa112fb",
+    "evals/golden/v1/adversarial/claims.jsonl": "f51feebd33da6f12dd0acd2191b1d14132fb2332d5f736bec4b9ca1611bf3c7e",
     "evals/golden/v1/adversarial/injection.jsonl": "ea3aa9cf61cce948cfc26def7636308f1d94b26e9d6faff80c9d633bcefcc3ad",
     "evals/golden/v1/adversarial/near_miss.jsonl": "983d66fc99bb7ce244d7e92c46e35a1a231b7905a392377e6043620d1a33160e",
-    "evals/golden/v1/adversarial/perturbation.jsonl": "bafcf34b36628a2a2cee5ff6a6529a7d626dd6f3c3c6e787c42aabc3d679dd4f",
+    "evals/golden/v1/adversarial/perturbation.jsonl": "070c0a1e78de6f8a1c4f86e540c847123af0a62f372c289a7fe3432e5ad45dfe",
     "evals/golden/v1/adversarial/pii.jsonl": "4a97a0ec1e4c71ff6c561d5784faf74a8debd4ad38c2f4a69ebb1a3e6e830256",
     "evals/golden/v1/dev.jsonl": "a6e3724084c0bec28cdacb0e4f4312f912f3fdd6d45a8a9f72de2c08da3b11b0",
-    "evals/golden/v1/test.jsonl": "7caa6228e814b4ae09dc71b48a026502a7b69442a7eee51fe8e8ec04b47b9937",
-    "evals/splits/v1.json": "1e0ee360996ced3bfc09580b576e1c4e700638d393d5628b86237af02d238bcc"
+    "evals/golden/v1/test.jsonl": "9995648a9eeb63587a83b02b33aa741b7c30cbf3070c6db44d5a62d2cfd6e07f",
+    "evals/splits/v1.json": "2342e1fbbbb7b9c5b5abde050a18648924e0037a184e32cb6d30e130382c4973"
   }
 }
