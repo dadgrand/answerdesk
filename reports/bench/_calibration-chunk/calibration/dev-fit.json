@@ -1,0 +1,48 @@
+{
+  "alpha_by_bucket": {
+    "account_legal": 0.01,
+    "informational": 0.05,
+    "transactional": 0.02
+  },
+  "buckets": [
+    {
+      "alpha": 0.05,
+      "bucket": "informational",
+      "coverage_lower_bound": 0.95,
+      "feasible": true,
+      "n": 40,
+      "pooled_fallback": false,
+      "q_hat": 0.6,
+      "rank": 39
+    },
+    {
+      "alpha": 0.02,
+      "bucket": "transactional",
+      "coverage_lower_bound": 0.98,
+      "feasible": false,
+      "n": 40,
+      "pooled_fallback": true,
+      "q_hat": Infinity,
+      "rank": 41
+    },
+    {
+      "alpha": 0.01,
+      "bucket": "account_legal",
+      "coverage_lower_bound": 0.99,
+      "feasible": false,
+      "n": 40,
+      "pooled_fallback": true,
+      "q_hat": Infinity,
+      "rank": 41
+    }
+  ],
+  "corpus_version": "corpus-77d7d081813738a6",
+  "costs": {
+    "c_abstain": 0.1,
+    "c_delay": 0.05,
+    "c_wrong": 1.0
+  },
+  "n": 40,
+  "note": "split-conformal thresholds fitted on the dev split; the test split is never used for fitting (INV-09)",
+  "split": "dev"
+}

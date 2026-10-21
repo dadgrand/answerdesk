@@ -1,0 +1,849 @@
+{
+  "arm": "primary",
+  "calibration": {
+    "accuracy": 0.2,
+    "aurc": 0.524206,
+    "bins_equal_mass": [
+      {
+        "accuracy": 0.0,
+        "count": 1,
+        "lower": 0.4,
+        "mean_confidence": 0.4,
+        "upper": 0.4
+      },
+      {
+        "accuracy": 0.0,
+        "count": 1,
+        "lower": 0.4,
+        "mean_confidence": 0.4,
+        "upper": 0.4
+      },
+      {
+        "accuracy": 0.0,
+        "count": 1,
+        "lower": 0.85,
+        "mean_confidence": 0.85,
+        "upper": 0.85
+      },
+      {
+        "accuracy": 0.0,
+        "count": 1,
+        "lower": 0.85,
+        "mean_confidence": 0.85,
+        "upper": 0.85
+      },
+      {
+        "accuracy": 0.0,
+        "count": 1,
+        "lower": 0.88,
+        "mean_confidence": 0.88,
+        "upper": 0.88
+      },
+      {
+        "accuracy": 0.0,
+        "count": 1,
+        "lower": 0.88,
+        "mean_confidence": 0.88,
+        "upper": 0.88
+      },
+      {
+        "accuracy": 0.0,
+        "count": 1,
+        "lower": 0.9,
+        "mean_confidence": 0.9,
+        "upper": 0.9
+      },
+      {
+        "accuracy": 1.0,
+        "count": 1,
+        "lower": 1.0,
+        "mean_confidence": 1.0,
+        "upper": 1.0
+      },
+      {
+        "accuracy": 0.0,
+        "count": 1,
+        "lower": 1.0,
+        "mean_confidence": 1.0,
+        "upper": 1.0
+      },
+      {
+        "accuracy": 1.0,
+        "count": 1,
+        "lower": 1.0,
+        "mean_confidence": 1.0,
+        "upper": 1.0
+      }
+    ],
+    "bins_equal_width": [
+      {
+        "accuracy": 0.0,
+        "count": 2,
+        "lower": 0.4,
+        "mean_confidence": 0.4,
+        "upper": 0.5
+      },
+      {
+        "accuracy": 0.0,
+        "count": 4,
+        "lower": 0.8,
+        "mean_confidence": 0.865,
+        "upper": 0.9
+      },
+      {
+        "accuracy": 0.5,
+        "count": 4,
+        "lower": 0.9,
+        "mean_confidence": 0.975,
+        "upper": 1.0
+      }
+    ],
+    "brier": 0.51238,
+    "coverage_at_target": 0.1,
+    "curve": [
+      {
+        "coverage": 0.0,
+        "n_answered": 0,
+        "risk": 0.0,
+        "threshold": 1.0
+      },
+      {
+        "coverage": 0.1,
+        "n_answered": 1,
+        "risk": 0.0,
+        "threshold": 1.0
+      },
+      {
+        "coverage": 0.2,
+        "n_answered": 2,
+        "risk": 0.5,
+        "threshold": 1.0
+      },
+      {
+        "coverage": 0.3,
+        "n_answered": 3,
+        "risk": 0.333333,
+        "threshold": 1.0
+      },
+      {
+        "coverage": 0.4,
+        "n_answered": 4,
+        "risk": 0.5,
+        "threshold": 0.9
+      },
+      {
+        "coverage": 0.5,
+        "n_answered": 5,
+        "risk": 0.6,
+        "threshold": 0.88
+      },
+      {
+        "coverage": 0.6,
+        "n_answered": 6,
+        "risk": 0.666667,
+        "threshold": 0.88
+      },
+      {
+        "coverage": 0.7,
+        "n_answered": 7,
+        "risk": 0.714286,
+        "threshold": 0.85
+      },
+      {
+        "coverage": 0.8,
+        "n_answered": 8,
+        "risk": 0.75,
+        "threshold": 0.85
+      },
+      {
+        "coverage": 0.9,
+        "n_answered": 9,
+        "risk": 0.777778,
+        "threshold": 0.4
+      },
+      {
+        "coverage": 1.0,
+        "n_answered": 10,
+        "risk": 0.8,
+        "threshold": 0.4
+      }
+    ],
+    "ece_equal_mass": 0.616,
+    "ece_equal_width": 0.616,
+    "mean_confidence": 0.816,
+    "n": 10,
+    "per_bucket": {},
+    "risk_at_target": 0.0,
+    "risk_interval": {
+      "high": 0.793451,
+      "low": 0.0,
+      "n": 1
+    }
+  },
+  "cells": [
+    {
+      "arm": "primary",
+      "category": "",
+      "ci_high": 1.0,
+      "ci_low": 0.8,
+      "locale": "",
+      "method": "bootstrap",
+      "n": 3,
+      "name": "groundedness_judged",
+      "note": "mean per-answer claim-support rate",
+      "value": 0.933333
+    },
+    {
+      "arm": "primary",
+      "category": "",
+      "ci_high": 0.977583,
+      "ci_low": 0.529112,
+      "locale": "",
+      "method": "wilson",
+      "n": 8,
+      "name": "groundedness_claim_pooled",
+      "note": "7/8 displayed claims supported",
+      "value": 0.875
+    },
+    {
+      "arm": "primary",
+      "category": "",
+      "ci_high": 1.0,
+      "ci_low": 0.0,
+      "locale": "",
+      "method": "none",
+      "n": 0,
+      "name": "citation_precision",
+      "note": "per-answer mean; a phantom citation is impossible by contract (F-5)",
+      "value": 0.0
+    },
+    {
+      "arm": "primary",
+      "category": "",
+      "ci_high": 1.0,
+      "ci_low": 0.8,
+      "locale": "",
+      "method": "bootstrap",
+      "n": 3,
+      "name": "citation_recall",
+      "note": "fraction of required evidence chunks actually cited",
+      "value": 0.933333
+    },
+    {
+      "arm": "primary",
+      "category": "",
+      "ci_high": 5.0,
+      "ci_low": 5.0,
+      "locale": "",
+      "method": "bootstrap",
+      "n": 3,
+      "name": "rubric_score",
+      "note": "judge rubric, 1-5 (context-anchored, per claim)",
+      "value": 5.0
+    },
+    {
+      "arm": "primary",
+      "category": "",
+      "ci_high": 1.0,
+      "ci_low": 0.438503,
+      "locale": "",
+      "method": "wilson",
+      "n": 3,
+      "name": "rubric_pass_rate",
+      "note": "rubric >= 4 (F-1/§8.1 'correct' component)",
+      "value": 1.0
+    },
+    {
+      "arm": "primary",
+      "category": "",
+      "ci_high": 0.561497,
+      "ci_low": 0.0,
+      "locale": "",
+      "method": "wilson",
+      "n": 3,
+      "name": "phantom_citations",
+      "note": "structural: must be 0 (F-5)",
+      "value": 0.0
+    },
+    {
+      "arm": "primary",
+      "category": "",
+      "ci_high": 0.561497,
+      "ci_low": 0.0,
+      "locale": "",
+      "method": "wilson",
+      "n": 3,
+      "name": "unsupported_displayed_claims",
+      "note": "structural: must be 0 (F-4)",
+      "value": 0.0
+    },
+    {
+      "arm": "primary",
+      "category": "",
+      "ci_high": 1.0,
+      "ci_low": 0.438503,
+      "locale": "",
+      "method": "wilson",
+      "n": 3,
+      "name": "language_agreement",
+      "note": "F-7: answer language equals the detected query language",
+      "value": 1.0
+    },
+    {
+      "arm": "primary",
+      "category": "",
+      "ci_high": 0.79234,
+      "ci_low": 0.061492,
+      "locale": "",
+      "method": "wilson",
+      "n": 3,
+      "name": "realised_risk",
+      "note": "1/3 auto-answered turns were incorrect (E-1)",
+      "value": 0.333333
+    },
+    {
+      "arm": "primary",
+      "category": "",
+      "ci_high": 0.603222,
+      "ci_low": 0.107791,
+      "locale": "",
+      "method": "wilson",
+      "n": 10,
+      "name": "coverage",
+      "note": "auto-answer coverage on answerable items (E-4)",
+      "value": 0.3
+    },
+    {
+      "arm": "primary",
+      "category": "",
+      "ci_high": 1.0,
+      "ci_low": 0.0,
+      "locale": "",
+      "method": "none",
+      "n": 0,
+      "name": "must_escalate_recall",
+      "note": "0/0 unsafe or unanswerable turns were escalated (E-2)",
+      "value": 0.0
+    },
+    {
+      "arm": "primary",
+      "category": "",
+      "ci_high": 0.35433,
+      "ci_low": 0.0,
+      "locale": "",
+      "method": "wilson",
+      "n": 7,
+      "name": "escalation_precision",
+      "note": "escalated turns that were genuinely unsafe/unanswerable (E-3)",
+      "value": 0.0
+    },
+    {
+      "arm": "primary",
+      "category": "informational",
+      "ci_high": 0.79234,
+      "ci_low": 0.061492,
+      "locale": "",
+      "method": "wilson",
+      "n": 3,
+      "name": "realised_risk_by_bucket",
+      "note": "intent bucket informational (E-1 per bucket)",
+      "value": 0.333333
+    },
+    {
+      "arm": "primary",
+      "category": "informational",
+      "ci_high": 0.603222,
+      "ci_low": 0.107791,
+      "locale": "",
+      "method": "wilson",
+      "n": 10,
+      "name": "coverage_by_bucket",
+      "note": "intent bucket informational",
+      "value": 0.3
+    },
+    {
+      "arm": "primary",
+      "category": "",
+      "ci_high": 4186.980615,
+      "ci_low": 3792.464085,
+      "locale": "",
+      "method": "none",
+      "n": 10,
+      "name": "latency_generation_p50_ms",
+      "note": "distribution summary; the bracket is the p(q-5)..p(q+5) spread",
+      "value": 3989.72235
+    },
+    {
+      "arm": "primary",
+      "category": "",
+      "ci_high": 10676.3867,
+      "ci_low": 5862.11435,
+      "locale": "",
+      "method": "none",
+      "n": 10,
+      "name": "latency_generation_p95_ms",
+      "note": "distribution summary; the bracket is the p(q-5)..p(q+5) spread",
+      "value": 8269.250525
+    },
+    {
+      "arm": "primary",
+      "category": "",
+      "ci_high": 3831.429335,
+      "ci_low": 3516.768365,
+      "locale": "",
+      "method": "none",
+      "n": 10,
+      "name": "latency_judge_p50_ms",
+      "note": "distribution summary; the bracket is the p(q-5)..p(q+5) spread",
+      "value": 3674.09885
+    },
+    {
+      "arm": "primary",
+      "category": "",
+      "ci_high": 14090.3761,
+      "ci_low": 13386.6994,
+      "locale": "",
+      "method": "none",
+      "n": 10,
+      "name": "latency_judge_p95_ms",
+      "note": "distribution summary; the bracket is the p(q-5)..p(q+5) spread",
+      "value": 13738.53775
+    },
+    {
+      "arm": "primary",
+      "category": "",
+      "ci_high": 1.10877,
+      "ci_low": 1.10283,
+      "locale": "",
+      "method": "none",
+      "n": 10,
+      "name": "latency_policy_p50_ms",
+      "note": "distribution summary; the bracket is the p(q-5)..p(q+5) spread",
+      "value": 1.1058
+    },
+    {
+      "arm": "primary",
+      "category": "",
+      "ci_high": 1.871,
+      "ci_low": 1.58579,
+      "locale": "",
+      "method": "none",
+      "n": 10,
+      "name": "latency_policy_p95_ms",
+      "note": "distribution summary; the bracket is the p(q-5)..p(q+5) spread",
+      "value": 1.728395
+    },
+    {
+      "arm": "primary",
+      "category": "",
+      "ci_high": 1.73382,
+      "ci_low": 1.52718,
+      "locale": "",
+      "method": "none",
+      "n": 10,
+      "name": "latency_retrieval_p50_ms",
+      "note": "distribution summary; the bracket is the p(q-5)..p(q+5) spread",
+      "value": 1.6305
+    },
+    {
+      "arm": "primary",
+      "category": "",
+      "ci_high": 17.4671,
+      "ci_low": 3.67352,
+      "locale": "",
+      "method": "none",
+      "n": 10,
+      "name": "latency_retrieval_p95_ms",
+      "note": "distribution summary; the bracket is the p(q-5)..p(q+5) spread",
+      "value": 10.57031
+    },
+    {
+      "arm": "primary",
+      "category": "",
+      "ci_high": 8825.53241,
+      "ci_low": 8753.17619,
+      "locale": "",
+      "method": "none",
+      "n": 10,
+      "name": "latency_total_p50_ms",
+      "note": "distribution summary; the bracket is the p(q-5)..p(q+5) spread",
+      "value": 8789.3543
+    },
+    {
+      "arm": "primary",
+      "category": "",
+      "ci_high": 18939.445,
+      "ci_low": 17662.3306,
+      "locale": "",
+      "method": "none",
+      "n": 10,
+      "name": "latency_total_p95_ms",
+      "note": "distribution summary; the bracket is the p(q-5)..p(q+5) spread",
+      "value": 18300.8878
+    },
+    {
+      "arm": "primary",
+      "category": "",
+      "ci_high": 12810.177302,
+      "ci_low": 6533.032462,
+      "locale": "",
+      "method": "bootstrap",
+      "n": 10,
+      "name": "latency_total_mean_ms",
+      "note": "wall clock measured in-process; not a server-side latency claim (NFR-LAT-01)",
+      "value": 9492.81086
+    },
+    {
+      "arm": "primary",
+      "category": "",
+      "ci_high": 0.0,
+      "ci_low": 0.0,
+      "locale": "",
+      "method": "bootstrap",
+      "n": 10,
+      "name": "usd_per_answer",
+      "note": "priced with the pinned pricing table (NFR-COST-02)",
+      "value": 0.0
+    },
+    {
+      "arm": "primary",
+      "category": "",
+      "ci_high": 0.0,
+      "ci_low": 0.0,
+      "locale": "",
+      "method": "none",
+      "n": 10,
+      "name": "usd_per_answer_p95",
+      "note": "distribution summary; the bracket is the p(q-5)..p(q+5) spread",
+      "value": 0.0
+    },
+    {
+      "arm": "primary",
+      "category": "",
+      "ci_high": 2866.205,
+      "ci_low": 2183.0675,
+      "locale": "",
+      "method": "bootstrap",
+      "n": 10,
+      "name": "tokens_input_mean",
+      "note": "",
+      "value": 2517.0
+    },
+    {
+      "arm": "primary",
+      "category": "",
+      "ci_high": 395.7,
+      "ci_low": 196.0975,
+      "locale": "",
+      "method": "bootstrap",
+      "n": 10,
+      "name": "tokens_output_mean",
+      "note": "",
+      "value": 289.4
+    },
+    {
+      "arm": "primary",
+      "category": "",
+      "ci_high": 0.277533,
+      "ci_low": 0.0,
+      "locale": "",
+      "method": "wilson",
+      "n": 10,
+      "name": "cache_hit_rate",
+      "note": "exact-normalised-query replay; the semantic cache is owned by t8 (§9)",
+      "value": 0.0
+    }
+  ],
+  "confusion": {
+    "coverage": 0.3,
+    "false_escalation_rate": 0.7,
+    "fn": 0,
+    "fp": 7,
+    "n": 10,
+    "precision": 0.0,
+    "recall": null,
+    "specificity": 0.3,
+    "tn": 3,
+    "tp": 0
+  },
+  "escalated": 7,
+  "generator_model": "qwen3.6-35b-a3b-noreason",
+  "judge": {
+    "agreement_kappa": {},
+    "agreement_n": {},
+    "cross_family": true,
+    "generator_family": "qwen",
+    "generator_model": "qwen3.6-35b-a3b-noreason",
+    "human_calibrated": false,
+    "judge_family": "deepseek",
+    "judge_model": "deepseek-flash",
+    "note": "cross-family judge; human κ not established for this corpus, so judged numbers are reported with an explicit κ caveat, not as F-1/F-2/F-3 gates",
+    "position_swap": true,
+    "prompt_version": "judge-rubric-1",
+    "reportable": true,
+    "rubric_version": "rubric-v1"
+  },
+  "judge_failure_rate": 0.0,
+  "judge_failures": 0,
+  "judge_model": "deepseek-flash",
+  "n": 10,
+  "noisy_cells": [
+    {
+      "arm": "primary:noisy",
+      "category": "",
+      "ci_high": 1.0,
+      "ci_low": 0.8,
+      "locale": "",
+      "method": "bootstrap",
+      "n": 3,
+      "name": "groundedness_judged",
+      "note": "mean per-answer claim-support rate",
+      "value": 0.933333
+    },
+    {
+      "arm": "primary:noisy",
+      "category": "",
+      "ci_high": 0.977583,
+      "ci_low": 0.529112,
+      "locale": "",
+      "method": "wilson",
+      "n": 8,
+      "name": "groundedness_claim_pooled",
+      "note": "7/8 displayed claims supported",
+      "value": 0.875
+    },
+    {
+      "arm": "primary:noisy",
+      "category": "",
+      "ci_high": 1.0,
+      "ci_low": 0.0,
+      "locale": "",
+      "method": "none",
+      "n": 0,
+      "name": "citation_precision",
+      "note": "per-answer mean; a phantom citation is impossible by contract (F-5)",
+      "value": 0.0
+    },
+    {
+      "arm": "primary:noisy",
+      "category": "",
+      "ci_high": 1.0,
+      "ci_low": 0.8,
+      "locale": "",
+      "method": "bootstrap",
+      "n": 3,
+      "name": "citation_recall",
+      "note": "fraction of required evidence chunks actually cited",
+      "value": 0.933333
+    },
+    {
+      "arm": "primary:noisy",
+      "category": "",
+      "ci_high": 5.0,
+      "ci_low": 5.0,
+      "locale": "",
+      "method": "bootstrap",
+      "n": 3,
+      "name": "rubric_score",
+      "note": "judge rubric, 1-5 (context-anchored, per claim)",
+      "value": 5.0
+    },
+    {
+      "arm": "primary:noisy",
+      "category": "",
+      "ci_high": 1.0,
+      "ci_low": 0.438503,
+      "locale": "",
+      "method": "wilson",
+      "n": 3,
+      "name": "rubric_pass_rate",
+      "note": "rubric >= 4 (F-1/§8.1 'correct' component)",
+      "value": 1.0
+    },
+    {
+      "arm": "primary:noisy",
+      "category": "",
+      "ci_high": 0.561497,
+      "ci_low": 0.0,
+      "locale": "",
+      "method": "wilson",
+      "n": 3,
+      "name": "phantom_citations",
+      "note": "structural: must be 0 (F-5)",
+      "value": 0.0
+    },
+    {
+      "arm": "primary:noisy",
+      "category": "",
+      "ci_high": 0.561497,
+      "ci_low": 0.0,
+      "locale": "",
+      "method": "wilson",
+      "n": 3,
+      "name": "unsupported_displayed_claims",
+      "note": "structural: must be 0 (F-4)",
+      "value": 0.0
+    },
+    {
+      "arm": "primary:noisy",
+      "category": "",
+      "ci_high": 1.0,
+      "ci_low": 0.438503,
+      "locale": "",
+      "method": "wilson",
+      "n": 3,
+      "name": "language_agreement",
+      "note": "F-7: answer language equals the detected query language",
+      "value": 1.0
+    },
+    {
+      "arm": "primary:noisy",
+      "category": "",
+      "ci_high": 0.79234,
+      "ci_low": 0.061492,
+      "locale": "",
+      "method": "wilson",
+      "n": 3,
+      "name": "realised_risk",
+      "note": "1/3 auto-answered turns were incorrect (E-1)",
+      "value": 0.333333
+    },
+    {
+      "arm": "primary:noisy",
+      "category": "",
+      "ci_high": 0.603222,
+      "ci_low": 0.107791,
+      "locale": "",
+      "method": "wilson",
+      "n": 10,
+      "name": "coverage",
+      "note": "auto-answer coverage on answerable items (E-4)",
+      "value": 0.3
+    },
+    {
+      "arm": "primary:noisy",
+      "category": "",
+      "ci_high": 1.0,
+      "ci_low": 0.0,
+      "locale": "",
+      "method": "none",
+      "n": 0,
+      "name": "must_escalate_recall",
+      "note": "0/0 unsafe or unanswerable turns were escalated (E-2)",
+      "value": 0.0
+    },
+    {
+      "arm": "primary:noisy",
+      "category": "",
+      "ci_high": 0.35433,
+      "ci_low": 0.0,
+      "locale": "",
+      "method": "wilson",
+      "n": 7,
+      "name": "escalation_precision",
+      "note": "escalated turns that were genuinely unsafe/unanswerable (E-3)",
+      "value": 0.0
+    },
+    {
+      "arm": "primary:noisy",
+      "category": "informational",
+      "ci_high": 0.79234,
+      "ci_low": 0.061492,
+      "locale": "",
+      "method": "wilson",
+      "n": 3,
+      "name": "realised_risk_by_bucket",
+      "note": "intent bucket informational (E-1 per bucket)",
+      "value": 0.333333
+    },
+    {
+      "arm": "primary:noisy",
+      "category": "informational",
+      "ci_high": 0.603222,
+      "ci_low": 0.107791,
+      "locale": "",
+      "method": "wilson",
+      "n": 10,
+      "name": "coverage_by_bucket",
+      "note": "intent bucket informational",
+      "value": 0.3
+    }
+  ],
+  "noisy_n": 10,
+  "per_language": [
+    {
+      "answer_accuracy": 1.0,
+      "answer_accuracy_ci": "[0.207,1.000]",
+      "answered": 1,
+      "coverage": 0.5,
+      "coverage_ci": "[0.095,0.905]",
+      "locale": "ky",
+      "must_escalate_ci": "[0.000,1.000]",
+      "must_escalate_recall": 0.0,
+      "n": 2
+    },
+    {
+      "answer_accuracy": 1.0,
+      "answer_accuracy_ci": "[0.207,1.000]",
+      "answered": 1,
+      "coverage": 0.5,
+      "coverage_ci": "[0.095,0.905]",
+      "locale": "ru",
+      "must_escalate_ci": "[0.000,1.000]",
+      "must_escalate_recall": 0.0,
+      "n": 2
+    },
+    {
+      "answer_accuracy": 0.0,
+      "answer_accuracy_ci": "[0.000,1.000]",
+      "answered": 0,
+      "coverage": 0.0,
+      "coverage_ci": "[0.000,0.793]",
+      "locale": "tg",
+      "must_escalate_ci": "[0.000,1.000]",
+      "must_escalate_recall": 0.0,
+      "n": 1
+    },
+    {
+      "answer_accuracy": 0.0,
+      "answer_accuracy_ci": "[0.000,0.793]",
+      "answered": 1,
+      "coverage": 1.0,
+      "coverage_ci": "[0.207,1.000]",
+      "locale": "tr",
+      "must_escalate_ci": "[0.000,1.000]",
+      "must_escalate_recall": 0.0,
+      "n": 1
+    },
+    {
+      "answer_accuracy": 0.0,
+      "answer_accuracy_ci": "[0.000,1.000]",
+      "answered": 0,
+      "coverage": 0.0,
+      "coverage_ci": "[0.000,0.658]",
+      "locale": "uz",
+      "must_escalate_ci": "[0.000,1.000]",
+      "must_escalate_recall": 0.0,
+      "n": 2
+    },
+    {
+      "answer_accuracy": 0.0,
+      "answer_accuracy_ci": "[0.000,1.000]",
+      "answered": 0,
+      "coverage": 0.0,
+      "coverage_ci": "[0.000,0.658]",
+      "locale": "zh",
+      "must_escalate_ci": "[0.000,1.000]",
+      "must_escalate_recall": 0.0,
+      "n": 2
+    }
+  ],
+  "reason_codes": [
+    {
+      "count": 7,
+      "reason_code": "LOW_CONFIDENCE",
+      "share": 1.0
+    }
+  ],
+  "replay": false
+}

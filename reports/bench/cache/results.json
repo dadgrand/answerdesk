@@ -1,0 +1,16 @@
+{
+  "attempts": 28,
+  "generation_usd_total": 0.0,
+  "hit_latency_p50_ms": 0.0,
+  "hit_latency_p95_ms": 0.0,
+  "hit_rate": 0.0,
+  "hit_rate_ci": "[0.000,0.121]",
+  "hits": 0,
+  "misses": 28,
+  "note": "replay pairs are same-document, same-base-question rephrasings (typo/code-switch); a wrong hit is a hit whose cached citations do not cover the sibling's evidence",
+  "pairs": 30,
+  "saved_usd": 0.0,
+  "wrong_hit_rate": 0.0,
+  "wrong_hit_ucb": 0.0,
+  "wrong_hits": 0
+}

@@ -1,0 +1,745 @@
+{
+  "label_source": "judge labels (cross-family LLM judge: deepseek-flash on qwen answers)",
+  "label_caveat": "targets are judge labels, not human labels; the calibration inherits the judge's error and its per-claim rubric, so a human-labelled recalibration is required before any production gate",
+  "risk_gate_rule": "risk control holds only if the Wilson 95% upper bound of the realised risk on the answered set is <= alpha; a point estimate below alpha with an upper bound above it does not count",
+  "features": [
+    "overlap_score",
+    "bm25_top",
+    "bm25_margin",
+    "bm25_above_gate",
+    "citation_density",
+    "log_claims"
+  ],
+  "fit_split": "dev only",
+  "n_dev": 200,
+  "n_test": 200,
+  "alpha": 0.05,
+  "l2": 2.0,
+  "coefficients": [
+    0.110841,
+    0.289198,
+    -0.043186,
+    0.142032,
+    0.0,
+    1.412363,
+    0.16288
+  ],
+  "dev_accuracy": 0.805,
+  "q_hat": 0.918967,
+  "threshold": 0.081033,
+  "dev_operating_point": {
+    "target": 0.02,
+    "feasible": false,
+    "coverage": 0.0,
+    "threshold": 1.0
+  },
+  "test": {
+    "calibrated_conformal": {
+      "scorer": "calibrated-logistic",
+      "threshold": 0.081033,
+      "n": 200,
+      "answered": 195,
+      "coverage": 0.975,
+      "coverage_ci": [
+        0.942822,
+        0.989275
+      ],
+      "realised_risk": 0.410256,
+      "risk_ci": [
+        0.3436,
+        0.48038
+      ],
+      "target_alpha": 0.05,
+      "risk_control_held": false,
+      "rule": "risk_control_held = Wilson upper bound of realised risk <= alpha",
+      "ece": 0.079379,
+      "reliability": [
+        {
+          "bin_low": 0.0,
+          "bin_high": 0.1,
+          "n": 20,
+          "mean_score": 0.08487493693979843,
+          "accuracy": 0.0
+        },
+        {
+          "bin_low": 0.1,
+          "bin_high": 0.2,
+          "n": 13,
+          "mean_score": 0.14520364648875225,
+          "accuracy": 0.0
+        },
+        {
+          "bin_low": 0.3,
+          "bin_high": 0.4,
+          "n": 2,
+          "mean_score": 0.37935960687565184,
+          "accuracy": 0.5
+        },
+        {
+          "bin_low": 0.4,
+          "bin_high": 0.5,
+          "n": 9,
+          "mean_score": 0.4503903672796467,
+          "accuracy": 0.6666666666666666
+        },
+        {
+          "bin_low": 0.5,
+          "bin_high": 0.6,
+          "n": 9,
+          "mean_score": 0.5616230837213836,
+          "accuracy": 0.4444444444444444
+        },
+        {
+          "bin_low": 0.6,
+          "bin_high": 0.7,
+          "n": 14,
+          "mean_score": 0.6706559115519638,
+          "accuracy": 0.21428571428571427
+        },
+        {
+          "bin_low": 0.7,
+          "bin_high": 0.8,
+          "n": 120,
+          "mean_score": 0.74519721497151,
+          "accuracy": 0.75
+        },
+        {
+          "bin_low": 0.8,
+          "bin_high": 0.9,
+          "n": 11,
+          "mean_score": 0.8102940134864592,
+          "accuracy": 0.9090909090909091
+        },
+        {
+          "bin_low": 0.9,
+          "bin_high": 1.0,
+          "n": 2,
+          "mean_score": 0.9980401591020622,
+          "accuracy": 0.5
+        }
+      ],
+      "curve": [
+        {
+          "coverage": 0.05,
+          "risk": 0.1,
+          "threshold": 0.8078365992671735
+        },
+        {
+          "coverage": 0.1,
+          "risk": 0.2,
+          "threshold": 0.7953583267454489
+        },
+        {
+          "coverage": 0.15,
+          "risk": 0.16666666666666666,
+          "threshold": 0.7830980853143977
+        },
+        {
+          "coverage": 0.2,
+          "risk": 0.175,
+          "threshold": 0.7699872953106832
+        },
+        {
+          "coverage": 0.25,
+          "risk": 0.24,
+          "threshold": 0.7539367592270587
+        },
+        {
+          "coverage": 0.3,
+          "risk": 0.23333333333333334,
+          "threshold": 0.7494761878943708
+        },
+        {
+          "coverage": 0.35,
+          "risk": 0.21428571428571427,
+          "threshold": 0.741407752020702
+        },
+        {
+          "coverage": 0.4,
+          "risk": 0.25,
+          "threshold": 0.736257966048565
+        },
+        {
+          "coverage": 0.45,
+          "risk": 0.24444444444444444,
+          "threshold": 0.7293643455490502
+        },
+        {
+          "coverage": 0.5,
+          "risk": 0.23,
+          "threshold": 0.7261311872906385
+        },
+        {
+          "coverage": 0.55,
+          "risk": 0.24545454545454545,
+          "threshold": 0.7229006594051968
+        },
+        {
+          "coverage": 0.6,
+          "risk": 0.24166666666666667,
+          "threshold": 0.7181121323717576
+        },
+        {
+          "coverage": 0.65,
+          "risk": 0.23846153846153847,
+          "threshold": 0.7077486357767735
+        },
+        {
+          "coverage": 0.7,
+          "risk": 0.2714285714285714,
+          "threshold": 0.6802614048384049
+        },
+        {
+          "coverage": 0.75,
+          "risk": 0.3,
+          "threshold": 0.5834579433674106
+        },
+        {
+          "coverage": 0.8,
+          "risk": 0.31875,
+          "threshold": 0.45128746257127034
+        },
+        {
+          "coverage": 0.85,
+          "risk": 0.3235294117647059,
+          "threshold": 0.16969301926910313
+        },
+        {
+          "coverage": 0.9,
+          "risk": 0.3611111111111111,
+          "threshold": 0.10162212053900889
+        },
+        {
+          "coverage": 0.95,
+          "risk": 0.39473684210526316,
+          "threshold": 0.08874237402535279
+        },
+        {
+          "coverage": 1.0,
+          "risk": 0.425,
+          "threshold": 0.0603619376681415
+        }
+      ]
+    },
+    "calibrated_operating": {
+      "scorer": "calibrated (dev operating point)",
+      "threshold": 1.0,
+      "n": 200,
+      "answered": 0,
+      "coverage": 0.0,
+      "coverage_ci": [
+        0.0,
+        0.018845
+      ],
+      "realised_risk": null,
+      "risk_ci": null,
+      "target_alpha": 0.02,
+      "risk_control_held": false,
+      "rule": "risk_control_held = Wilson upper bound of realised risk <= alpha",
+      "ece": 0.079379,
+      "reliability": [
+        {
+          "bin_low": 0.0,
+          "bin_high": 0.1,
+          "n": 20,
+          "mean_score": 0.08487493693979843,
+          "accuracy": 0.0
+        },
+        {
+          "bin_low": 0.1,
+          "bin_high": 0.2,
+          "n": 13,
+          "mean_score": 0.14520364648875225,
+          "accuracy": 0.0
+        },
+        {
+          "bin_low": 0.3,
+          "bin_high": 0.4,
+          "n": 2,
+          "mean_score": 0.37935960687565184,
+          "accuracy": 0.5
+        },
+        {
+          "bin_low": 0.4,
+          "bin_high": 0.5,
+          "n": 9,
+          "mean_score": 0.4503903672796467,
+          "accuracy": 0.6666666666666666
+        },
+        {
+          "bin_low": 0.5,
+          "bin_high": 0.6,
+          "n": 9,
+          "mean_score": 0.5616230837213836,
+          "accuracy": 0.4444444444444444
+        },
+        {
+          "bin_low": 0.6,
+          "bin_high": 0.7,
+          "n": 14,
+          "mean_score": 0.6706559115519638,
+          "accuracy": 0.21428571428571427
+        },
+        {
+          "bin_low": 0.7,
+          "bin_high": 0.8,
+          "n": 120,
+          "mean_score": 0.74519721497151,
+          "accuracy": 0.75
+        },
+        {
+          "bin_low": 0.8,
+          "bin_high": 0.9,
+          "n": 11,
+          "mean_score": 0.8102940134864592,
+          "accuracy": 0.9090909090909091
+        },
+        {
+          "bin_low": 0.9,
+          "bin_high": 1.0,
+          "n": 2,
+          "mean_score": 0.9980401591020622,
+          "accuracy": 0.5
+        }
+      ],
+      "curve": [
+        {
+          "coverage": 0.05,
+          "risk": 0.1,
+          "threshold": 0.8078365992671735
+        },
+        {
+          "coverage": 0.1,
+          "risk": 0.2,
+          "threshold": 0.7953583267454489
+        },
+        {
+          "coverage": 0.15,
+          "risk": 0.16666666666666666,
+          "threshold": 0.7830980853143977
+        },
+        {
+          "coverage": 0.2,
+          "risk": 0.175,
+          "threshold": 0.7699872953106832
+        },
+        {
+          "coverage": 0.25,
+          "risk": 0.24,
+          "threshold": 0.7539367592270587
+        },
+        {
+          "coverage": 0.3,
+          "risk": 0.23333333333333334,
+          "threshold": 0.7494761878943708
+        },
+        {
+          "coverage": 0.35,
+          "risk": 0.21428571428571427,
+          "threshold": 0.741407752020702
+        },
+        {
+          "coverage": 0.4,
+          "risk": 0.25,
+          "threshold": 0.736257966048565
+        },
+        {
+          "coverage": 0.45,
+          "risk": 0.24444444444444444,
+          "threshold": 0.7293643455490502
+        },
+        {
+          "coverage": 0.5,
+          "risk": 0.23,
+          "threshold": 0.7261311872906385
+        },
+        {
+          "coverage": 0.55,
+          "risk": 0.24545454545454545,
+          "threshold": 0.7229006594051968
+        },
+        {
+          "coverage": 0.6,
+          "risk": 0.24166666666666667,
+          "threshold": 0.7181121323717576
+        },
+        {
+          "coverage": 0.65,
+          "risk": 0.23846153846153847,
+          "threshold": 0.7077486357767735
+        },
+        {
+          "coverage": 0.7,
+          "risk": 0.2714285714285714,
+          "threshold": 0.6802614048384049
+        },
+        {
+          "coverage": 0.75,
+          "risk": 0.3,
+          "threshold": 0.5834579433674106
+        },
+        {
+          "coverage": 0.8,
+          "risk": 0.31875,
+          "threshold": 0.45128746257127034
+        },
+        {
+          "coverage": 0.85,
+          "risk": 0.3235294117647059,
+          "threshold": 0.16969301926910313
+        },
+        {
+          "coverage": 0.9,
+          "risk": 0.3611111111111111,
+          "threshold": 0.10162212053900889
+        },
+        {
+          "coverage": 0.95,
+          "risk": 0.39473684210526316,
+          "threshold": 0.08874237402535279
+        },
+        {
+          "coverage": 1.0,
+          "risk": 0.425,
+          "threshold": 0.0603619376681415
+        }
+      ]
+    },
+    "raw_overlap": {
+      "scorer": "raw-overlap@0.5",
+      "threshold": 0.5,
+      "n": 200,
+      "answered": 189,
+      "coverage": 0.945,
+      "coverage_ci": [
+        0.904213,
+        0.969015
+      ],
+      "realised_risk": 0.391534,
+      "risk_ci": [
+        0.324772,
+        0.462618
+      ],
+      "target_alpha": 0.05,
+      "risk_control_held": false,
+      "rule": "risk_control_held = Wilson upper bound of realised risk <= alpha",
+      "ece": 0.342784,
+      "reliability": [
+        {
+          "bin_low": 0.4,
+          "bin_high": 0.5,
+          "n": 11,
+          "mean_score": 0.4284631818181818,
+          "accuracy": 0.0
+        },
+        {
+          "bin_low": 0.5,
+          "bin_high": 0.6,
+          "n": 2,
+          "mean_score": 0.563636,
+          "accuracy": 0.0
+        },
+        {
+          "bin_low": 0.6,
+          "bin_high": 0.7,
+          "n": 13,
+          "mean_score": 0.633335076923077,
+          "accuracy": 0.0
+        },
+        {
+          "bin_low": 0.7,
+          "bin_high": 0.8,
+          "n": 6,
+          "mean_score": 0.7038461666666667,
+          "accuracy": 0.0
+        },
+        {
+          "bin_low": 0.8,
+          "bin_high": 0.9,
+          "n": 16,
+          "mean_score": 0.85375,
+          "accuracy": 0.0
+        },
+        {
+          "bin_low": 0.9,
+          "bin_high": 1.0,
+          "n": 152,
+          "mean_score": 0.9973684210526316,
+          "accuracy": 0.756578947368421
+        }
+      ],
+      "curve": [
+        {
+          "coverage": 0.05,
+          "risk": 0.1,
+          "threshold": 1.0
+        },
+        {
+          "coverage": 0.1,
+          "risk": 0.25,
+          "threshold": 1.0
+        },
+        {
+          "coverage": 0.15,
+          "risk": 0.23333333333333334,
+          "threshold": 1.0
+        },
+        {
+          "coverage": 0.2,
+          "risk": 0.25,
+          "threshold": 1.0
+        },
+        {
+          "coverage": 0.25,
+          "risk": 0.28,
+          "threshold": 1.0
+        },
+        {
+          "coverage": 0.3,
+          "risk": 0.26666666666666666,
+          "threshold": 1.0
+        },
+        {
+          "coverage": 0.35,
+          "risk": 0.2571428571428571,
+          "threshold": 1.0
+        },
+        {
+          "coverage": 0.4,
+          "risk": 0.2875,
+          "threshold": 1.0
+        },
+        {
+          "coverage": 0.45,
+          "risk": 0.26666666666666666,
+          "threshold": 1.0
+        },
+        {
+          "coverage": 0.5,
+          "risk": 0.24,
+          "threshold": 1.0
+        },
+        {
+          "coverage": 0.55,
+          "risk": 0.22727272727272727,
+          "threshold": 1.0
+        },
+        {
+          "coverage": 0.6,
+          "risk": 0.23333333333333334,
+          "threshold": 1.0
+        },
+        {
+          "coverage": 0.65,
+          "risk": 0.2230769230769231,
+          "threshold": 1.0
+        },
+        {
+          "coverage": 0.7,
+          "risk": 0.22142857142857142,
+          "threshold": 1.0
+        },
+        {
+          "coverage": 0.75,
+          "risk": 0.23333333333333334,
+          "threshold": 0.9
+        },
+        {
+          "coverage": 0.8,
+          "risk": 0.28125,
+          "threshold": 0.85
+        },
+        {
+          "coverage": 0.85,
+          "risk": 0.3235294117647059,
+          "threshold": 0.7
+        },
+        {
+          "coverage": 0.9,
+          "risk": 0.3611111111111111,
+          "threshold": 0.64
+        },
+        {
+          "coverage": 0.95,
+          "risk": 0.39473684210526316,
+          "threshold": 0.485714
+        },
+        {
+          "coverage": 1.0,
+          "risk": 0.425,
+          "threshold": 0.4
+        }
+      ]
+    },
+    "raw_overlap_engine": {
+      "scorer": "raw-overlap@1.0 (what the engine actually did)",
+      "threshold": 1.0,
+      "n": 200,
+      "answered": 148,
+      "coverage": 0.74,
+      "coverage_ci": [
+        0.675093,
+        0.795862
+      ],
+      "realised_risk": 0.222973,
+      "risk_ci": [
+        0.163406,
+        0.296557
+      ],
+      "target_alpha": 0.05,
+      "risk_control_held": false,
+      "rule": "risk_control_held = Wilson upper bound of realised risk <= alpha",
+      "ece": 0.342784,
+      "reliability": [
+        {
+          "bin_low": 0.4,
+          "bin_high": 0.5,
+          "n": 11,
+          "mean_score": 0.4284631818181818,
+          "accuracy": 0.0
+        },
+        {
+          "bin_low": 0.5,
+          "bin_high": 0.6,
+          "n": 2,
+          "mean_score": 0.563636,
+          "accuracy": 0.0
+        },
+        {
+          "bin_low": 0.6,
+          "bin_high": 0.7,
+          "n": 13,
+          "mean_score": 0.633335076923077,
+          "accuracy": 0.0
+        },
+        {
+          "bin_low": 0.7,
+          "bin_high": 0.8,
+          "n": 6,
+          "mean_score": 0.7038461666666667,
+          "accuracy": 0.0
+        },
+        {
+          "bin_low": 0.8,
+          "bin_high": 0.9,
+          "n": 16,
+          "mean_score": 0.85375,
+          "accuracy": 0.0
+        },
+        {
+          "bin_low": 0.9,
+          "bin_high": 1.0,
+          "n": 152,
+          "mean_score": 0.9973684210526316,
+          "accuracy": 0.756578947368421
+        }
+      ],
+      "curve": [
+        {
+          "coverage": 0.05,
+          "risk": 0.1,
+          "threshold": 1.0
+        },
+        {
+          "coverage": 0.1,
+          "risk": 0.25,
+          "threshold": 1.0
+        },
+        {
+          "coverage": 0.15,
+          "risk": 0.23333333333333334,
+          "threshold": 1.0
+        },
+        {
+          "coverage": 0.2,
+          "risk": 0.25,
+          "threshold": 1.0
+        },
+        {
+          "coverage": 0.25,
+          "risk": 0.28,
+          "threshold": 1.0
+        },
+        {
+          "coverage": 0.3,
+          "risk": 0.26666666666666666,
+          "threshold": 1.0
+        },
+        {
+          "coverage": 0.35,
+          "risk": 0.2571428571428571,
+          "threshold": 1.0
+        },
+        {
+          "coverage": 0.4,
+          "risk": 0.2875,
+          "threshold": 1.0
+        },
+        {
+          "coverage": 0.45,
+          "risk": 0.26666666666666666,
+          "threshold": 1.0
+        },
+        {
+          "coverage": 0.5,
+          "risk": 0.24,
+          "threshold": 1.0
+        },
+        {
+          "coverage": 0.55,
+          "risk": 0.22727272727272727,
+          "threshold": 1.0
+        },
+        {
+          "coverage": 0.6,
+          "risk": 0.23333333333333334,
+          "threshold": 1.0
+        },
+        {
+          "coverage": 0.65,
+          "risk": 0.2230769230769231,
+          "threshold": 1.0
+        },
+        {
+          "coverage": 0.7,
+          "risk": 0.22142857142857142,
+          "threshold": 1.0
+        },
+        {
+          "coverage": 0.75,
+          "risk": 0.23333333333333334,
+          "threshold": 0.9
+        },
+        {
+          "coverage": 0.8,
+          "risk": 0.28125,
+          "threshold": 0.85
+        },
+        {
+          "coverage": 0.85,
+          "risk": 0.3235294117647059,
+          "threshold": 0.7
+        },
+        {
+          "coverage": 0.9,
+          "risk": 0.3611111111111111,
+          "threshold": 0.64
+        },
+        {
+          "coverage": 0.95,
+          "risk": 0.39473684210526316,
+          "threshold": 0.485714
+        },
+        {
+          "coverage": 1.0,
+          "risk": 0.425,
+          "threshold": 0.4
+        }
+      ]
+    }
+  },
+  "verdict": {
+    "risk_control_held": false,
+    "note": "the calibrated scorer's realised risk is 0.410256 against alpha=0.05; the gate does NOT hold and no risk-control wording may ship"
+  }
+}

@@ -91,8 +91,6 @@ def _value(cells: Sequence[dict[str, object]], name: str) -> dict[str, object] |
     return None
 
 
-if __name__ == "__main__":
-    raise SystemExit(main())
 
 
 # --------------------------------------------------------------------------------------
@@ -116,3 +114,7 @@ def run_chunking(run: Path, *, limit: int = 240, replay: bool = False) -> int:
     payload = run_chunking_ablation(state, out_dir=run, cases=state.test_cases, limit=limit)
     print("chunking ablation:", json.dumps(payload["rows"], ensure_ascii=False)[:400])
     return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

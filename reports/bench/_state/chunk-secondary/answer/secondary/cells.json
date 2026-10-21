@@ -1,0 +1,1032 @@
+{
+  "arm": "secondary",
+  "calibration": {
+    "accuracy": 0.05,
+    "aurc": 0.940005,
+    "bins_equal_mass": [
+      {
+        "accuracy": 0.0,
+        "count": 4,
+        "lower": 0.4,
+        "mean_confidence": 0.4,
+        "upper": 0.4
+      },
+      {
+        "accuracy": 0.0,
+        "count": 4,
+        "lower": 0.4,
+        "mean_confidence": 0.45,
+        "upper": 0.6
+      },
+      {
+        "accuracy": 0.0,
+        "count": 4,
+        "lower": 0.8,
+        "mean_confidence": 0.8125,
+        "upper": 0.85
+      },
+      {
+        "accuracy": 0.0,
+        "count": 4,
+        "lower": 0.85,
+        "mean_confidence": 0.865,
+        "upper": 0.88
+      },
+      {
+        "accuracy": 0.0,
+        "count": 4,
+        "lower": 0.88,
+        "mean_confidence": 0.88,
+        "upper": 0.88
+      },
+      {
+        "accuracy": 0.0,
+        "count": 4,
+        "lower": 0.9,
+        "mean_confidence": 0.925,
+        "upper": 1.0
+      },
+      {
+        "accuracy": 0.0,
+        "count": 4,
+        "lower": 1.0,
+        "mean_confidence": 1.0,
+        "upper": 1.0
+      },
+      {
+        "accuracy": 0.0,
+        "count": 4,
+        "lower": 1.0,
+        "mean_confidence": 1.0,
+        "upper": 1.0
+      },
+      {
+        "accuracy": 0.0,
+        "count": 4,
+        "lower": 1.0,
+        "mean_confidence": 1.0,
+        "upper": 1.0
+      },
+      {
+        "accuracy": 0.5,
+        "count": 4,
+        "lower": 1.0,
+        "mean_confidence": 1.0,
+        "upper": 1.0
+      }
+    ],
+    "bins_equal_width": [
+      {
+        "accuracy": 0.0,
+        "count": 7,
+        "lower": 0.4,
+        "mean_confidence": 0.4,
+        "upper": 0.5
+      },
+      {
+        "accuracy": 0.0,
+        "count": 1,
+        "lower": 0.6,
+        "mean_confidence": 0.6,
+        "upper": 0.7
+      },
+      {
+        "accuracy": 0.0,
+        "count": 12,
+        "lower": 0.8,
+        "mean_confidence": 0.8525,
+        "upper": 0.9
+      },
+      {
+        "accuracy": 0.1,
+        "count": 20,
+        "lower": 0.9,
+        "mean_confidence": 0.985,
+        "upper": 1.0
+      }
+    ],
+    "brier": 0.691098,
+    "coverage_at_target": 0.0,
+    "curve": [
+      {
+        "coverage": 0.0,
+        "n_answered": 0,
+        "risk": 0.0,
+        "threshold": 1.0
+      },
+      {
+        "coverage": 0.025,
+        "n_answered": 1,
+        "risk": 1.0,
+        "threshold": 1.0
+      },
+      {
+        "coverage": 0.05,
+        "n_answered": 2,
+        "risk": 1.0,
+        "threshold": 1.0
+      },
+      {
+        "coverage": 0.075,
+        "n_answered": 3,
+        "risk": 1.0,
+        "threshold": 1.0
+      },
+      {
+        "coverage": 0.1,
+        "n_answered": 4,
+        "risk": 1.0,
+        "threshold": 1.0
+      },
+      {
+        "coverage": 0.125,
+        "n_answered": 5,
+        "risk": 1.0,
+        "threshold": 1.0
+      },
+      {
+        "coverage": 0.15,
+        "n_answered": 6,
+        "risk": 1.0,
+        "threshold": 1.0
+      },
+      {
+        "coverage": 0.175,
+        "n_answered": 7,
+        "risk": 1.0,
+        "threshold": 1.0
+      },
+      {
+        "coverage": 0.2,
+        "n_answered": 8,
+        "risk": 1.0,
+        "threshold": 1.0
+      },
+      {
+        "coverage": 0.225,
+        "n_answered": 9,
+        "risk": 1.0,
+        "threshold": 1.0
+      },
+      {
+        "coverage": 0.25,
+        "n_answered": 10,
+        "risk": 1.0,
+        "threshold": 1.0
+      },
+      {
+        "coverage": 0.275,
+        "n_answered": 11,
+        "risk": 1.0,
+        "threshold": 1.0
+      },
+      {
+        "coverage": 0.3,
+        "n_answered": 12,
+        "risk": 1.0,
+        "threshold": 1.0
+      },
+      {
+        "coverage": 0.325,
+        "n_answered": 13,
+        "risk": 1.0,
+        "threshold": 1.0
+      },
+      {
+        "coverage": 0.35,
+        "n_answered": 14,
+        "risk": 1.0,
+        "threshold": 1.0
+      },
+      {
+        "coverage": 0.375,
+        "n_answered": 15,
+        "risk": 0.933333,
+        "threshold": 1.0
+      },
+      {
+        "coverage": 0.4,
+        "n_answered": 16,
+        "risk": 0.9375,
+        "threshold": 1.0
+      },
+      {
+        "coverage": 0.425,
+        "n_answered": 17,
+        "risk": 0.882353,
+        "threshold": 1.0
+      },
+      {
+        "coverage": 0.45,
+        "n_answered": 18,
+        "risk": 0.888889,
+        "threshold": 0.9
+      },
+      {
+        "coverage": 0.475,
+        "n_answered": 19,
+        "risk": 0.894737,
+        "threshold": 0.9
+      },
+      {
+        "coverage": 0.5,
+        "n_answered": 20,
+        "risk": 0.9,
+        "threshold": 0.9
+      },
+      {
+        "coverage": 0.525,
+        "n_answered": 21,
+        "risk": 0.904762,
+        "threshold": 0.88
+      },
+      {
+        "coverage": 0.55,
+        "n_answered": 22,
+        "risk": 0.909091,
+        "threshold": 0.88
+      },
+      {
+        "coverage": 0.575,
+        "n_answered": 23,
+        "risk": 0.913043,
+        "threshold": 0.88
+      },
+      {
+        "coverage": 0.6,
+        "n_answered": 24,
+        "risk": 0.916667,
+        "threshold": 0.88
+      },
+      {
+        "coverage": 0.625,
+        "n_answered": 25,
+        "risk": 0.92,
+        "threshold": 0.88
+      },
+      {
+        "coverage": 0.65,
+        "n_answered": 26,
+        "risk": 0.923077,
+        "threshold": 0.88
+      },
+      {
+        "coverage": 0.675,
+        "n_answered": 27,
+        "risk": 0.925926,
+        "threshold": 0.85
+      },
+      {
+        "coverage": 0.7,
+        "n_answered": 28,
+        "risk": 0.928571,
+        "threshold": 0.85
+      },
+      {
+        "coverage": 0.725,
+        "n_answered": 29,
+        "risk": 0.931034,
+        "threshold": 0.85
+      },
+      {
+        "coverage": 0.75,
+        "n_answered": 30,
+        "risk": 0.933333,
+        "threshold": 0.8
+      },
+      {
+        "coverage": 0.775,
+        "n_answered": 31,
+        "risk": 0.935484,
+        "threshold": 0.8
+      },
+      {
+        "coverage": 0.8,
+        "n_answered": 32,
+        "risk": 0.9375,
+        "threshold": 0.8
+      },
+      {
+        "coverage": 0.825,
+        "n_answered": 33,
+        "risk": 0.939394,
+        "threshold": 0.6
+      },
+      {
+        "coverage": 0.85,
+        "n_answered": 34,
+        "risk": 0.941176,
+        "threshold": 0.4
+      },
+      {
+        "coverage": 0.875,
+        "n_answered": 35,
+        "risk": 0.942857,
+        "threshold": 0.4
+      },
+      {
+        "coverage": 0.9,
+        "n_answered": 36,
+        "risk": 0.944444,
+        "threshold": 0.4
+      },
+      {
+        "coverage": 0.925,
+        "n_answered": 37,
+        "risk": 0.945946,
+        "threshold": 0.4
+      },
+      {
+        "coverage": 0.95,
+        "n_answered": 38,
+        "risk": 0.947368,
+        "threshold": 0.4
+      },
+      {
+        "coverage": 0.975,
+        "n_answered": 39,
+        "risk": 0.948718,
+        "threshold": 0.4
+      },
+      {
+        "coverage": 1.0,
+        "n_answered": 40,
+        "risk": 0.95,
+        "threshold": 0.4
+      }
+    ],
+    "ece_equal_mass": 0.78325,
+    "ece_equal_width": 0.78325,
+    "mean_confidence": 0.83325,
+    "n": 40,
+    "per_bucket": {},
+    "risk_at_target": 0.0,
+    "risk_interval": null
+  },
+  "cells": [
+    {
+      "arm": "secondary",
+      "category": "",
+      "ci_high": 0.977273,
+      "ci_low": 0.772727,
+      "locale": "",
+      "method": "bootstrap",
+      "n": 11,
+      "name": "groundedness_judged",
+      "note": "mean per-answer claim-support rate",
+      "value": 0.886364
+    },
+    {
+      "arm": "secondary",
+      "category": "",
+      "ci_high": 0.955934,
+      "ci_low": 0.746852,
+      "locale": "",
+      "method": "wilson",
+      "n": 36,
+      "name": "groundedness_claim_pooled",
+      "note": "32/36 displayed claims supported",
+      "value": 0.888889
+    },
+    {
+      "arm": "secondary",
+      "category": "",
+      "ci_high": 1.0,
+      "ci_low": 0.0,
+      "locale": "",
+      "method": "none",
+      "n": 0,
+      "name": "citation_precision",
+      "note": "per-answer mean; a phantom citation is impossible by contract (F-5)",
+      "value": 0.0
+    },
+    {
+      "arm": "secondary",
+      "category": "",
+      "ci_high": 0.977273,
+      "ci_low": 0.772727,
+      "locale": "",
+      "method": "bootstrap",
+      "n": 11,
+      "name": "citation_recall",
+      "note": "fraction of required evidence chunks actually cited",
+      "value": 0.886364
+    },
+    {
+      "arm": "secondary",
+      "category": "",
+      "ci_high": 3.939546,
+      "ci_low": 3.009091,
+      "locale": "",
+      "method": "bootstrap",
+      "n": 11,
+      "name": "rubric_score",
+      "note": "judge rubric, 1-5 (context-anchored, per claim)",
+      "value": 3.454545
+    },
+    {
+      "arm": "secondary",
+      "category": "",
+      "ci_high": 0.565645,
+      "ci_low": 0.097461,
+      "locale": "",
+      "method": "wilson",
+      "n": 11,
+      "name": "rubric_pass_rate",
+      "note": "rubric >= 4 (F-1/§8.1 'correct' component)",
+      "value": 0.272727
+    },
+    {
+      "arm": "secondary",
+      "category": "",
+      "ci_high": 0.184318,
+      "ci_low": 0.0,
+      "locale": "",
+      "method": "wilson",
+      "n": 17,
+      "name": "phantom_citations",
+      "note": "structural: must be 0 (F-5)",
+      "value": 0.0
+    },
+    {
+      "arm": "secondary",
+      "category": "",
+      "ci_high": 0.184318,
+      "ci_low": 0.0,
+      "locale": "",
+      "method": "wilson",
+      "n": 17,
+      "name": "unsupported_displayed_claims",
+      "note": "structural: must be 0 (F-4)",
+      "value": 0.0
+    },
+    {
+      "arm": "secondary",
+      "category": "",
+      "ci_high": 1.0,
+      "ci_low": 0.815682,
+      "locale": "",
+      "method": "wilson",
+      "n": 17,
+      "name": "language_agreement",
+      "note": "F-7: answer language equals the detected query language",
+      "value": 1.0
+    },
+    {
+      "arm": "secondary",
+      "category": "",
+      "ci_high": 0.96712,
+      "ci_low": 0.656636,
+      "locale": "",
+      "method": "wilson",
+      "n": 17,
+      "name": "realised_risk",
+      "note": "15/17 auto-answered turns were incorrect (E-1)",
+      "value": 0.882353
+    },
+    {
+      "arm": "secondary",
+      "category": "",
+      "ci_high": 0.578049,
+      "ci_low": 0.285094,
+      "locale": "",
+      "method": "wilson",
+      "n": 40,
+      "name": "coverage",
+      "note": "auto-answer coverage on answerable items (E-4)",
+      "value": 0.425
+    },
+    {
+      "arm": "secondary",
+      "category": "",
+      "ci_high": 1.0,
+      "ci_low": 0.0,
+      "locale": "",
+      "method": "none",
+      "n": 0,
+      "name": "must_escalate_recall",
+      "note": "0/0 unsafe or unanswerable turns were escalated (E-2)",
+      "value": 0.0
+    },
+    {
+      "arm": "secondary",
+      "category": "",
+      "ci_high": 0.143117,
+      "ci_low": 0.0,
+      "locale": "",
+      "method": "wilson",
+      "n": 23,
+      "name": "escalation_precision",
+      "note": "escalated turns that were genuinely unsafe/unanswerable (E-3)",
+      "value": 0.0
+    },
+    {
+      "arm": "secondary",
+      "category": "informational",
+      "ci_high": 0.96712,
+      "ci_low": 0.656636,
+      "locale": "",
+      "method": "wilson",
+      "n": 17,
+      "name": "realised_risk_by_bucket",
+      "note": "intent bucket informational (E-1 per bucket)",
+      "value": 0.882353
+    },
+    {
+      "arm": "secondary",
+      "category": "informational",
+      "ci_high": 0.578049,
+      "ci_low": 0.285094,
+      "locale": "",
+      "method": "wilson",
+      "n": 40,
+      "name": "coverage_by_bucket",
+      "note": "intent bucket informational",
+      "value": 0.425
+    },
+    {
+      "arm": "secondary",
+      "category": "",
+      "ci_high": 8103.611565,
+      "ci_low": 5384.053015,
+      "locale": "",
+      "method": "none",
+      "n": 40,
+      "name": "latency_generation_p50_ms",
+      "note": "distribution summary; the bracket is the p(q-5)..p(q+5) spread",
+      "value": 5916.5178
+    },
+    {
+      "arm": "secondary",
+      "category": "",
+      "ci_high": 14087.1833,
+      "ci_low": 12656.87507,
+      "locale": "",
+      "method": "none",
+      "n": 40,
+      "name": "latency_generation_p95_ms",
+      "note": "distribution summary; the bracket is the p(q-5)..p(q+5) spread",
+      "value": 13351.361665
+    },
+    {
+      "arm": "secondary",
+      "category": "",
+      "ci_high": 2438.30235,
+      "ci_low": 2066.967025,
+      "locale": "",
+      "method": "none",
+      "n": 26,
+      "name": "latency_judge_p50_ms",
+      "note": "distribution summary; the bracket is the p(q-5)..p(q+5) spread",
+      "value": 2259.293
+    },
+    {
+      "arm": "secondary",
+      "category": "",
+      "ci_high": 5129.7941,
+      "ci_low": 4293.87765,
+      "locale": "",
+      "method": "none",
+      "n": 26,
+      "name": "latency_judge_p95_ms",
+      "note": "distribution summary; the bracket is the p(q-5)..p(q+5) spread",
+      "value": 4907.894
+    },
+    {
+      "arm": "secondary",
+      "category": "",
+      "ci_high": 1.082625,
+      "ci_low": 1.01383,
+      "locale": "",
+      "method": "none",
+      "n": 40,
+      "name": "latency_policy_p50_ms",
+      "note": "distribution summary; the bracket is the p(q-5)..p(q+5) spread",
+      "value": 1.0681
+    },
+    {
+      "arm": "secondary",
+      "category": "",
+      "ci_high": 1.3344,
+      "ci_low": 1.27234,
+      "locale": "",
+      "method": "none",
+      "n": 40,
+      "name": "latency_policy_p95_ms",
+      "note": "distribution summary; the bracket is the p(q-5)..p(q+5) spread",
+      "value": 1.286515
+    },
+    {
+      "arm": "secondary",
+      "category": "",
+      "ci_high": 1.17424,
+      "ci_low": 1.15099,
+      "locale": "",
+      "method": "none",
+      "n": 40,
+      "name": "latency_retrieval_p50_ms",
+      "note": "distribution summary; the bracket is the p(q-5)..p(q+5) spread",
+      "value": 1.1615
+    },
+    {
+      "arm": "secondary",
+      "category": "",
+      "ci_high": 17.927,
+      "ci_low": 1.7709,
+      "locale": "",
+      "method": "none",
+      "n": 40,
+      "name": "latency_retrieval_p95_ms",
+      "note": "distribution summary; the bracket is the p(q-5)..p(q+5) spread",
+      "value": 2.581105
+    },
+    {
+      "arm": "secondary",
+      "category": "",
+      "ci_high": 9902.45837,
+      "ci_low": 8384.38371,
+      "locale": "",
+      "method": "none",
+      "n": 40,
+      "name": "latency_total_p50_ms",
+      "note": "distribution summary; the bracket is the p(q-5)..p(q+5) spread",
+      "value": 9031.01375
+    },
+    {
+      "arm": "secondary",
+      "category": "",
+      "ci_high": 16390.3329,
+      "ci_low": 14118.51747,
+      "locale": "",
+      "method": "none",
+      "n": 40,
+      "name": "latency_total_p95_ms",
+      "note": "distribution summary; the bracket is the p(q-5)..p(q+5) spread",
+      "value": 15007.548
+    },
+    {
+      "arm": "secondary",
+      "category": "",
+      "ci_high": 10316.849736,
+      "ci_low": 7767.822956,
+      "locale": "",
+      "method": "bootstrap",
+      "n": 40,
+      "name": "latency_total_mean_ms",
+      "note": "wall clock measured in-process; not a server-side latency claim (NFR-LAT-01)",
+      "value": 9068.154565
+    },
+    {
+      "arm": "secondary",
+      "category": "",
+      "ci_high": 0.0,
+      "ci_low": 0.0,
+      "locale": "",
+      "method": "bootstrap",
+      "n": 40,
+      "name": "usd_per_answer",
+      "note": "priced with the pinned pricing table (NFR-COST-02)",
+      "value": 0.0
+    },
+    {
+      "arm": "secondary",
+      "category": "",
+      "ci_high": 0.0,
+      "ci_low": 0.0,
+      "locale": "",
+      "method": "none",
+      "n": 40,
+      "name": "usd_per_answer_p95",
+      "note": "distribution summary; the bracket is the p(q-5)..p(q+5) spread",
+      "value": 0.0
+    },
+    {
+      "arm": "secondary",
+      "category": "",
+      "ci_high": 4204.84625,
+      "ci_low": 3279.848125,
+      "locale": "",
+      "method": "bootstrap",
+      "n": 40,
+      "name": "tokens_input_mean",
+      "note": "",
+      "value": 3743.425
+    },
+    {
+      "arm": "secondary",
+      "category": "",
+      "ci_high": 1368.16375,
+      "ci_low": 932.396875,
+      "locale": "",
+      "method": "bootstrap",
+      "n": 40,
+      "name": "tokens_output_mean",
+      "note": "",
+      "value": 1155.15
+    },
+    {
+      "arm": "secondary",
+      "category": "",
+      "ci_high": 0.087622,
+      "ci_low": 0.0,
+      "locale": "",
+      "method": "wilson",
+      "n": 40,
+      "name": "cache_hit_rate",
+      "note": "exact-normalised-query replay; the semantic cache is owned by t8 (§9)",
+      "value": 0.0
+    }
+  ],
+  "confusion": {
+    "coverage": 0.425,
+    "false_escalation_rate": 0.575,
+    "fn": 0,
+    "fp": 23,
+    "n": 40,
+    "precision": 0.0,
+    "recall": null,
+    "specificity": 0.425,
+    "tn": 17,
+    "tp": 0
+  },
+  "escalated": 23,
+  "generator_model": "deepseek-flash",
+  "judge": {
+    "agreement_kappa": {},
+    "agreement_n": {},
+    "cross_family": true,
+    "generator_family": "deepseek",
+    "generator_model": "deepseek-flash",
+    "human_calibrated": false,
+    "judge_family": "qwen",
+    "judge_model": "qwen3.6-35b-a3b-noreason",
+    "note": "cross-family judge; human κ not established for this corpus, so judged numbers are reported with an explicit κ caveat, not as F-1/F-2/F-3 gates",
+    "position_swap": true,
+    "prompt_version": "judge-rubric-1",
+    "reportable": true,
+    "rubric_version": "rubric-v1"
+  },
+  "judge_failure_rate": 0.0,
+  "judge_failures": 0,
+  "judge_model": "qwen3.6-35b-a3b-noreason",
+  "n": 40,
+  "noisy_cells": [
+    {
+      "arm": "secondary:noisy",
+      "category": "",
+      "ci_high": 0.977273,
+      "ci_low": 0.772727,
+      "locale": "",
+      "method": "bootstrap",
+      "n": 11,
+      "name": "groundedness_judged",
+      "note": "mean per-answer claim-support rate",
+      "value": 0.886364
+    },
+    {
+      "arm": "secondary:noisy",
+      "category": "",
+      "ci_high": 0.955934,
+      "ci_low": 0.746852,
+      "locale": "",
+      "method": "wilson",
+      "n": 36,
+      "name": "groundedness_claim_pooled",
+      "note": "32/36 displayed claims supported",
+      "value": 0.888889
+    },
+    {
+      "arm": "secondary:noisy",
+      "category": "",
+      "ci_high": 1.0,
+      "ci_low": 0.0,
+      "locale": "",
+      "method": "none",
+      "n": 0,
+      "name": "citation_precision",
+      "note": "per-answer mean; a phantom citation is impossible by contract (F-5)",
+      "value": 0.0
+    },
+    {
+      "arm": "secondary:noisy",
+      "category": "",
+      "ci_high": 0.977273,
+      "ci_low": 0.772727,
+      "locale": "",
+      "method": "bootstrap",
+      "n": 11,
+      "name": "citation_recall",
+      "note": "fraction of required evidence chunks actually cited",
+      "value": 0.886364
+    },
+    {
+      "arm": "secondary:noisy",
+      "category": "",
+      "ci_high": 3.939546,
+      "ci_low": 3.009091,
+      "locale": "",
+      "method": "bootstrap",
+      "n": 11,
+      "name": "rubric_score",
+      "note": "judge rubric, 1-5 (context-anchored, per claim)",
+      "value": 3.454545
+    },
+    {
+      "arm": "secondary:noisy",
+      "category": "",
+      "ci_high": 0.565645,
+      "ci_low": 0.097461,
+      "locale": "",
+      "method": "wilson",
+      "n": 11,
+      "name": "rubric_pass_rate",
+      "note": "rubric >= 4 (F-1/§8.1 'correct' component)",
+      "value": 0.272727
+    },
+    {
+      "arm": "secondary:noisy",
+      "category": "",
+      "ci_high": 0.184318,
+      "ci_low": 0.0,
+      "locale": "",
+      "method": "wilson",
+      "n": 17,
+      "name": "phantom_citations",
+      "note": "structural: must be 0 (F-5)",
+      "value": 0.0
+    },
+    {
+      "arm": "secondary:noisy",
+      "category": "",
+      "ci_high": 0.184318,
+      "ci_low": 0.0,
+      "locale": "",
+      "method": "wilson",
+      "n": 17,
+      "name": "unsupported_displayed_claims",
+      "note": "structural: must be 0 (F-4)",
+      "value": 0.0
+    },
+    {
+      "arm": "secondary:noisy",
+      "category": "",
+      "ci_high": 1.0,
+      "ci_low": 0.815682,
+      "locale": "",
+      "method": "wilson",
+      "n": 17,
+      "name": "language_agreement",
+      "note": "F-7: answer language equals the detected query language",
+      "value": 1.0
+    },
+    {
+      "arm": "secondary:noisy",
+      "category": "",
+      "ci_high": 0.96712,
+      "ci_low": 0.656636,
+      "locale": "",
+      "method": "wilson",
+      "n": 17,
+      "name": "realised_risk",
+      "note": "15/17 auto-answered turns were incorrect (E-1)",
+      "value": 0.882353
+    },
+    {
+      "arm": "secondary:noisy",
+      "category": "",
+      "ci_high": 0.578049,
+      "ci_low": 0.285094,
+      "locale": "",
+      "method": "wilson",
+      "n": 40,
+      "name": "coverage",
+      "note": "auto-answer coverage on answerable items (E-4)",
+      "value": 0.425
+    },
+    {
+      "arm": "secondary:noisy",
+      "category": "",
+      "ci_high": 1.0,
+      "ci_low": 0.0,
+      "locale": "",
+      "method": "none",
+      "n": 0,
+      "name": "must_escalate_recall",
+      "note": "0/0 unsafe or unanswerable turns were escalated (E-2)",
+      "value": 0.0
+    },
+    {
+      "arm": "secondary:noisy",
+      "category": "",
+      "ci_high": 0.143117,
+      "ci_low": 0.0,
+      "locale": "",
+      "method": "wilson",
+      "n": 23,
+      "name": "escalation_precision",
+      "note": "escalated turns that were genuinely unsafe/unanswerable (E-3)",
+      "value": 0.0
+    },
+    {
+      "arm": "secondary:noisy",
+      "category": "informational",
+      "ci_high": 0.96712,
+      "ci_low": 0.656636,
+      "locale": "",
+      "method": "wilson",
+      "n": 17,
+      "name": "realised_risk_by_bucket",
+      "note": "intent bucket informational (E-1 per bucket)",
+      "value": 0.882353
+    },
+    {
+      "arm": "secondary:noisy",
+      "category": "informational",
+      "ci_high": 0.578049,
+      "ci_low": 0.285094,
+      "locale": "",
+      "method": "wilson",
+      "n": 40,
+      "name": "coverage_by_bucket",
+      "note": "intent bucket informational",
+      "value": 0.425
+    }
+  ],
+  "noisy_n": 40,
+  "per_language": [
+    {
+      "answer_accuracy": 0.2,
+      "answer_accuracy_ci": "[0.036,0.624]",
+      "answered": 5,
+      "coverage": 0.714286,
+      "coverage_ci": "[0.359,0.918]",
+      "locale": "ky",
+      "must_escalate_ci": "[0.000,1.000]",
+      "must_escalate_recall": 0.0,
+      "n": 7
+    },
+    {
+      "answer_accuracy": 0.333333,
+      "answer_accuracy_ci": "[0.061,0.792]",
+      "answered": 3,
+      "coverage": 0.428571,
+      "coverage_ci": "[0.158,0.750]",
+      "locale": "ru",
+      "must_escalate_ci": "[0.000,1.000]",
+      "must_escalate_recall": 0.0,
+      "n": 7
+    },
+    {
+      "answer_accuracy": 0.0,
+      "answer_accuracy_ci": "[0.000,0.490]",
+      "answered": 4,
+      "coverage": 0.666667,
+      "coverage_ci": "[0.300,0.903]",
+      "locale": "tg",
+      "must_escalate_ci": "[0.000,1.000]",
+      "must_escalate_recall": 0.0,
+      "n": 6
+    },
+    {
+      "answer_accuracy": 0.0,
+      "answer_accuracy_ci": "[0.000,0.658]",
+      "answered": 2,
+      "coverage": 0.333333,
+      "coverage_ci": "[0.097,0.700]",
+      "locale": "tr",
+      "must_escalate_ci": "[0.000,1.000]",
+      "must_escalate_recall": 0.0,
+      "n": 6
+    },
+    {
+      "answer_accuracy": 0.0,
+      "answer_accuracy_ci": "[0.000,0.561]",
+      "answered": 3,
+      "coverage": 0.428571,
+      "coverage_ci": "[0.158,0.750]",
+      "locale": "uz",
+      "must_escalate_ci": "[0.000,1.000]",
+      "must_escalate_recall": 0.0,
+      "n": 7
+    },
+    {
+      "answer_accuracy": 0.0,
+      "answer_accuracy_ci": "[0.000,1.000]",
+      "answered": 0,
+      "coverage": 0.0,
+      "coverage_ci": "[0.000,0.354]",
+      "locale": "zh",
+      "must_escalate_ci": "[0.000,1.000]",
+      "must_escalate_recall": 0.0,
+      "n": 7
+    }
+  ],
+  "reason_codes": [
+    {
+      "count": 23,
+      "reason_code": "LOW_CONFIDENCE",
+      "share": 1.0
+    }
+  ],
+  "replay": false
+}

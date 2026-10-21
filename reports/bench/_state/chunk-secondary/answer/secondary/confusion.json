@@ -1,0 +1,12 @@
+{
+  "coverage": 0.425,
+  "false_escalation_rate": 0.575,
+  "fn": 0,
+  "fp": 23,
+  "n": 40,
+  "precision": 0.0,
+  "recall": null,
+  "specificity": 0.425,
+  "tn": 17,
+  "tp": 0
+}

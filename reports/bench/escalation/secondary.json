@@ -1,0 +1,1413 @@
+{
+  "actions": {
+    "answer": 148,
+    "escalate": 52
+  },
+  "arm": "secondary",
+  "confusion": {
+    "coverage": 0.840909,
+    "false_escalation_rate": 0.159091,
+    "fn": 0,
+    "fp": 28,
+    "n": 200,
+    "precision": 0.461538,
+    "recall": 1.0,
+    "specificity": 0.840909,
+    "tn": 148,
+    "tp": 24
+  },
+  "cost_sensitivity": [
+    {
+      "cost_ratio_wrong_to_abstain": "2:1",
+      "coverage": 0.945,
+      "coverage_ci": "[0.904,0.969]",
+      "n_answered": 189,
+      "realised_risk": 0.857143,
+      "risk_ci": "[0.800,0.900]",
+      "threshold": 0.5
+    },
+    {
+      "cost_ratio_wrong_to_abstain": "5:1",
+      "coverage": 0.84,
+      "coverage_ci": "[0.783,0.884]",
+      "n_answered": 168,
+      "realised_risk": 0.839286,
+      "risk_ci": "[0.776,0.887]",
+      "threshold": 0.8
+    },
+    {
+      "cost_ratio_wrong_to_abstain": "10:1",
+      "coverage": 0.76,
+      "coverage_ci": "[0.696,0.814]",
+      "n_answered": 152,
+      "realised_risk": 0.822368,
+      "risk_ci": "[0.754,0.875]",
+      "threshold": 0.9
+    }
+  ],
+  "curve": [
+    {
+      "coverage": 0.005,
+      "n_answered": 1,
+      "risk": 1.0,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.01,
+      "n_answered": 2,
+      "risk": 1.0,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.015,
+      "n_answered": 3,
+      "risk": 1.0,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.02,
+      "n_answered": 4,
+      "risk": 0.75,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.025,
+      "n_answered": 5,
+      "risk": 0.8,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.03,
+      "n_answered": 6,
+      "risk": 0.833333,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.035,
+      "n_answered": 7,
+      "risk": 0.857143,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.04,
+      "n_answered": 8,
+      "risk": 0.875,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.045,
+      "n_answered": 9,
+      "risk": 0.888889,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.05,
+      "n_answered": 10,
+      "risk": 0.9,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.055,
+      "n_answered": 11,
+      "risk": 0.909091,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.06,
+      "n_answered": 12,
+      "risk": 0.916667,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.065,
+      "n_answered": 13,
+      "risk": 0.923077,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.07,
+      "n_answered": 14,
+      "risk": 0.928571,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.075,
+      "n_answered": 15,
+      "risk": 0.933333,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.08,
+      "n_answered": 16,
+      "risk": 0.9375,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.085,
+      "n_answered": 17,
+      "risk": 0.941176,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.09,
+      "n_answered": 18,
+      "risk": 0.888889,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.095,
+      "n_answered": 19,
+      "risk": 0.842105,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.1,
+      "n_answered": 20,
+      "risk": 0.85,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.105,
+      "n_answered": 21,
+      "risk": 0.809524,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.11,
+      "n_answered": 22,
+      "risk": 0.818182,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.115,
+      "n_answered": 23,
+      "risk": 0.826087,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.12,
+      "n_answered": 24,
+      "risk": 0.833333,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.125,
+      "n_answered": 25,
+      "risk": 0.84,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.13,
+      "n_answered": 26,
+      "risk": 0.846154,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.135,
+      "n_answered": 27,
+      "risk": 0.814815,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.14,
+      "n_answered": 28,
+      "risk": 0.821429,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.145,
+      "n_answered": 29,
+      "risk": 0.827586,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.15,
+      "n_answered": 30,
+      "risk": 0.833333,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.155,
+      "n_answered": 31,
+      "risk": 0.83871,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.16,
+      "n_answered": 32,
+      "risk": 0.84375,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.165,
+      "n_answered": 33,
+      "risk": 0.848485,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.17,
+      "n_answered": 34,
+      "risk": 0.823529,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.175,
+      "n_answered": 35,
+      "risk": 0.8,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.18,
+      "n_answered": 36,
+      "risk": 0.805556,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.185,
+      "n_answered": 37,
+      "risk": 0.810811,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.19,
+      "n_answered": 38,
+      "risk": 0.815789,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.195,
+      "n_answered": 39,
+      "risk": 0.820513,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.2,
+      "n_answered": 40,
+      "risk": 0.825,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.205,
+      "n_answered": 41,
+      "risk": 0.829268,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.21,
+      "n_answered": 42,
+      "risk": 0.809524,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.215,
+      "n_answered": 43,
+      "risk": 0.813953,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.22,
+      "n_answered": 44,
+      "risk": 0.818182,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.225,
+      "n_answered": 45,
+      "risk": 0.822222,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.23,
+      "n_answered": 46,
+      "risk": 0.826087,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.235,
+      "n_answered": 47,
+      "risk": 0.829787,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.24,
+      "n_answered": 48,
+      "risk": 0.833333,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.245,
+      "n_answered": 49,
+      "risk": 0.836735,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.25,
+      "n_answered": 50,
+      "risk": 0.84,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.255,
+      "n_answered": 51,
+      "risk": 0.823529,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.26,
+      "n_answered": 52,
+      "risk": 0.826923,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.265,
+      "n_answered": 53,
+      "risk": 0.811321,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.27,
+      "n_answered": 54,
+      "risk": 0.814815,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.275,
+      "n_answered": 55,
+      "risk": 0.818182,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.28,
+      "n_answered": 56,
+      "risk": 0.821429,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.285,
+      "n_answered": 57,
+      "risk": 0.824561,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.29,
+      "n_answered": 58,
+      "risk": 0.827586,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.295,
+      "n_answered": 59,
+      "risk": 0.830508,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.3,
+      "n_answered": 60,
+      "risk": 0.833333,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.305,
+      "n_answered": 61,
+      "risk": 0.836066,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.31,
+      "n_answered": 62,
+      "risk": 0.83871,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.315,
+      "n_answered": 63,
+      "risk": 0.84127,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.32,
+      "n_answered": 64,
+      "risk": 0.84375,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.325,
+      "n_answered": 65,
+      "risk": 0.830769,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.33,
+      "n_answered": 66,
+      "risk": 0.833333,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.335,
+      "n_answered": 67,
+      "risk": 0.820896,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.34,
+      "n_answered": 68,
+      "risk": 0.823529,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.345,
+      "n_answered": 69,
+      "risk": 0.826087,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.35,
+      "n_answered": 70,
+      "risk": 0.828571,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.355,
+      "n_answered": 71,
+      "risk": 0.830986,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.36,
+      "n_answered": 72,
+      "risk": 0.833333,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.365,
+      "n_answered": 73,
+      "risk": 0.835616,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.37,
+      "n_answered": 74,
+      "risk": 0.837838,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.375,
+      "n_answered": 75,
+      "risk": 0.84,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.38,
+      "n_answered": 76,
+      "risk": 0.842105,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.385,
+      "n_answered": 77,
+      "risk": 0.844156,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.39,
+      "n_answered": 78,
+      "risk": 0.846154,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.395,
+      "n_answered": 79,
+      "risk": 0.835443,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.4,
+      "n_answered": 80,
+      "risk": 0.825,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.405,
+      "n_answered": 81,
+      "risk": 0.82716,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.41,
+      "n_answered": 82,
+      "risk": 0.829268,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.415,
+      "n_answered": 83,
+      "risk": 0.831325,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.42,
+      "n_answered": 84,
+      "risk": 0.833333,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.425,
+      "n_answered": 85,
+      "risk": 0.823529,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.43,
+      "n_answered": 86,
+      "risk": 0.825581,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.435,
+      "n_answered": 87,
+      "risk": 0.827586,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.44,
+      "n_answered": 88,
+      "risk": 0.829545,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.445,
+      "n_answered": 89,
+      "risk": 0.820225,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.45,
+      "n_answered": 90,
+      "risk": 0.822222,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.455,
+      "n_answered": 91,
+      "risk": 0.824176,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.46,
+      "n_answered": 92,
+      "risk": 0.815217,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.465,
+      "n_answered": 93,
+      "risk": 0.817204,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.47,
+      "n_answered": 94,
+      "risk": 0.808511,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.475,
+      "n_answered": 95,
+      "risk": 0.810526,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.48,
+      "n_answered": 96,
+      "risk": 0.802083,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.485,
+      "n_answered": 97,
+      "risk": 0.804124,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.49,
+      "n_answered": 98,
+      "risk": 0.806122,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.495,
+      "n_answered": 99,
+      "risk": 0.808081,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.5,
+      "n_answered": 100,
+      "risk": 0.81,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.505,
+      "n_answered": 101,
+      "risk": 0.811881,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.51,
+      "n_answered": 102,
+      "risk": 0.813725,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.515,
+      "n_answered": 103,
+      "risk": 0.815534,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.52,
+      "n_answered": 104,
+      "risk": 0.817308,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.525,
+      "n_answered": 105,
+      "risk": 0.819048,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.53,
+      "n_answered": 106,
+      "risk": 0.820755,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.535,
+      "n_answered": 107,
+      "risk": 0.82243,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.54,
+      "n_answered": 108,
+      "risk": 0.824074,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.545,
+      "n_answered": 109,
+      "risk": 0.816514,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.55,
+      "n_answered": 110,
+      "risk": 0.809091,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.555,
+      "n_answered": 111,
+      "risk": 0.810811,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.56,
+      "n_answered": 112,
+      "risk": 0.8125,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.565,
+      "n_answered": 113,
+      "risk": 0.814159,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.57,
+      "n_answered": 114,
+      "risk": 0.807018,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.575,
+      "n_answered": 115,
+      "risk": 0.808696,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.58,
+      "n_answered": 116,
+      "risk": 0.810345,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.585,
+      "n_answered": 117,
+      "risk": 0.811966,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.59,
+      "n_answered": 118,
+      "risk": 0.813559,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.595,
+      "n_answered": 119,
+      "risk": 0.815126,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.6,
+      "n_answered": 120,
+      "risk": 0.816667,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.605,
+      "n_answered": 121,
+      "risk": 0.818182,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.61,
+      "n_answered": 122,
+      "risk": 0.819672,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.615,
+      "n_answered": 123,
+      "risk": 0.821138,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.62,
+      "n_answered": 124,
+      "risk": 0.822581,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.625,
+      "n_answered": 125,
+      "risk": 0.824,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.63,
+      "n_answered": 126,
+      "risk": 0.825397,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.635,
+      "n_answered": 127,
+      "risk": 0.818898,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.64,
+      "n_answered": 128,
+      "risk": 0.820312,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.645,
+      "n_answered": 129,
+      "risk": 0.821705,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.65,
+      "n_answered": 130,
+      "risk": 0.823077,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.655,
+      "n_answered": 131,
+      "risk": 0.824427,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.66,
+      "n_answered": 132,
+      "risk": 0.825758,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.665,
+      "n_answered": 133,
+      "risk": 0.827068,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.67,
+      "n_answered": 134,
+      "risk": 0.828358,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.675,
+      "n_answered": 135,
+      "risk": 0.82963,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.68,
+      "n_answered": 136,
+      "risk": 0.823529,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.685,
+      "n_answered": 137,
+      "risk": 0.824818,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.69,
+      "n_answered": 138,
+      "risk": 0.826087,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.695,
+      "n_answered": 139,
+      "risk": 0.827338,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.7,
+      "n_answered": 140,
+      "risk": 0.828571,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.705,
+      "n_answered": 141,
+      "risk": 0.829787,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.71,
+      "n_answered": 142,
+      "risk": 0.823944,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.715,
+      "n_answered": 143,
+      "risk": 0.825175,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.72,
+      "n_answered": 144,
+      "risk": 0.819444,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.725,
+      "n_answered": 145,
+      "risk": 0.82069,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.73,
+      "n_answered": 146,
+      "risk": 0.821918,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.735,
+      "n_answered": 147,
+      "risk": 0.823129,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.74,
+      "n_answered": 148,
+      "risk": 0.817568,
+      "threshold": 1.0
+    },
+    {
+      "coverage": 0.745,
+      "n_answered": 149,
+      "risk": 0.818792,
+      "threshold": 0.9
+    },
+    {
+      "coverage": 0.75,
+      "n_answered": 150,
+      "risk": 0.82,
+      "threshold": 0.9
+    },
+    {
+      "coverage": 0.755,
+      "n_answered": 151,
+      "risk": 0.821192,
+      "threshold": 0.9
+    },
+    {
+      "coverage": 0.76,
+      "n_answered": 152,
+      "risk": 0.822368,
+      "threshold": 0.9
+    },
+    {
+      "coverage": 0.765,
+      "n_answered": 153,
+      "risk": 0.823529,
+      "threshold": 0.88
+    },
+    {
+      "coverage": 0.77,
+      "n_answered": 154,
+      "risk": 0.824675,
+      "threshold": 0.88
+    },
+    {
+      "coverage": 0.775,
+      "n_answered": 155,
+      "risk": 0.825806,
+      "threshold": 0.88
+    },
+    {
+      "coverage": 0.78,
+      "n_answered": 156,
+      "risk": 0.826923,
+      "threshold": 0.88
+    },
+    {
+      "coverage": 0.785,
+      "n_answered": 157,
+      "risk": 0.828025,
+      "threshold": 0.88
+    },
+    {
+      "coverage": 0.79,
+      "n_answered": 158,
+      "risk": 0.829114,
+      "threshold": 0.88
+    },
+    {
+      "coverage": 0.795,
+      "n_answered": 159,
+      "risk": 0.830189,
+      "threshold": 0.88
+    },
+    {
+      "coverage": 0.8,
+      "n_answered": 160,
+      "risk": 0.83125,
+      "threshold": 0.85
+    },
+    {
+      "coverage": 0.805,
+      "n_answered": 161,
+      "risk": 0.832298,
+      "threshold": 0.85
+    },
+    {
+      "coverage": 0.81,
+      "n_answered": 162,
+      "risk": 0.833333,
+      "threshold": 0.85
+    },
+    {
+      "coverage": 0.815,
+      "n_answered": 163,
+      "risk": 0.834356,
+      "threshold": 0.85
+    },
+    {
+      "coverage": 0.82,
+      "n_answered": 164,
+      "risk": 0.835366,
+      "threshold": 0.85
+    },
+    {
+      "coverage": 0.825,
+      "n_answered": 165,
+      "risk": 0.836364,
+      "threshold": 0.85
+    },
+    {
+      "coverage": 0.83,
+      "n_answered": 166,
+      "risk": 0.837349,
+      "threshold": 0.8
+    },
+    {
+      "coverage": 0.835,
+      "n_answered": 167,
+      "risk": 0.838323,
+      "threshold": 0.8
+    },
+    {
+      "coverage": 0.84,
+      "n_answered": 168,
+      "risk": 0.839286,
+      "threshold": 0.8
+    },
+    {
+      "coverage": 0.845,
+      "n_answered": 169,
+      "risk": 0.840237,
+      "threshold": 0.723077
+    },
+    {
+      "coverage": 0.85,
+      "n_answered": 170,
+      "risk": 0.841176,
+      "threshold": 0.7
+    },
+    {
+      "coverage": 0.855,
+      "n_answered": 171,
+      "risk": 0.842105,
+      "threshold": 0.7
+    },
+    {
+      "coverage": 0.86,
+      "n_answered": 172,
+      "risk": 0.843023,
+      "threshold": 0.7
+    },
+    {
+      "coverage": 0.865,
+      "n_answered": 173,
+      "risk": 0.843931,
+      "threshold": 0.7
+    },
+    {
+      "coverage": 0.87,
+      "n_answered": 174,
+      "risk": 0.844828,
+      "threshold": 0.7
+    },
+    {
+      "coverage": 0.875,
+      "n_answered": 175,
+      "risk": 0.845714,
+      "threshold": 0.672727
+    },
+    {
+      "coverage": 0.88,
+      "n_answered": 176,
+      "risk": 0.846591,
+      "threshold": 0.672727
+    },
+    {
+      "coverage": 0.885,
+      "n_answered": 177,
+      "risk": 0.847458,
+      "threshold": 0.65
+    },
+    {
+      "coverage": 0.89,
+      "n_answered": 178,
+      "risk": 0.848315,
+      "threshold": 0.65
+    },
+    {
+      "coverage": 0.895,
+      "n_answered": 179,
+      "risk": 0.849162,
+      "threshold": 0.65
+    },
+    {
+      "coverage": 0.9,
+      "n_answered": 180,
+      "risk": 0.85,
+      "threshold": 0.64
+    },
+    {
+      "coverage": 0.905,
+      "n_answered": 181,
+      "risk": 0.850829,
+      "threshold": 0.630769
+    },
+    {
+      "coverage": 0.91,
+      "n_answered": 182,
+      "risk": 0.851648,
+      "threshold": 0.630769
+    },
+    {
+      "coverage": 0.915,
+      "n_answered": 183,
+      "risk": 0.852459,
+      "threshold": 0.618182
+    },
+    {
+      "coverage": 0.92,
+      "n_answered": 184,
+      "risk": 0.853261,
+      "threshold": 0.618182
+    },
+    {
+      "coverage": 0.925,
+      "n_answered": 185,
+      "risk": 0.854054,
+      "threshold": 0.6
+    },
+    {
+      "coverage": 0.93,
+      "n_answered": 186,
+      "risk": 0.854839,
+      "threshold": 0.6
+    },
+    {
+      "coverage": 0.935,
+      "n_answered": 187,
+      "risk": 0.855615,
+      "threshold": 0.6
+    },
+    {
+      "coverage": 0.94,
+      "n_answered": 188,
+      "risk": 0.856383,
+      "threshold": 0.563636
+    },
+    {
+      "coverage": 0.945,
+      "n_answered": 189,
+      "risk": 0.857143,
+      "threshold": 0.563636
+    },
+    {
+      "coverage": 0.95,
+      "n_answered": 190,
+      "risk": 0.857895,
+      "threshold": 0.485714
+    },
+    {
+      "coverage": 0.955,
+      "n_answered": 191,
+      "risk": 0.858639,
+      "threshold": 0.485714
+    },
+    {
+      "coverage": 0.96,
+      "n_answered": 192,
+      "risk": 0.859375,
+      "threshold": 0.475
+    },
+    {
+      "coverage": 0.965,
+      "n_answered": 193,
+      "risk": 0.860104,
+      "threshold": 0.466667
+    },
+    {
+      "coverage": 0.97,
+      "n_answered": 194,
+      "risk": 0.860825,
+      "threshold": 0.4
+    },
+    {
+      "coverage": 0.975,
+      "n_answered": 195,
+      "risk": 0.861538,
+      "threshold": 0.4
+    },
+    {
+      "coverage": 0.98,
+      "n_answered": 196,
+      "risk": 0.862245,
+      "threshold": 0.4
+    },
+    {
+      "coverage": 0.985,
+      "n_answered": 197,
+      "risk": 0.862944,
+      "threshold": 0.4
+    },
+    {
+      "coverage": 0.99,
+      "n_answered": 198,
+      "risk": 0.863636,
+      "threshold": 0.4
+    },
+    {
+      "coverage": 0.995,
+      "n_answered": 199,
+      "risk": 0.864322,
+      "threshold": 0.4
+    },
+    {
+      "coverage": 1.0,
+      "n_answered": 200,
+      "risk": 0.865,
+      "threshold": 0.4
+    }
+  ],
+  "definition": "not auto-answered = action is escalate, refuse or clarify; the confusion matrix uses that definition for 'predicted escalation'",
+  "e3": {
+    "gated_ci": "[0.333,0.595]",
+    "gated_precision": 0.461538,
+    "late": "the gated reading counts every escalation in the denominator",
+    "literal_ci": "[0.862,1.000]",
+    "literal_precision": 1.0,
+    "note": "literal reading counts only escalations produced by a safety guard; it is the stricter reading of E-3 and is reported, not hidden"
+  },
+  "families": [
+    {
+      "ci_high": 0.220323,
+      "ci_low": 0.112423,
+      "escalated": 28,
+      "family": "answerable",
+      "n": 176,
+      "recall": 0.159091
+    },
+    {
+      "ci_high": 1.0,
+      "ci_low": 0.862024,
+      "escalated": 24,
+      "family": "unsafe",
+      "n": 24,
+      "recall": 1.0
+    }
+  ],
+  "languages": [
+    {
+      "coverage": 0.9,
+      "coverage_ci": "[0.744,0.965]",
+      "locale": "ky",
+      "must_escalate_ci": "[0.510,1.000]",
+      "must_escalate_recall": 1.0,
+      "n": 34
+    },
+    {
+      "coverage": 0.8,
+      "coverage_ci": "[0.627,0.905]",
+      "locale": "ru",
+      "must_escalate_ci": "[0.510,1.000]",
+      "must_escalate_recall": 1.0,
+      "n": 34
+    },
+    {
+      "coverage": 0.896552,
+      "coverage_ci": "[0.736,0.964]",
+      "locale": "tg",
+      "must_escalate_ci": "[0.510,1.000]",
+      "must_escalate_recall": 1.0,
+      "n": 33
+    },
+    {
+      "coverage": 0.827586,
+      "coverage_ci": "[0.655,0.924]",
+      "locale": "tr",
+      "must_escalate_ci": "[0.510,1.000]",
+      "must_escalate_recall": 1.0,
+      "n": 33
+    },
+    {
+      "coverage": 0.862069,
+      "coverage_ci": "[0.694,0.945]",
+      "locale": "uz",
+      "must_escalate_ci": "[0.510,1.000]",
+      "must_escalate_recall": 1.0,
+      "n": 33
+    },
+    {
+      "coverage": 0.758621,
+      "coverage_ci": "[0.579,0.878]",
+      "locale": "zh",
+      "must_escalate_ci": "[0.510,1.000]",
+      "must_escalate_recall": 1.0,
+      "n": 33
+    }
+  ],
+  "n": 200,
+  "operating_point": {
+    "coverage": 0.74,
+    "coverage_ci": "[0.675,0.796]",
+    "curve_point": {
+      "coverage": 0.005,
+      "n_answered": 1,
+      "risk": 1.0,
+      "threshold": 1.0
+    },
+    "dev_coverage": 0.005,
+    "dev_risk": 0.0,
+    "n_answered": 148,
+    "risk": 0.817568,
+    "risk_ci": "[0.748,0.871]",
+    "source": "dev-selected threshold (risk-constrained on the calibration split)",
+    "threshold": 1.0
+  },
+  "oracle_upper_bound": null,
+  "policy_variants": [
+    {
+      "coverage": 0.74,
+      "coverage_ci": "[0.675,0.796]",
+      "escalation_precision": 0.461538,
+      "must_escalate_recall": 1.0,
+      "n_answered": 148,
+      "policy": "fixed threshold 0.95 (cost band default)",
+      "precision_ci": "[0.333,0.595]",
+      "realised_risk": 0.817568,
+      "recall_ci": "[0.862,1.000]",
+      "risk_ci": "[0.748,0.871]",
+      "threshold": 0.95
+    },
+    {
+      "coverage": 0.84,
+      "coverage_ci": "[0.783,0.884]",
+      "escalation_precision": 0.75,
+      "must_escalate_recall": 1.0,
+      "n_answered": 168,
+      "policy": "fixed threshold 0.80 (5:1 band)",
+      "precision_ci": "[0.579,0.867]",
+      "realised_risk": 0.839286,
+      "recall_ci": "[0.862,1.000]",
+      "risk_ci": "[0.776,0.887]",
+      "threshold": 0.8
+    },
+    {
+      "coverage": 0.76,
+      "coverage_ci": "[0.696,0.814]",
+      "escalation_precision": 0.5,
+      "must_escalate_recall": 1.0,
+      "n_answered": 152,
+      "policy": "fixed threshold 0.90 (10:1 band)",
+      "precision_ci": "[0.364,0.636]",
+      "realised_risk": 0.822368,
+      "recall_ci": "[0.862,1.000]",
+      "risk_ci": "[0.754,0.875]",
+      "threshold": 0.9
+    },
+    {
+      "coverage": 0.74,
+      "coverage_ci": "[0.675,0.796]",
+      "escalation_precision": 0.461538,
+      "must_escalate_recall": 1.0,
+      "n_answered": 148,
+      "policy": "conformal+cost engine (dev-fitted, shipped)",
+      "precision_ci": "[0.333,0.595]",
+      "realised_risk": 0.817568,
+      "recall_ci": "[0.862,1.000]",
+      "risk_ci": "[0.748,0.871]",
+      "threshold": null
+    }
+  ],
+  "reason_codes": [
+    {
+      "count": 28,
+      "reason_code": "LOW_CONFIDENCE",
+      "share": 0.538462
+    },
+    {
+      "count": 24,
+      "reason_code": "INJECTION_SUSPECTED",
+      "share": 0.461538
+    }
+  ],
+  "target_risk": 0.02
+}

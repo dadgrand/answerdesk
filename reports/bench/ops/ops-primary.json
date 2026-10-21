@@ -1,0 +1,95 @@
+{
+  "answered": 148,
+  "arm": "primary",
+  "hardware": "Windows 11 / Python 3.12.10",
+  "latency": [
+    {
+      "mean_ms": 1.783,
+      "n": 200,
+      "p50_ms": 1.439,
+      "p95_ms": 2.541,
+      "stage": "retrieval"
+    },
+    {
+      "mean_ms": 4132.559,
+      "n": 200,
+      "p50_ms": 2618.221,
+      "p95_ms": 14116.757,
+      "stage": "generation"
+    },
+    {
+      "mean_ms": 10352.802,
+      "n": 200,
+      "p50_ms": 3409.631,
+      "p95_ms": 51578.15,
+      "stage": "judge"
+    },
+    {
+      "mean_ms": 14487.144,
+      "n": 200,
+      "p50_ms": 7748.476,
+      "p95_ms": 55107.455,
+      "stage": "total"
+    }
+  ],
+  "n": 200,
+  "pricing": [
+    {
+      "input_usd_per_1k_tokens": 0.0,
+      "model": "deepseek-chat",
+      "output_usd_per_1k_tokens": 0.0,
+      "retrieved_at": "2026-10-20",
+      "source": "placeholder — replace with the provider's published price before quoting USD"
+    },
+    {
+      "input_usd_per_1k_tokens": 0.0,
+      "model": "deepseek-flash",
+      "output_usd_per_1k_tokens": 0.0,
+      "retrieved_at": "2026-10-21",
+      "source": "key used for the benchmark exposed no billing statement; token counts recorded"
+    },
+    {
+      "input_usd_per_1k_tokens": 0.0,
+      "model": "fake-model",
+      "output_usd_per_1k_tokens": 0.0,
+      "retrieved_at": "2026-10-20",
+      "source": "deterministic CI double — always free"
+    },
+    {
+      "input_usd_per_1k_tokens": 0.0,
+      "model": "gpt-4o-mini",
+      "output_usd_per_1k_tokens": 0.0,
+      "retrieved_at": "2026-10-20",
+      "source": "placeholder — replace with the provider's published price before quoting USD"
+    },
+    {
+      "input_usd_per_1k_tokens": 0.0,
+      "model": "local-model",
+      "output_usd_per_1k_tokens": 0.0,
+      "retrieved_at": "2026-10-20",
+      "source": "self-hosted (vLLM / llama.cpp / Ollama): electricity only, recorded as 0"
+    },
+    {
+      "input_usd_per_1k_tokens": 0.0,
+      "model": "qwen3.6-35b-a3b",
+      "output_usd_per_1k_tokens": 0.0,
+      "retrieved_at": "2026-10-21",
+      "source": "NeuralDeep free tariff at measurement — no per-token charge observed"
+    },
+    {
+      "input_usd_per_1k_tokens": 0.0,
+      "model": "qwen3.6-35b-a3b-noreason",
+      "output_usd_per_1k_tokens": 0.0,
+      "retrieved_at": "2026-10-21",
+      "source": "NeuralDeep free tariff at measurement — no per-token charge observed"
+    }
+  ],
+  "tokens": {
+    "input_per_answer": 3255.6,
+    "input_total": 481826,
+    "output_per_answer": 511.9,
+    "output_total": 75760
+  },
+  "usd_per_answer": 0.0,
+  "usd_total": 0.0
+}

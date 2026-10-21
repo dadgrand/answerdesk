@@ -328,6 +328,10 @@ def _answer_block(summary: Mapping[str, Any], run: Path) -> list[str]:
         lines.append("")
         lines.append(_model_alias_note())
         lines.append("")
+        note = summary.get("models", {}).get(arm, {}).get("note")
+        if note:
+            lines.append(f"_{note}_")
+            lines.append("")
         lines.append(
             f"Cross-family judging: **{'yes' if judge.get('cross_family') else 'no'}** "
             f"(`{judge.get('generator_family')}` vs `{judge.get('judge_family')}`); "
@@ -796,6 +800,88 @@ def _error_taxonomy(run: Path) -> list[str]:
     return lines
 
 
+def _calibration_verdict_block(summary: Mapping[str, Any]) -> list[str]:
+    verdict = summary.get("calibration_verdict")
+    if not verdict:
+        return []
+    held = bool(verdict.get("risk_control_held"))
+    lines = ["## Calibration verdict (does risk control hold?)", ""]
+    lines.append(
+        f"Conformal α (informational bucket) = {verdict.get('target_alpha')}, operating-point "
+        f"target {verdict.get('operating_point_target')}; realised risk on the answered set of "
+        f"the primary arm = **{verdict.get('realised_risk')}**. "
+        + ("Risk control **held**." if held else "Risk control **did not hold**.")
+    )
+    lines.append("")
+    lines.append(f"_{verdict.get('reason', '')}_")
+    lines.append("")
+    if not held:
+        lines.append(
+            "This is reported as a measured negative result, not smoothed over: the "
+            "deterministic overlap confidence saturates at 1.0 on most queries, so the "
+            "split-conformal quantile collapses to zero and the threshold separates almost "
+            "nothing. A calibrated confidence signal (the t8 judge-based scorer, or a "
+            "monotone calibration map fitted on dev) is required before any risk-control "
+            "claim can be made; the shipped default in this repository remains the "
+            "config-driven threshold, and README/claim language must not assert calibrated "
+            "escalation on this evidence."
+        )
+        lines.append("")
+    return lines
+
+
+def _scorer_block(summary: Mapping[str, Any]) -> list[str]:
+    payload = summary.get("calibration_scorer")
+    if not payload:
+        return []
+    lines = ["## Calibrated answerability scorer (replaces the saturated overlap score)", ""]
+    lines.append(
+        f"L2 logistic regression fitted on **dev answers only** (n={payload.get('n_dev')}, "
+        f"l2={payload.get('l2')}), features: {', '.join(payload.get('features', []))}. "
+        f"Split-conformal q-hat on the calibrated dev scores = {payload.get('q_hat')} "
+        f"(threshold {payload.get('threshold')}). Evaluated on the held-out test turns "
+        f"(n={payload.get('n_test')}); no answer was regenerated."
+    )
+    lines.append("")
+    rows = []
+    for name, value in payload.get("test", {}).items():
+        rows.append(
+            [
+                value.get("scorer", name),
+                value.get("coverage"),
+                value.get("realised_risk"),
+                value.get("risk_ci"),
+                value.get("ece"),
+                "yes" if value.get("risk_control_held") else "no",
+            ]
+        )
+    lines.append(
+        _table(
+            ("scorer", "coverage", "realised risk", "risk 95% CI", "ECE", "risk control held"), rows
+        )
+    )
+    lines.append("")
+    verdict = payload.get("verdict", {})
+    lines.append(f"**{verdict.get('note', '')}**")
+    lines.append("")
+    lines.append(
+        f"Gate rule (stated explicitly): {payload.get('risk_gate_rule', '')} "
+        f"Label source: {payload.get('label_source', '')}. {payload.get('label_caveat', '')} "
+        f"n_dev = {payload.get('n_dev')}, so the fit is small-n; the CIs above are the honest "
+        "measure of that."
+    )
+    lines.append("")
+    lines.append(
+        "The calibrated score is much better *calibrated* than the raw overlap score "
+        f"(ECE {payload['test']['calibrated_conformal']['ece']} vs "
+        f"{payload['test']['raw_overlap']['ece']}) but has **not enough discriminative power** "
+        "to deliver the 5% guarantee on this corpus: at the conformal threshold the realised "
+        "risk is far above alpha. That is a measured negative result and is reported as such."
+    )
+    lines.append("")
+    return lines
+
+
 def _external_block() -> list[str]:
     """External validity is a separate deliverable (t19); state the boundary explicitly."""
     doc = REPO_ROOT / "docs" / "external-validity.md"
@@ -857,10 +943,12 @@ def _limitations(summary: Mapping[str, Any]) -> list[str]:
         "quality for Uzbek, Tajik or Kyrgyz, for which no public qrels exist.",
         "8. **Provider drift.** Hosted models and prices change; the run records model ids, "
         "token counts and the pricing snapshot date so a later run can be compared honestly.",
-        "9. **Reasoning variant.** The primary generator is `qwen3.6-35b-a3b-noreason`. The "
-        "reasoning variant needs a much larger JSON budget to finish; the side study reports "
-        "its measured success rate, latency and cost at higher budgets, and no headline number "
-        "depends on it.",
+        "9. **Reasoning variant.** The primary generator is `qwen3.6-35b-a3b-noreason` "
+        "(measured: the reasoning variant spent its whole JSON budget on the trace in a "
+        "direct probe). The planned side study at 8192/16384 tokens was **not run in this "
+        "window**: the two free subscriptions were spent on the answer arms after the session "
+        "cooldown, so the reasoning variant has probe evidence only and no headline number "
+        "depends on it. `scripts/reasoning-side-study.py` reproduces it when quota allows.",
         "10. **Noisy slice is small.** The free-form block is reported per example so a reader "
         "can see individual failures; it is not a population estimate for arbitrary malformed "
         "input.",
@@ -966,6 +1054,8 @@ def render(run: Path) -> str:
         blocks.append("")
     blocks.extend(_retrieval_block(summary, run))
     blocks.extend(_answer_block(summary, run))
+    blocks.extend(_calibration_verdict_block(summary))
+    blocks.extend(_scorer_block(summary))
     blocks.extend(_escalation_block(summary, run))
     blocks.extend(_chunking_block(run))
     blocks.extend(_side_study_block(run))

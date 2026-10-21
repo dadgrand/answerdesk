@@ -250,7 +250,9 @@ def _run_benchmark(
         )
     if replay:
         emit("REPLAY-MODE: no API key detected or forced; numbers are diagnostics")
-    emit(f"artifacts: {out_dir}")
+    # run_bench redirects a replay run that would overwrite live evidence, so report the
+    # directory that actually holds this run's artefacts.
+    emit(f"artifacts: {summary.get('run_dir', out_dir)}")
     return 0
 
 

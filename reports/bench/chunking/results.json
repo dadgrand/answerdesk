@@ -1,0 +1,44 @@
+{
+  "cases": 240,
+  "naive_overlap": 150,
+  "naive_window": 900,
+  "note": "gold spans are carried over by character overlap, so both chunkings are scored against the same evidence; the naive arm ignores headings, tables and FAQ pairs",
+  "rows": [
+    {
+      "arm": "structure-bm25",
+      "chunks": 7229,
+      "n": 240,
+      "recall_any@10": 0.991667,
+      "recall_any@10_ci": "[0.970,0.998]",
+      "recall_any@20": 0.995833,
+      "recall_any@20_ci": "[0.977,0.999]"
+    },
+    {
+      "arm": "structure-dense",
+      "chunks": 7229,
+      "n": 240,
+      "recall_any@10": 0.925,
+      "recall_any@10_ci": "[0.885,0.952]",
+      "recall_any@20": 0.945833,
+      "recall_any@20_ci": "[0.910,0.968]"
+    },
+    {
+      "arm": "naive-bm25",
+      "chunks": 2924,
+      "n": 240,
+      "recall_any@10": 0.995833,
+      "recall_any@10_ci": "[0.977,0.999]",
+      "recall_any@20": 0.995833,
+      "recall_any@20_ci": "[0.977,0.999]"
+    },
+    {
+      "arm": "naive-dense",
+      "chunks": 2924,
+      "n": 240,
+      "recall_any@10": 0.929167,
+      "recall_any@10_ci": "[0.890,0.955]",
+      "recall_any@20": 0.958333,
+      "recall_any@20_ci": "[0.925,0.977]"
+    }
+  ]
+}

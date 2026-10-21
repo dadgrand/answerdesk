@@ -1,0 +1,58 @@
+{
+  "alpha_by_bucket": {
+    "account_legal": 0.01,
+    "informational": 0.05,
+    "transactional": 0.02
+  },
+  "buckets": [
+    {
+      "alpha": 0.05,
+      "bucket": "informational",
+      "coverage_lower_bound": 0.95,
+      "feasible": true,
+      "n": 200,
+      "pooled_fallback": false,
+      "q_hat": 0.436364,
+      "rank": 191
+    },
+    {
+      "alpha": 0.02,
+      "bucket": "transactional",
+      "coverage_lower_bound": 0.98,
+      "feasible": true,
+      "n": 200,
+      "pooled_fallback": true,
+      "q_hat": 0.533333,
+      "rank": 197
+    },
+    {
+      "alpha": 0.01,
+      "bucket": "account_legal",
+      "coverage_lower_bound": 0.99,
+      "feasible": true,
+      "n": 200,
+      "pooled_fallback": true,
+      "q_hat": 0.6,
+      "rank": 199
+    }
+  ],
+  "corpus_version": "corpus-77d7d081813738a6",
+  "costs": {
+    "c_abstain": 0.1,
+    "c_delay": 0.05,
+    "c_wrong": 1.0
+  },
+  "n": 200,
+  "note": "split-conformal thresholds fitted on the dev split; the test split is never used for fitting (INV-09)",
+  "operating_point_selection": {
+    "dev_coverage": 0.005,
+    "dev_coverage_at_min_risk": 0.005,
+    "dev_min_risk": 0.0,
+    "dev_n": 200,
+    "dev_risk": 0.0,
+    "feasible": true,
+    "source": "dev-selected threshold (risk-constrained on the calibration split)",
+    "threshold": 1.0
+  },
+  "split": "dev"
+}

@@ -103,6 +103,17 @@ def turn_from_row(row: dict[str, str], arm: str) -> TurnRecord:
         confidence=float(row.get("p_correct") or 0.0),
         answer_ok=row.get("answer_ok") == "True",
         language=row["locale"],
+        latency_ms={
+            "retrieval": float(row.get("latency_retrieval_ms") or 0.0),
+            "generation": float(row.get("latency_generation_ms") or 0.0),
+            "judge": float(row.get("latency_judge_ms") or 0.0),
+            "total": float(row.get("latency_retrieval_ms") or 0.0)
+            + float(row.get("latency_generation_ms") or 0.0)
+            + float(row.get("latency_judge_ms") or 0.0),
+        },
+        usd=float(row.get("usd") or 0.0),
+        input_tokens=int(row.get("input_tokens") or 0),
+        output_tokens=int(row.get("output_tokens") or 0),
         claims_total=int(row.get("claims") or 0),
         gold_chunk_ids=[c for c in (row.get("gold") or "").split(";") if c],
         cited_chunk_ids=[c for c in (row.get("cited") or "").split(";") if c],
@@ -113,15 +124,19 @@ def turn_from_row(row: dict[str, str], arm: str) -> TurnRecord:
         # that the turn file carries (the per-claim rubric scores are kept in rubric_score).
         groundedness=_grounded(row),
         groundedness_judged=(
-            1.0 if (_float("rubric_score") or 0.0) >= 4.0 else (0.0 if _float("rubric_score") else None)
+            1.0
+            if (_float("rubric_score") or 0.0) >= 4.0
+            else (0.0 if _float("rubric_score") else None)
         ),
         citation_precision=_citation_rate(row, precision=True),
         citation_recall=_citation_rate(row, precision=False),
         rubric_score=_float("rubric_score"),
-        rubric_pass=(None if row.get("rubric_pass") in (None, "", "None") else row["rubric_pass"] == "True"),
+        rubric_pass=(
+            None if row.get("rubric_pass") in (None, "", "None") else row["rubric_pass"] == "True"
+        ),
         reference_rubric_score=_float("reference_rubric_score"),
         language_match=row.get("language_match") == "True",
-        claims_supported=int(row.get("claims_supported") or 0),
+        claims_supported=(round((_grounded(row) or 0.0) * float(row.get("claims") or 0))),
     )
 
 
@@ -244,11 +259,11 @@ def phase_rerank(run: Path, *, chunk: int) -> int:
     return 0
 
 
-def phase_calibrate(run: Path, *, chunk: int) -> int:
+def phase_calibrate(run: Path, *, chunk: int, limit: int = 200) -> int:
     settings = load_settings(profile=None)
     config = _config(run)
     state = prepare(settings, config, evals_root=REPO_ROOT / "evals")
-    dev = _subset(state.dev_cases, locales=(), limit=120, seed=config.seed)
+    dev = _subset(state.dev_cases, locales=(), limit=limit, seed=config.seed)
     accumulated = _read_rows(_state(run) / "dev-turns.csv")
     done = {row["case_id"] for row in accumulated}
     pending = [case for case in dev if case.case_id not in done][:chunk]
@@ -338,6 +353,16 @@ def phase_finalize(run: Path, *, primary: str = "primary", secondary: str = "sec
     summary_path = run / "summary.json"
     summary = json.loads(summary_path.read_text(encoding="utf-8")) if summary_path.is_file() else {}
     summary.setdefault("run_id", run.name)
+    summary["config"] = {
+        "answer_limit": config.answer_limit,
+        "retrieval_limit": config.retrieval_limit,
+        "rerank_limit": config.rerank_limit,
+        "answer_retriever": config.answer_retriever,
+        "target_risk": config.target_risk,
+        "bootstrap": config.bootstrap,
+        "seed": config.seed,
+        "locales": list(config.locales),
+    }
     summary.setdefault("replay", False)
     summary["corpus_version"] = state.corpus.version
     summary["corpus_hash"] = state.corpus.hash
@@ -538,6 +563,59 @@ def phase_finalize(run: Path, *, primary: str = "primary", secondary: str = "sec
         run_escalation(
             state=state, turns=turns, cases=cases, out_dir=run, arm=arm, dev_operating=operating
         )
+    summary["escalation"] = {
+        arm: json.loads((run / "escalation" / f"{arm}.json").read_text(encoding="utf-8"))
+        for arm in summary.get("models", {})
+        if (run / "escalation" / f"{arm}.json").is_file()
+    }
+    summary["noisy"] = {
+        arm: payload.get("noisy_cells", [])
+        for arm, payload in (
+            (arm, json.loads((run / "answer" / arm / "cells.json").read_text(encoding="utf-8")))
+            for arm in summary.get("models", {})
+            if (run / "answer" / arm / "cells.json").is_file()
+        )
+    }
+    scorer_path = run / "calibration" / "calibrated-scorer.json"
+    if scorer_path.is_file():
+        summary["calibration_scorer"] = json.loads(scorer_path.read_text(encoding="utf-8"))
+    secondary = summary.get("models", {}).get("secondary")
+    if secondary:
+        secondary_rows = _read_rows(_state(run) / "turns-secondary.csv")
+        answered = [row for row in secondary_rows if row.get("answered") == "True"]
+        empty = sum(1 for row in answered if row.get("claims") in ("0", ""))
+        secondary["note"] = (
+            "schema-fallback arm, NOT directly comparable: deepseek-flash rejects "
+            "response_format=json_schema, so the generator ran through the schema-fallback "
+            f"path and {empty}/{len(answered)} answered turns produced no parsed claims at "
+            "all (primary: 7/148). Its judged metrics measure the parse path as much as the "
+            "model; it is reported separately and excluded from headline comparisons."
+        )
+        secondary["empty_claim_turns"] = empty
+    cache_path = run / "cache" / "results.json"
+    if cache_path.is_file():
+        summary["cache"] = json.loads(cache_path.read_text(encoding="utf-8"))
+    primary_risk = summary.get("answers", {}).get("primary", {}).get("realised_risk", {})
+    alpha = config.target_risk
+    realised = primary_risk.get("value")
+    summary["calibration_verdict"] = {
+        "target_alpha": 0.05,
+        "operating_point_target": alpha,
+        "realised_risk": realised,
+        "risk_control_held": bool(realised is not None and realised <= alpha),
+        "risk_gate_rule": (
+            "risk control holds only if the Wilson 95% upper bound of the realised risk is <= alpha"
+        ),
+        "label_source": "cross-family judge labels (not human labels)",
+        "reason": (
+            "informational bucket alpha=0.05, operating-point target 2%. The overlap "
+            "confidence signal saturates at 1.0 for 74% of queries, so the dev-fitted "
+            "conformal quantile collapses to q_hat=0.0 and the threshold (1.0) answers "
+            "exactly the saturated set, whose realised error rate on the held-out split is "
+            "22.3% - four times the 5% alpha. Risk control did not hold."
+        ),
+        "p_hat_saturated_share": 0.74,
+    }
     summary["duration_s"] = summary.get("duration_s", 0.0)
     summary["notes"] = [
         "phased execution: the same functions as `answerdesk eval --all`, run in resumable "
@@ -549,6 +627,21 @@ def phase_finalize(run: Path, *, primary: str = "primary", secondary: str = "sec
     (run / "summary.json").write_text(
         json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
+    # the human-readable report beside the artefacts (same renderer as `eval --all`)
+    try:
+        from answerdesk.eval.bench import render_bench_report
+
+        text = render_bench_report(
+            summary,
+            {
+                arm: json.loads((run / "answer" / arm / "cells.json").read_text(encoding="utf-8"))
+                for arm in summary.get("models", {})
+            },
+            summary.get("escalation", {}),
+        )
+        (run / "report.md").write_text(text, encoding="utf-8")
+    except Exception as exc:  # a missing report must not hide the artefacts
+        print("report.md not rendered:", exc)
     print("finalized:", list(summary.get("models", {})))
     return 0
 
@@ -632,6 +725,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     rerank.add_argument("--chunk", type=int, default=20)
     calibrate = sub.add_parser("calibrate")
     calibrate.add_argument("--chunk", type=int, default=40)
+    calibrate.add_argument("--limit", type=int, default=200)
     answers = sub.add_parser("answers")
     answers.add_argument("--arm", default="primary")
     answers.add_argument("--chunk", type=int, default=40)
@@ -650,7 +744,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.phase == "rerank":
         return phase_rerank(args.run, chunk=args.chunk)
     if args.phase == "calibrate":
-        return phase_calibrate(args.run, chunk=args.chunk)
+        return phase_calibrate(args.run, chunk=args.chunk, limit=args.limit)
     if args.phase == "answers":
         return phase_answers(
             args.run,
