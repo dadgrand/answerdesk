@@ -6,8 +6,9 @@ evidence, the system abstains when evidence is insufficient, and the quality num
 confidence intervals and committed artifacts.
 
 > **Status: v0.1.0 in progress.** The service, evaluation harness and operator console work
-> offline; the live benchmark results and the final README land with the v0.1.0 release.
-> Design documents are already in [`docs/`](docs).
+> offline; design documents are in [`docs/`](docs), and the first live evidence package
+> (including a negative calibration result) is in [`docs/results.md`](docs/results.md).
+> The live-risk claim is not met yet — see *Honest limitations* below.
 
 ## Why this exists
 
@@ -80,15 +81,24 @@ runs against `vLLM`, `llama.cpp` or `Ollama` with no code change.
 
 ## Honest limitations
 
-- The synthetic corpus is lexically easy — BM25 already scores 1.0 recall on it. It proves the
-  machinery, not the domain; external validity comes from `answerdesk-bench`.
-- Content is synthetic and LLM-assisted; scripts, terminology, formats and grounding are
-  tested, native-speaker fluency is not.
-- Free-tier model quotas limit the live benchmark sample size; every reported number carries
-  its `n` and CI.
+- **Risk control did not hold in the first live study.** With `qwen3.6-35b-a3b-noreason`, the
+  decision-time overlap signal saturated (p=1.0 on most answered turns), the conformal
+  threshold degenerated, and realised risk on answered turns was 22.3% against a 5% target.
+  A logistic scorer fitted on dev improved calibration (ECE 0.343 → 0.079) but still failed the
+  gate (risk 0.410, Wilson UCB 0.446; the dev-selected 2% operating point was infeasible).
+  Calibration machinery works; the signal/answer quality does not yet support a risk guarantee.
+  See [`docs/results.md`](docs/results.md).
+- The synthetic corpus is lexically easy — BM25 already scores ≈1.0 recall on it, and
+  structure-aware chunking did not improve recall over naive windows in the ablation. It proves
+  the machinery, not the domain; external validity comes from `answerdesk-bench`.
 - A local query-rewriter LoRA was trained and measured, and **did not help** (clean-query
   regression) — it ships disabled, with the negative result documented in
   [`docs/query-rewriter.md`](docs/query-rewriter.md).
+- The secondary DeepSeek arm used a schema-fallback path (the provider rejects strict
+  `json_schema`), so it is labelled *not directly comparable* rather than reported as a model
+  quality gap.
+- Content is synthetic and LLM-assisted; scripts, terminology, formats and grounding are
+  tested, native-speaker fluency is not.
 
 ## Repository map
 

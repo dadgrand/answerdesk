@@ -8,10 +8,10 @@
         "value": 0.0
       },
       "coverage": {
-        "ci_high": 0.532937,
-        "ci_low": 0.179722,
-        "n": 24,
-        "value": 0.333333
+        "ci_high": 0.65208,
+        "ci_low": 0.559267,
+        "n": 422,
+        "value": 0.606635
       },
       "groundedness": {
         "ci_high": 1.0,
@@ -21,15 +21,15 @@
       },
       "must_escalate_recall": {
         "ci_high": 1.0,
-        "ci_low": 0.0,
-        "n": 0,
-        "value": 0.0
+        "ci_low": 0.965653,
+        "n": 108,
+        "value": 1.0
       },
-      "noisy_n": 0,
+      "noisy_n": 195,
       "realised_risk": {
         "ci_high": 1.0,
-        "ci_low": 0.675592,
-        "n": 8,
+        "ci_low": 0.985216,
+        "n": 256,
         "value": 1.0
       },
       "rubric_score": null
@@ -42,10 +42,10 @@
         "value": 0.0
       },
       "coverage": {
-        "ci_high": 0.532937,
-        "ci_low": 0.179722,
-        "n": 24,
-        "value": 0.333333
+        "ci_high": 0.65208,
+        "ci_low": 0.559267,
+        "n": 422,
+        "value": 0.606635
       },
       "groundedness": {
         "ci_high": 1.0,
@@ -55,15 +55,15 @@
       },
       "must_escalate_recall": {
         "ci_high": 1.0,
-        "ci_low": 0.0,
-        "n": 0,
-        "value": 0.0
+        "ci_low": 0.965653,
+        "n": 108,
+        "value": 1.0
       },
-      "noisy_n": 0,
+      "noisy_n": 195,
       "realised_risk": {
         "ci_high": 1.0,
-        "ci_low": 0.675592,
-        "n": 8,
+        "ci_low": 0.985216,
+        "n": 256,
         "value": 1.0
       },
       "rubric_score": null
@@ -85,7 +85,8 @@
         "coverage_lower_bound": 0.95,
         "feasible": true,
         "n": 108,
-        "q_hat": 0.675,
+        "pooled_fallback": false,
+        "q_hat": 0.085714,
         "rank": 104
       },
       {
@@ -94,11 +95,22 @@
         "coverage_lower_bound": 0.98,
         "feasible": false,
         "n": 12,
+        "pooled_fallback": false,
         "q_hat": Infinity,
         "rank": 13
+      },
+      {
+        "alpha": 0.01,
+        "bucket": "account_legal",
+        "coverage_lower_bound": 0.99,
+        "feasible": true,
+        "n": 120,
+        "pooled_fallback": true,
+        "q_hat": 0.533333,
+        "rank": 120
       }
     ],
-    "corpus_version": "corpus-96f93db4f7f648b5",
+    "corpus_version": "corpus-77d7d081813738a6",
     "costs": {
       "c_abstain": 0.1,
       "c_delay": 0.05,
@@ -106,11 +118,21 @@
     },
     "n": 120,
     "note": "split-conformal thresholds fitted on the dev split; the test split is never used for fitting (INV-09)",
+    "operating_point_selection": {
+      "dev_coverage": 0.0,
+      "dev_coverage_at_min_risk": 0.008333,
+      "dev_min_risk": 1.0,
+      "dev_n": 120,
+      "dev_risk": 0.0,
+      "feasible": false,
+      "source": "no feasible point at the target risk on the calibration split; the conformal engine's own threshold is the shipped rule",
+      "threshold": 1.0
+    },
     "split": "dev"
   },
   "chunks": 7229,
   "config": {
-    "answer_limit": 24,
+    "answer_limit": null,
     "bootstrap": 1000,
     "dev_limit": null,
     "generator_arms": [
@@ -121,82 +143,162 @@
     "locales": [],
     "replay": true,
     "retrieval_arms": [],
-    "run_id": "bench-replay",
+    "run_id": "bench",
     "seed": 20261021,
     "target_risk": 0.02,
     "test_limit": null
   },
-  "corpus_hash": "7ef3fc20400131dc966904bc68d517a805faf48e98b62584f44e086270e246d6",
-  "corpus_version": "corpus-96f93db4f7f648b5",
+  "corpus_hash": "ae30066e61e1dc1402b4a51a12f4c4f66335d72c207073b496ef5cd9e5378a36",
+  "corpus_version": "corpus-77d7d081813738a6",
   "dev_cases": 216,
   "documents": 810,
-  "duration_s": 24.6,
+  "duration_s": 33.2,
   "escalation": {
     "primary": {
       "confusion": {
-        "coverage": 0.333333,
-        "false_escalation_rate": 0.666667,
+        "coverage": 0.606635,
+        "false_escalation_rate": 0.393365,
         "fn": 0,
-        "fp": 16,
-        "n": 24,
-        "precision": 0.0,
-        "recall": null,
-        "specificity": 0.333333,
-        "tn": 8,
-        "tp": 0
+        "fp": 166,
+        "n": 530,
+        "precision": 0.394161,
+        "recall": 1.0,
+        "specificity": 0.606635,
+        "tn": 256,
+        "tp": 108
       },
       "e3": {
-        "gated_ci": "[0.000,0.194]",
-        "gated_precision": 0.0,
+        "gated_ci": "[0.338,0.453]",
+        "gated_precision": 0.394161,
         "late": "the gated reading counts every escalation in the denominator",
-        "literal_ci": "n/a",
-        "literal_precision": null,
+        "literal_ci": "[0.966,1.000]",
+        "literal_precision": 1.0,
         "note": "literal reading counts only escalations produced by a safety guard; it is the stricter reading of E-3 and is reported, not hidden"
       },
       "families": [
         {
-          "ci_high": 0.820278,
-          "ci_low": 0.467063,
-          "escalated": 16,
+          "ci_high": 0.440733,
+          "ci_low": 0.34792,
+          "escalated": 166,
           "family": "answerable",
+          "n": 422,
+          "recall": 0.393365
+        },
+        {
+          "ci_high": 1.0,
+          "ci_low": 0.862024,
+          "escalated": 24,
+          "family": "injection",
           "n": 24,
-          "recall": 0.666667
+          "recall": 1.0
+        },
+        {
+          "ci_high": 1.0,
+          "ci_low": 0.824121,
+          "escalated": 18,
+          "family": "pii",
+          "n": 18,
+          "recall": 1.0
+        },
+        {
+          "ci_high": 1.0,
+          "ci_low": 0.944997,
+          "escalated": 66,
+          "family": "unanswerable",
+          "n": 66,
+          "recall": 1.0
         }
       ],
-      "operating_point": null
+      "operating_point": {
+        "coverage": 0.483019,
+        "coverage_ci": "[0.441,0.526]",
+        "curve_point": {
+          "coverage": 0.001887,
+          "n_answered": 1,
+          "risk": 1.0,
+          "threshold": 1.0
+        },
+        "dev_coverage": 0.0,
+        "dev_risk": 0.0,
+        "n_answered": 256,
+        "risk": 1.0,
+        "risk_ci": "[0.985,1.000]",
+        "source": "no feasible point at the target risk on the calibration split; the conformal engine's own threshold is the shipped rule",
+        "threshold": 1.0
+      }
     },
     "secondary": {
       "confusion": {
-        "coverage": 0.333333,
-        "false_escalation_rate": 0.666667,
+        "coverage": 0.606635,
+        "false_escalation_rate": 0.393365,
         "fn": 0,
-        "fp": 16,
-        "n": 24,
-        "precision": 0.0,
-        "recall": null,
-        "specificity": 0.333333,
-        "tn": 8,
-        "tp": 0
+        "fp": 166,
+        "n": 530,
+        "precision": 0.394161,
+        "recall": 1.0,
+        "specificity": 0.606635,
+        "tn": 256,
+        "tp": 108
       },
       "e3": {
-        "gated_ci": "[0.000,0.194]",
-        "gated_precision": 0.0,
+        "gated_ci": "[0.338,0.453]",
+        "gated_precision": 0.394161,
         "late": "the gated reading counts every escalation in the denominator",
-        "literal_ci": "n/a",
-        "literal_precision": null,
+        "literal_ci": "[0.966,1.000]",
+        "literal_precision": 1.0,
         "note": "literal reading counts only escalations produced by a safety guard; it is the stricter reading of E-3 and is reported, not hidden"
       },
       "families": [
         {
-          "ci_high": 0.820278,
-          "ci_low": 0.467063,
-          "escalated": 16,
+          "ci_high": 0.440733,
+          "ci_low": 0.34792,
+          "escalated": 166,
           "family": "answerable",
+          "n": 422,
+          "recall": 0.393365
+        },
+        {
+          "ci_high": 1.0,
+          "ci_low": 0.862024,
+          "escalated": 24,
+          "family": "injection",
           "n": 24,
-          "recall": 0.666667
+          "recall": 1.0
+        },
+        {
+          "ci_high": 1.0,
+          "ci_low": 0.824121,
+          "escalated": 18,
+          "family": "pii",
+          "n": 18,
+          "recall": 1.0
+        },
+        {
+          "ci_high": 1.0,
+          "ci_low": 0.944997,
+          "escalated": 66,
+          "family": "unanswerable",
+          "n": 66,
+          "recall": 1.0
         }
       ],
-      "operating_point": null
+      "operating_point": {
+        "coverage": 0.483019,
+        "coverage_ci": "[0.441,0.526]",
+        "curve_point": {
+          "coverage": 0.001887,
+          "n_answered": 1,
+          "risk": 1.0,
+          "threshold": 1.0
+        },
+        "dev_coverage": 0.0,
+        "dev_risk": 0.0,
+        "n_answered": 256,
+        "risk": 1.0,
+        "risk_ci": "[0.985,1.000]",
+        "source": "no feasible point at the target risk on the calibration split; the conformal engine's own threshold is the shipped rule",
+        "threshold": 1.0
+      }
     }
   },
   "hardware": "Windows 11 / Python 3.12.10",
@@ -207,7 +309,7 @@
       "generator_family": "fake",
       "judge": "fake-judge",
       "judge_family": "fake",
-      "n": 24,
+      "n": 530,
       "reportable": false
     },
     "secondary": {
@@ -216,54 +318,368 @@
       "generator_family": "fake",
       "judge": "fake-judge",
       "judge_family": "fake",
-      "n": 24,
+      "n": 530,
       "reportable": false
     }
   },
   "noisy": {
-    "primary": [],
-    "secondary": []
+    "primary": [
+      {
+        "arm": "primary:noisy",
+        "category": "",
+        "ci_high": 1.0,
+        "ci_low": 0.0,
+        "locale": "",
+        "method": "none",
+        "n": 0,
+        "name": "groundedness_judged",
+        "note": "no answered turns",
+        "value": 0.0
+      },
+      {
+        "arm": "primary:noisy",
+        "category": "",
+        "ci_high": 1.0,
+        "ci_low": 0.0,
+        "locale": "",
+        "method": "none",
+        "n": 0,
+        "name": "groundedness_claim_pooled",
+        "note": "0/0 displayed claims supported",
+        "value": 0.0
+      },
+      {
+        "arm": "primary:noisy",
+        "category": "",
+        "ci_high": 1.0,
+        "ci_low": 0.0,
+        "locale": "",
+        "method": "none",
+        "n": 0,
+        "name": "citation_precision",
+        "note": "per-answer mean; a phantom citation is impossible by contract (F-5)",
+        "value": 0.0
+      },
+      {
+        "arm": "primary:noisy",
+        "category": "",
+        "ci_high": 1.0,
+        "ci_low": 0.0,
+        "locale": "",
+        "method": "none",
+        "n": 0,
+        "name": "citation_recall",
+        "note": "fraction of required evidence chunks actually cited",
+        "value": 0.0
+      },
+      {
+        "arm": "primary:noisy",
+        "category": "",
+        "ci_high": 0.058344,
+        "ci_low": 0.0,
+        "locale": "",
+        "method": "wilson",
+        "n": 62,
+        "name": "phantom_citations",
+        "note": "structural: must be 0 (F-5)",
+        "value": 0.0
+      },
+      {
+        "arm": "primary:noisy",
+        "category": "",
+        "ci_high": 0.058344,
+        "ci_low": 0.0,
+        "locale": "",
+        "method": "wilson",
+        "n": 62,
+        "name": "unsupported_displayed_claims",
+        "note": "structural: must be 0 (F-4)",
+        "value": 0.0
+      },
+      {
+        "arm": "primary:noisy",
+        "category": "",
+        "ci_high": 1.0,
+        "ci_low": 0.941656,
+        "locale": "",
+        "method": "wilson",
+        "n": 62,
+        "name": "language_agreement",
+        "note": "F-7: answer language equals the detected query language",
+        "value": 1.0
+      },
+      {
+        "arm": "primary:noisy",
+        "category": "",
+        "ci_high": 1.0,
+        "ci_low": 0.941656,
+        "locale": "",
+        "method": "wilson",
+        "n": 62,
+        "name": "realised_risk",
+        "note": "62/62 auto-answered turns were incorrect (E-1)",
+        "value": 1.0
+      },
+      {
+        "arm": "primary:noisy",
+        "category": "",
+        "ci_high": 0.386288,
+        "ci_low": 0.256644,
+        "locale": "",
+        "method": "wilson",
+        "n": 195,
+        "name": "coverage",
+        "note": "auto-answer coverage on answerable items (E-4)",
+        "value": 0.317949
+      },
+      {
+        "arm": "primary:noisy",
+        "category": "",
+        "ci_high": 1.0,
+        "ci_low": 0.0,
+        "locale": "",
+        "method": "none",
+        "n": 0,
+        "name": "must_escalate_recall",
+        "note": "0/0 unsafe or unanswerable turns were escalated (E-2)",
+        "value": 0.0
+      },
+      {
+        "arm": "primary:noisy",
+        "category": "",
+        "ci_high": 0.028072,
+        "ci_low": 0.0,
+        "locale": "",
+        "method": "wilson",
+        "n": 133,
+        "name": "escalation_precision",
+        "note": "escalated turns that were genuinely unsafe/unanswerable (E-3)",
+        "value": 0.0
+      },
+      {
+        "arm": "primary:noisy",
+        "category": "informational",
+        "ci_high": 1.0,
+        "ci_low": 0.941656,
+        "locale": "",
+        "method": "wilson",
+        "n": 62,
+        "name": "realised_risk_by_bucket",
+        "note": "intent bucket informational (E-1 per bucket)",
+        "value": 1.0
+      },
+      {
+        "arm": "primary:noisy",
+        "category": "informational",
+        "ci_high": 0.386288,
+        "ci_low": 0.256644,
+        "locale": "",
+        "method": "wilson",
+        "n": 195,
+        "name": "coverage_by_bucket",
+        "note": "intent bucket informational",
+        "value": 0.317949
+      }
+    ],
+    "secondary": [
+      {
+        "arm": "secondary:noisy",
+        "category": "",
+        "ci_high": 1.0,
+        "ci_low": 0.0,
+        "locale": "",
+        "method": "none",
+        "n": 0,
+        "name": "groundedness_judged",
+        "note": "no answered turns",
+        "value": 0.0
+      },
+      {
+        "arm": "secondary:noisy",
+        "category": "",
+        "ci_high": 1.0,
+        "ci_low": 0.0,
+        "locale": "",
+        "method": "none",
+        "n": 0,
+        "name": "groundedness_claim_pooled",
+        "note": "0/0 displayed claims supported",
+        "value": 0.0
+      },
+      {
+        "arm": "secondary:noisy",
+        "category": "",
+        "ci_high": 1.0,
+        "ci_low": 0.0,
+        "locale": "",
+        "method": "none",
+        "n": 0,
+        "name": "citation_precision",
+        "note": "per-answer mean; a phantom citation is impossible by contract (F-5)",
+        "value": 0.0
+      },
+      {
+        "arm": "secondary:noisy",
+        "category": "",
+        "ci_high": 1.0,
+        "ci_low": 0.0,
+        "locale": "",
+        "method": "none",
+        "n": 0,
+        "name": "citation_recall",
+        "note": "fraction of required evidence chunks actually cited",
+        "value": 0.0
+      },
+      {
+        "arm": "secondary:noisy",
+        "category": "",
+        "ci_high": 0.058344,
+        "ci_low": 0.0,
+        "locale": "",
+        "method": "wilson",
+        "n": 62,
+        "name": "phantom_citations",
+        "note": "structural: must be 0 (F-5)",
+        "value": 0.0
+      },
+      {
+        "arm": "secondary:noisy",
+        "category": "",
+        "ci_high": 0.058344,
+        "ci_low": 0.0,
+        "locale": "",
+        "method": "wilson",
+        "n": 62,
+        "name": "unsupported_displayed_claims",
+        "note": "structural: must be 0 (F-4)",
+        "value": 0.0
+      },
+      {
+        "arm": "secondary:noisy",
+        "category": "",
+        "ci_high": 1.0,
+        "ci_low": 0.941656,
+        "locale": "",
+        "method": "wilson",
+        "n": 62,
+        "name": "language_agreement",
+        "note": "F-7: answer language equals the detected query language",
+        "value": 1.0
+      },
+      {
+        "arm": "secondary:noisy",
+        "category": "",
+        "ci_high": 1.0,
+        "ci_low": 0.941656,
+        "locale": "",
+        "method": "wilson",
+        "n": 62,
+        "name": "realised_risk",
+        "note": "62/62 auto-answered turns were incorrect (E-1)",
+        "value": 1.0
+      },
+      {
+        "arm": "secondary:noisy",
+        "category": "",
+        "ci_high": 0.386288,
+        "ci_low": 0.256644,
+        "locale": "",
+        "method": "wilson",
+        "n": 195,
+        "name": "coverage",
+        "note": "auto-answer coverage on answerable items (E-4)",
+        "value": 0.317949
+      },
+      {
+        "arm": "secondary:noisy",
+        "category": "",
+        "ci_high": 1.0,
+        "ci_low": 0.0,
+        "locale": "",
+        "method": "none",
+        "n": 0,
+        "name": "must_escalate_recall",
+        "note": "0/0 unsafe or unanswerable turns were escalated (E-2)",
+        "value": 0.0
+      },
+      {
+        "arm": "secondary:noisy",
+        "category": "",
+        "ci_high": 0.028072,
+        "ci_low": 0.0,
+        "locale": "",
+        "method": "wilson",
+        "n": 133,
+        "name": "escalation_precision",
+        "note": "escalated turns that were genuinely unsafe/unanswerable (E-3)",
+        "value": 0.0
+      },
+      {
+        "arm": "secondary:noisy",
+        "category": "informational",
+        "ci_high": 1.0,
+        "ci_low": 0.941656,
+        "locale": "",
+        "method": "wilson",
+        "n": 62,
+        "name": "realised_risk_by_bucket",
+        "note": "intent bucket informational (E-1 per bucket)",
+        "value": 1.0
+      },
+      {
+        "arm": "secondary:noisy",
+        "category": "informational",
+        "ci_high": 0.386288,
+        "ci_low": 0.256644,
+        "locale": "",
+        "method": "wilson",
+        "n": 195,
+        "name": "coverage_by_bucket",
+        "note": "intent bucket informational",
+        "value": 0.317949
+      }
+    ]
   },
   "notes": [
-    "split v1 5e57276f1c92 corpus corpus-96f93db4f7f648b5",
+    "split v1 f4738e34a303 corpus corpus-77d7d081813738a6",
     "REPLAY: hashing embedder, no hosted models"
   ],
   "ops": {
     "primary": {
-      "answered": 8,
+      "answered": 256,
       "arm": "primary",
       "hardware": "Windows 11 / Python 3.12.10",
       "latency": [
         {
-          "mean_ms": 2.101,
-          "n": 24,
-          "p50_ms": 1.92,
-          "p95_ms": 2.626,
+          "mean_ms": 2.573,
+          "n": 530,
+          "p50_ms": 1.8,
+          "p95_ms": 5.485,
           "stage": "retrieval"
         },
         {
-          "mean_ms": 0.937,
-          "n": 24,
-          "p50_ms": 0.943,
-          "p95_ms": 1.254,
+          "mean_ms": 0.931,
+          "n": 530,
+          "p50_ms": 0.985,
+          "p95_ms": 1.314,
           "stage": "policy"
         },
         {
-          "mean_ms": 2.02,
-          "n": 24,
-          "p50_ms": 2.179,
-          "p95_ms": 2.804,
+          "mean_ms": 1.917,
+          "n": 421,
+          "p50_ms": 1.827,
+          "p95_ms": 3.085,
           "stage": "generation"
         },
         {
-          "mean_ms": 5.058,
-          "n": 24,
-          "p50_ms": 4.962,
-          "p95_ms": 6.269,
+          "mean_ms": 5.027,
+          "n": 530,
+          "p50_ms": 4.765,
+          "p95_ms": 7.849,
           "stage": "total"
         }
       ],
-      "n": 24,
+      "n": 530,
       "pricing": [
         {
           "input_usd_per_1k_tokens": 0.0,
@@ -271,6 +687,13 @@
           "output_usd_per_1k_tokens": 0.0,
           "retrieved_at": "2026-10-20",
           "source": "placeholder — replace with the provider's published price before quoting USD"
+        },
+        {
+          "input_usd_per_1k_tokens": 0.0,
+          "model": "deepseek-flash",
+          "output_usd_per_1k_tokens": 0.0,
+          "retrieved_at": "2026-10-21",
+          "source": "key used for the benchmark exposed no billing statement; token counts recorded"
         },
         {
           "input_usd_per_1k_tokens": 0.0,
@@ -292,52 +715,66 @@
           "output_usd_per_1k_tokens": 0.0,
           "retrieved_at": "2026-10-20",
           "source": "self-hosted (vLLM / llama.cpp / Ollama): electricity only, recorded as 0"
+        },
+        {
+          "input_usd_per_1k_tokens": 0.0,
+          "model": "qwen3.6-35b-a3b",
+          "output_usd_per_1k_tokens": 0.0,
+          "retrieved_at": "2026-10-21",
+          "source": "NeuralDeep free tariff at measurement — no per-token charge observed"
+        },
+        {
+          "input_usd_per_1k_tokens": 0.0,
+          "model": "qwen3.6-35b-a3b-noreason",
+          "output_usd_per_1k_tokens": 0.0,
+          "retrieved_at": "2026-10-21",
+          "source": "NeuralDeep free tariff at measurement — no per-token charge observed"
         }
       ],
       "tokens": {
-        "input_per_answer": 5064.0,
-        "input_total": 40512,
-        "output_per_answer": 144.0,
-        "output_total": 1152
+        "input_per_answer": 2572.0,
+        "input_total": 658444,
+        "output_per_answer": 78.9,
+        "output_total": 20208
       },
       "usd_per_answer": 0.0,
       "usd_total": 0.0
     },
     "secondary": {
-      "answered": 8,
+      "answered": 256,
       "arm": "secondary",
       "hardware": "Windows 11 / Python 3.12.10",
       "latency": [
         {
-          "mean_ms": 2.14,
-          "n": 24,
-          "p50_ms": 2.007,
-          "p95_ms": 2.607,
+          "mean_ms": 2.451,
+          "n": 530,
+          "p50_ms": 1.77,
+          "p95_ms": 5.533,
           "stage": "retrieval"
         },
         {
-          "mean_ms": 0.965,
-          "n": 24,
-          "p50_ms": 0.986,
-          "p95_ms": 1.268,
+          "mean_ms": 0.923,
+          "n": 530,
+          "p50_ms": 0.97,
+          "p95_ms": 1.291,
           "stage": "policy"
         },
         {
-          "mean_ms": 2.024,
-          "n": 24,
-          "p50_ms": 2.154,
-          "p95_ms": 2.841,
+          "mean_ms": 1.878,
+          "n": 421,
+          "p50_ms": 1.813,
+          "p95_ms": 3.016,
           "stage": "generation"
         },
         {
-          "mean_ms": 5.128,
-          "n": 24,
-          "p50_ms": 5.1,
-          "p95_ms": 6.209,
+          "mean_ms": 4.865,
+          "n": 530,
+          "p50_ms": 4.717,
+          "p95_ms": 7.716,
           "stage": "total"
         }
       ],
-      "n": 24,
+      "n": 530,
       "pricing": [
         {
           "input_usd_per_1k_tokens": 0.0,
@@ -345,6 +782,13 @@
           "output_usd_per_1k_tokens": 0.0,
           "retrieved_at": "2026-10-20",
           "source": "placeholder — replace with the provider's published price before quoting USD"
+        },
+        {
+          "input_usd_per_1k_tokens": 0.0,
+          "model": "deepseek-flash",
+          "output_usd_per_1k_tokens": 0.0,
+          "retrieved_at": "2026-10-21",
+          "source": "key used for the benchmark exposed no billing statement; token counts recorded"
         },
         {
           "input_usd_per_1k_tokens": 0.0,
@@ -366,13 +810,27 @@
           "output_usd_per_1k_tokens": 0.0,
           "retrieved_at": "2026-10-20",
           "source": "self-hosted (vLLM / llama.cpp / Ollama): electricity only, recorded as 0"
+        },
+        {
+          "input_usd_per_1k_tokens": 0.0,
+          "model": "qwen3.6-35b-a3b",
+          "output_usd_per_1k_tokens": 0.0,
+          "retrieved_at": "2026-10-21",
+          "source": "NeuralDeep free tariff at measurement — no per-token charge observed"
+        },
+        {
+          "input_usd_per_1k_tokens": 0.0,
+          "model": "qwen3.6-35b-a3b-noreason",
+          "output_usd_per_1k_tokens": 0.0,
+          "retrieved_at": "2026-10-21",
+          "source": "NeuralDeep free tariff at measurement — no per-token charge observed"
         }
       ],
       "tokens": {
-        "input_per_answer": 5064.0,
-        "input_total": 40512,
-        "output_per_answer": 144.0,
-        "output_total": 1152
+        "input_per_answer": 2572.0,
+        "input_total": 658444,
+        "output_per_answer": 78.9,
+        "output_total": 20208
       },
       "usd_per_answer": 0.0,
       "usd_total": 0.0
@@ -382,365 +840,365 @@
   "retrieval": {
     "bm25": {
       "MRR@10": {
-        "ci_high": 0.79028,
-        "ci_low": 0.723147,
-        "n": 474,
-        "value": 0.757364
+        "ci_high": 0.98685,
+        "ci_low": 0.963498,
+        "n": 464,
+        "value": 0.975852
       },
       "nDCG@10": {
-        "ci_high": 0.772143,
-        "ci_low": 0.717819,
-        "n": 474,
-        "value": 0.744845
+        "ci_high": 0.91916,
+        "ci_low": 0.889207,
+        "n": 464,
+        "value": 0.90488
       },
-      "n_labeled": 474,
+      "n_labeled": 464,
       "recall_all@20": {
-        "ci_high": 0.933189,
-        "ci_low": 0.896283,
-        "n": 474,
-        "value": 0.914774
+        "ci_high": 0.948189,
+        "ci_low": 0.920392,
+        "n": 464,
+        "value": 0.935558
       },
       "recall_any@10": {
-        "ci_high": 0.978903,
-        "ci_low": 0.945148,
-        "n": 474,
-        "value": 0.962025
+        "ci_high": 0.99789,
+        "ci_low": 0.981013,
+        "n": 464,
+        "value": 0.991561
       },
       "recall_any@20": {
-        "ci_high": 0.978903,
-        "ci_low": 0.947257,
-        "n": 474,
-        "value": 0.964135
+        "ci_high": 0.99789,
+        "ci_low": 0.981013,
+        "n": 464,
+        "value": 0.991561
       }
     },
     "cc@0.5": {
       "MRR@10": {
-        "ci_high": 0.676607,
-        "ci_low": 0.610699,
-        "n": 474,
-        "value": 0.643386
+        "ci_high": 0.858533,
+        "ci_low": 0.814427,
+        "n": 464,
+        "value": 0.836305
       },
       "nDCG@10": {
-        "ci_high": 0.722012,
-        "ci_low": 0.667429,
-        "n": 474,
-        "value": 0.694766
+        "ci_high": 0.869424,
+        "ci_low": 0.834081,
+        "n": 464,
+        "value": 0.851979
       },
-      "n_labeled": 474,
+      "n_labeled": 464,
       "recall_all@20": {
-        "ci_high": 0.914809,
-        "ci_low": 0.87113,
-        "n": 474,
-        "value": 0.8923
+        "ci_high": 0.935533,
+        "ci_low": 0.900922,
+        "n": 464,
+        "value": 0.919053
       },
       "recall_any@10": {
-        "ci_high": 0.959916,
-        "ci_low": 0.917722,
-        "n": 474,
-        "value": 0.938819
+        "ci_high": 0.99789,
+        "ci_low": 0.978903,
+        "n": 464,
+        "value": 0.989451
       },
       "recall_any@20": {
-        "ci_high": 0.964135,
-        "ci_low": 0.924051,
-        "n": 474,
-        "value": 0.945148
+        "ci_high": 0.99789,
+        "ci_low": 0.978903,
+        "n": 464,
+        "value": 0.989451
       }
     },
     "cc@0.6": {
       "MRR@10": {
-        "ci_high": 0.489165,
-        "ci_low": 0.422966,
-        "n": 474,
-        "value": 0.456073
+        "ci_high": 0.617254,
+        "ci_low": 0.553599,
+        "n": 464,
+        "value": 0.584814
       },
       "nDCG@10": {
-        "ci_high": 0.558893,
-        "ci_low": 0.500658,
-        "n": 474,
-        "value": 0.528941
+        "ci_high": 0.668565,
+        "ci_low": 0.61788,
+        "n": 464,
+        "value": 0.643611
       },
-      "n_labeled": 474,
+      "n_labeled": 464,
       "recall_all@20": {
-        "ci_high": 0.823539,
-        "ci_low": 0.765897,
-        "n": 474,
-        "value": 0.794505
+        "ci_high": 0.846925,
+        "ci_low": 0.803268,
+        "n": 464,
+        "value": 0.824072
       },
       "recall_any@10": {
-        "ci_high": 0.919831,
-        "ci_low": 0.864979,
-        "n": 474,
-        "value": 0.892405
+        "ci_high": 0.991561,
+        "ci_low": 0.968354,
+        "n": 464,
+        "value": 0.981013
       },
       "recall_any@20": {
-        "ci_high": 0.938819,
-        "ci_low": 0.890295,
-        "n": 474,
-        "value": 0.915612
+        "ci_high": 0.995781,
+        "ci_low": 0.976793,
+        "n": 464,
+        "value": 0.987342
       }
     },
     "cc@0.7": {
       "MRR@10": {
-        "ci_high": 0.391522,
-        "ci_low": 0.320152,
-        "n": 474,
-        "value": 0.356386
+        "ci_high": 0.504678,
+        "ci_low": 0.429639,
+        "n": 464,
+        "value": 0.466377
       },
       "nDCG@10": {
-        "ci_high": 0.38809,
-        "ci_low": 0.32147,
-        "n": 474,
-        "value": 0.355162
+        "ci_high": 0.480542,
+        "ci_low": 0.414337,
+        "n": 464,
+        "value": 0.447228
       },
-      "n_labeled": 474,
+      "n_labeled": 464,
       "recall_all@20": {
-        "ci_high": 0.548976,
-        "ci_low": 0.473082,
-        "n": 474,
-        "value": 0.509334
+        "ci_high": 0.599225,
+        "ci_low": 0.531915,
+        "n": 464,
+        "value": 0.565982
       },
       "recall_any@10": {
-        "ci_high": 0.632911,
-        "ci_low": 0.55058,
-        "n": 474,
-        "value": 0.590717
+        "ci_high": 0.784372,
+        "ci_low": 0.709767,
+        "n": 464,
+        "value": 0.748061
       },
       "recall_any@20": {
-        "ci_high": 0.727848,
-        "ci_low": 0.64346,
-        "n": 474,
-        "value": 0.685654
+        "ci_high": 0.857085,
+        "ci_low": 0.788142,
+        "n": 464,
+        "value": 0.824866
       }
     },
     "cc@0.75": {
       "MRR@10": {
-        "ci_high": 0.369875,
-        "ci_low": 0.29678,
-        "n": 474,
-        "value": 0.333153
+        "ci_high": 0.465164,
+        "ci_low": 0.38626,
+        "n": 464,
+        "value": 0.426185
       },
       "nDCG@10": {
-        "ci_high": 0.344718,
-        "ci_low": 0.279057,
-        "n": 474,
-        "value": 0.311903
+        "ci_high": 0.415407,
+        "ci_low": 0.346816,
+        "n": 464,
+        "value": 0.380686
       },
-      "n_labeled": 474,
+      "n_labeled": 464,
       "recall_all@20": {
-        "ci_high": 0.434633,
-        "ci_low": 0.35974,
-        "n": 474,
-        "value": 0.397297
+        "ci_high": 0.47457,
+        "ci_low": 0.402703,
+        "n": 464,
+        "value": 0.43884
       },
       "recall_any@10": {
-        "ci_high": 0.542247,
-        "ci_low": 0.453586,
-        "n": 474,
-        "value": 0.49789
+        "ci_high": 0.640737,
+        "ci_low": 0.559108,
+        "n": 464,
+        "value": 0.598244
       },
       "recall_any@20": {
-        "ci_high": 0.575949,
-        "ci_low": 0.487342,
-        "n": 474,
-        "value": 0.531646
+        "ci_high": 0.70348,
+        "ci_low": 0.621155,
+        "n": 464,
+        "value": 0.662248
       }
     },
     "cc@0.8": {
       "MRR@10": {
-        "ci_high": 0.340509,
-        "ci_low": 0.267886,
-        "n": 474,
-        "value": 0.304318
+        "ci_high": 0.428662,
+        "ci_low": 0.35372,
+        "n": 464,
+        "value": 0.391507
       },
       "nDCG@10": {
-        "ci_high": 0.319158,
-        "ci_low": 0.252055,
-        "n": 474,
-        "value": 0.285946
+        "ci_high": 0.382167,
+        "ci_low": 0.314227,
+        "n": 464,
+        "value": 0.348461
       },
-      "n_labeled": 474,
+      "n_labeled": 464,
       "recall_all@20": {
-        "ci_high": 0.392399,
-        "ci_low": 0.319328,
-        "n": 474,
-        "value": 0.356027
+        "ci_high": 0.424589,
+        "ci_low": 0.354755,
+        "n": 464,
+        "value": 0.389051
       },
       "recall_any@10": {
-        "ci_high": 0.487395,
-        "ci_low": 0.400844,
-        "n": 474,
-        "value": 0.443038
+        "ci_high": 0.568138,
+        "ci_low": 0.485817,
+        "n": 464,
+        "value": 0.525659
       },
       "recall_any@20": {
-        "ci_high": 0.508439,
-        "ci_low": 0.421941,
-        "n": 474,
-        "value": 0.464135
+        "ci_high": 0.60458,
+        "ci_low": 0.519611,
+        "n": 464,
+        "value": 0.562094
       }
     },
     "cc@0.9": {
       "MRR@10": {
-        "ci_high": 0.313443,
-        "ci_low": 0.242305,
-        "n": 474,
-        "value": 0.276782
+        "ci_high": 0.387905,
+        "ci_low": 0.314021,
+        "n": 464,
+        "value": 0.350286
       },
       "nDCG@10": {
-        "ci_high": 0.289036,
-        "ci_low": 0.225581,
-        "n": 474,
-        "value": 0.257128
+        "ci_high": 0.342408,
+        "ci_low": 0.276201,
+        "n": 464,
+        "value": 0.310153
       },
-      "n_labeled": 474,
+      "n_labeled": 464,
       "recall_all@20": {
-        "ci_high": 0.359062,
-        "ci_low": 0.287353,
-        "n": 474,
-        "value": 0.323258
+        "ci_high": 0.376672,
+        "ci_low": 0.308437,
+        "n": 464,
+        "value": 0.343073
       },
       "recall_any@10": {
-        "ci_high": 0.455696,
-        "ci_low": 0.369198,
-        "n": 474,
-        "value": 0.413502
+        "ci_high": 0.535088,
+        "ci_low": 0.451353,
+        "n": 464,
+        "value": 0.492873
       },
       "recall_any@20": {
-        "ci_high": 0.474684,
-        "ci_low": 0.386076,
-        "n": 474,
-        "value": 0.43038
+        "ci_high": 0.548337,
+        "ci_low": 0.464445,
+        "n": 464,
+        "value": 0.505958
       }
     },
     "dense": {
       "MRR@10": {
-        "ci_high": 0.281224,
-        "ci_low": 0.213242,
-        "n": 474,
-        "value": 0.246041
+        "ci_high": 0.344695,
+        "ci_low": 0.275129,
+        "n": 464,
+        "value": 0.309438
       },
       "nDCG@10": {
-        "ci_high": 0.261926,
-        "ci_low": 0.201597,
-        "n": 474,
-        "value": 0.231371
+        "ci_high": 0.310598,
+        "ci_low": 0.247422,
+        "n": 464,
+        "value": 0.279211
       },
-      "n_labeled": 474,
+      "n_labeled": 464,
       "recall_all@20": {
-        "ci_high": 0.323156,
-        "ci_low": 0.254055,
-        "n": 474,
-        "value": 0.288838
+        "ci_high": 0.348677,
+        "ci_low": 0.280445,
+        "n": 464,
+        "value": 0.316213
       },
       "recall_any@10": {
-        "ci_high": 0.42827,
-        "ci_low": 0.343882,
-        "n": 474,
-        "value": 0.386076
+        "ci_high": 0.504284,
+        "ci_low": 0.420673,
+        "n": 464,
+        "value": 0.462481
       },
       "recall_any@20": {
-        "ci_high": 0.440928,
-        "ci_low": 0.352321,
-        "n": 474,
-        "value": 0.396624
+        "ci_high": 0.513553,
+        "ci_low": 0.431235,
+        "n": 464,
+        "value": 0.473315
       }
     },
     "rrf@10": {
       "MRR@10": {
-        "ci_high": 0.659541,
-        "ci_low": 0.589756,
-        "n": 474,
-        "value": 0.624616
+        "ci_high": 0.843619,
+        "ci_low": 0.800497,
+        "n": 464,
+        "value": 0.822231
       },
       "nDCG@10": {
-        "ci_high": 0.590541,
-        "ci_low": 0.534153,
-        "n": 474,
-        "value": 0.562989
+        "ci_high": 0.705648,
+        "ci_low": 0.665381,
+        "n": 464,
+        "value": 0.685122
       },
-      "n_labeled": 474,
+      "n_labeled": 464,
       "recall_all@20": {
-        "ci_high": 0.77753,
-        "ci_low": 0.722941,
-        "n": 474,
-        "value": 0.749688
+        "ci_high": 0.783202,
+        "ci_low": 0.745408,
+        "n": 464,
+        "value": 0.76519
       },
       "recall_any@10": {
-        "ci_high": 0.915612,
-        "ci_low": 0.85865,
-        "n": 474,
-        "value": 0.888186
+        "ci_high": 0.99789,
+        "ci_low": 0.981013,
+        "n": 464,
+        "value": 0.991561
       },
       "recall_any@20": {
-        "ci_high": 0.938819,
-        "ci_low": 0.888186,
-        "n": 474,
-        "value": 0.913502
+        "ci_high": 0.99789,
+        "ci_low": 0.981013,
+        "n": 464,
+        "value": 0.991561
       }
     },
     "rrf@100": {
       "MRR@10": {
-        "ci_high": 0.613941,
-        "ci_low": 0.541596,
-        "n": 474,
-        "value": 0.579367
+        "ci_high": 0.802084,
+        "ci_low": 0.750702,
+        "n": 464,
+        "value": 0.776225
       },
       "nDCG@10": {
-        "ci_high": 0.569349,
-        "ci_low": 0.511312,
-        "n": 474,
-        "value": 0.54096
+        "ci_high": 0.689472,
+        "ci_low": 0.64307,
+        "n": 464,
+        "value": 0.666292
       },
-      "n_labeled": 474,
+      "n_labeled": 464,
       "recall_all@20": {
-        "ci_high": 0.761506,
-        "ci_low": 0.700111,
-        "n": 474,
-        "value": 0.730542
+        "ci_high": 0.767725,
+        "ci_low": 0.727283,
+        "n": 464,
+        "value": 0.748063
       },
       "recall_any@10": {
-        "ci_high": 0.900844,
-        "ci_low": 0.841772,
-        "n": 474,
-        "value": 0.871308
+        "ci_high": 0.995781,
+        "ci_low": 0.976223,
+        "n": 464,
+        "value": 0.987057
       },
       "recall_any@20": {
-        "ci_high": 0.92827,
-        "ci_low": 0.875527,
-        "n": 474,
-        "value": 0.900844
+        "ci_high": 0.997748,
+        "ci_low": 0.980157,
+        "n": 464,
+        "value": 0.989166
       }
     },
     "rrf@60": {
       "MRR@10": {
-        "ci_high": 0.614754,
-        "ci_low": 0.543233,
-        "n": 474,
-        "value": 0.580527
+        "ci_high": 0.803701,
+        "ci_low": 0.75331,
+        "n": 464,
+        "value": 0.778031
       },
       "nDCG@10": {
-        "ci_high": 0.569732,
-        "ci_low": 0.511441,
-        "n": 474,
-        "value": 0.541235
+        "ci_high": 0.690413,
+        "ci_low": 0.644237,
+        "n": 464,
+        "value": 0.666895
       },
-      "n_labeled": 474,
+      "n_labeled": 464,
       "recall_all@20": {
-        "ci_high": 0.761506,
-        "ci_low": 0.700111,
-        "n": 474,
-        "value": 0.730542
+        "ci_high": 0.767725,
+        "ci_low": 0.727283,
+        "n": 464,
+        "value": 0.748063
       },
       "recall_any@10": {
-        "ci_high": 0.900844,
-        "ci_low": 0.841772,
-        "n": 474,
-        "value": 0.871308
+        "ci_high": 0.995781,
+        "ci_low": 0.976223,
+        "n": 464,
+        "value": 0.987057
       },
       "recall_any@20": {
-        "ci_high": 0.92827,
-        "ci_low": 0.875527,
-        "n": 474,
-        "value": 0.900844
+        "ci_high": 0.997748,
+        "ci_low": 0.980157,
+        "n": 464,
+        "value": 0.989166
       }
     }
   },
@@ -748,52 +1206,52 @@
     {
       "arm_a": "bm25",
       "arm_b": "dense",
-      "ci_high": 0.620253,
-      "ci_low": 0.531646,
-      "diff": 0.575949,
-      "mcnemar_b": 273,
+      "ci_high": 0.575485,
+      "ci_low": 0.489224,
+      "diff": 0.532328,
+      "mcnemar_b": 247,
       "mcnemar_c": 0,
       "mcnemar_method": "chi2",
       "mcnemar_p": 0.0,
-      "mean_a": 0.962025,
-      "mean_b": 0.386076,
+      "mean_a": 0.991379,
+      "mean_b": 0.459052,
       "metric": "recall_any@10",
-      "n": 474,
+      "n": 464,
       "significant": true
     },
     {
       "arm_a": "bm25",
       "arm_b": "rrf@60",
-      "ci_high": 0.118196,
-      "ci_low": 0.067511,
-      "diff": 0.090717,
-      "mcnemar_b": 44,
-      "mcnemar_c": 1,
-      "mcnemar_method": "chi2",
-      "mcnemar_p": 0.0,
-      "mean_a": 0.962025,
-      "mean_b": 0.871308,
+      "ci_high": 0.015086,
+      "ci_low": -0.00431,
+      "diff": 0.00431,
+      "mcnemar_b": 4,
+      "mcnemar_c": 2,
+      "mcnemar_method": "exact_binomial",
+      "mcnemar_p": 0.6875,
+      "mean_a": 0.991379,
+      "mean_b": 0.987069,
       "metric": "recall_any@10",
-      "n": 474,
-      "significant": true
+      "n": 464,
+      "significant": false
     },
     {
       "arm_a": "rrf@60",
       "arm_b": "cc@0.75",
-      "ci_high": 0.411392,
-      "ci_low": 0.327004,
-      "diff": 0.373418,
-      "mcnemar_b": 177,
+      "ci_high": 0.43319,
+      "ci_low": 0.349138,
+      "diff": 0.392241,
+      "mcnemar_b": 182,
       "mcnemar_c": 0,
       "mcnemar_method": "chi2",
       "mcnemar_p": 0.0,
-      "mean_a": 0.871308,
-      "mean_b": 0.49789,
+      "mean_a": 0.987069,
+      "mean_b": 0.594828,
       "metric": "recall_any@10",
-      "n": 474,
+      "n": 464,
       "significant": true
     }
   ],
-  "run_id": "bench-replay",
-  "test_cases": 540
+  "run_id": "bench",
+  "test_cases": 530
 }

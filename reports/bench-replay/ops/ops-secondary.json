@@ -1,38 +1,38 @@
 {
-  "answered": 8,
+  "answered": 256,
   "arm": "secondary",
   "hardware": "Windows 11 / Python 3.12.10",
   "latency": [
     {
-      "mean_ms": 2.14,
-      "n": 24,
-      "p50_ms": 2.007,
-      "p95_ms": 2.607,
+      "mean_ms": 2.451,
+      "n": 530,
+      "p50_ms": 1.77,
+      "p95_ms": 5.533,
       "stage": "retrieval"
     },
     {
-      "mean_ms": 0.965,
-      "n": 24,
-      "p50_ms": 0.986,
-      "p95_ms": 1.268,
+      "mean_ms": 0.923,
+      "n": 530,
+      "p50_ms": 0.97,
+      "p95_ms": 1.291,
       "stage": "policy"
     },
     {
-      "mean_ms": 2.024,
-      "n": 24,
-      "p50_ms": 2.154,
-      "p95_ms": 2.841,
+      "mean_ms": 1.878,
+      "n": 421,
+      "p50_ms": 1.813,
+      "p95_ms": 3.016,
       "stage": "generation"
     },
     {
-      "mean_ms": 5.128,
-      "n": 24,
-      "p50_ms": 5.1,
-      "p95_ms": 6.209,
+      "mean_ms": 4.865,
+      "n": 530,
+      "p50_ms": 4.717,
+      "p95_ms": 7.716,
       "stage": "total"
     }
   ],
-  "n": 24,
+  "n": 530,
   "pricing": [
     {
       "input_usd_per_1k_tokens": 0.0,
@@ -40,6 +40,13 @@
       "output_usd_per_1k_tokens": 0.0,
       "retrieved_at": "2026-10-20",
       "source": "placeholder — replace with the provider's published price before quoting USD"
+    },
+    {
+      "input_usd_per_1k_tokens": 0.0,
+      "model": "deepseek-flash",
+      "output_usd_per_1k_tokens": 0.0,
+      "retrieved_at": "2026-10-21",
+      "source": "key used for the benchmark exposed no billing statement; token counts recorded"
     },
     {
       "input_usd_per_1k_tokens": 0.0,
@@ -61,13 +68,27 @@
       "output_usd_per_1k_tokens": 0.0,
       "retrieved_at": "2026-10-20",
       "source": "self-hosted (vLLM / llama.cpp / Ollama): electricity only, recorded as 0"
+    },
+    {
+      "input_usd_per_1k_tokens": 0.0,
+      "model": "qwen3.6-35b-a3b",
+      "output_usd_per_1k_tokens": 0.0,
+      "retrieved_at": "2026-10-21",
+      "source": "NeuralDeep free tariff at measurement — no per-token charge observed"
+    },
+    {
+      "input_usd_per_1k_tokens": 0.0,
+      "model": "qwen3.6-35b-a3b-noreason",
+      "output_usd_per_1k_tokens": 0.0,
+      "retrieved_at": "2026-10-21",
+      "source": "NeuralDeep free tariff at measurement — no per-token charge observed"
     }
   ],
   "tokens": {
-    "input_per_answer": 5064.0,
-    "input_total": 40512,
-    "output_per_answer": 144.0,
-    "output_total": 1152
+    "input_per_answer": 2572.0,
+    "input_total": 658444,
+    "output_per_answer": 78.9,
+    "output_total": 20208
   },
   "usd_per_answer": 0.0,
   "usd_total": 0.0

@@ -1,40 +1,40 @@
-# answerdesk benchmark run — `bench-replay`
+# answerdesk benchmark run — `bench`
 
 > **REPLAY-MODE.** Deterministic doubles were used; these numbers validate the harness, not the system.
 
 | field | value |
 |---|---|
-| corpus version | corpus-96f93db4f7f648b5 |
-| corpus hash | 7ef3fc20400131dc966904bc68d517a805faf48e98b62584f44e086270e246d6 |
+| corpus version | corpus-77d7d081813738a6 |
+| corpus hash | ae30066e61e1dc1402b4a51a12f4c4f66335d72c207073b496ef5cd9e5378a36 |
 | documents / chunks | 810 / 7229 |
-| test cases | 540 |
-| calibration | {'corpus_version': 'corpus-96f93db4f7f648b5', 'split': 'dev', 'n': 120, 'buckets': [{'bucket': 'informational', 'n': 108, 'alpha': 0.05, 'q_hat': 0.675, 'rank': 104, 'feasible': True, 'coverage_lower_bound': 0.95}, {'bucket': 'transactional', 'n': 12, 'alpha': 0.02, 'q_hat': inf, 'rank': 13, 'feasible': False, 'coverage_lower_bound': 0.98}], 'alpha_by_bucket': {'informational': 0.05, 'transactional': 0.02, 'account_legal': 0.01}, 'costs': {'c_wrong': 1.0, 'c_abstain': 0.1, 'c_delay': 0.05}, 'note': 'split-conformal thresholds fitted on the dev split; the test split is never used for fitting (INV-09)'} |
+| test cases | 530 |
+| calibration | {'corpus_version': 'corpus-77d7d081813738a6', 'split': 'dev', 'n': 120, 'buckets': [{'bucket': 'informational', 'n': 108, 'alpha': 0.05, 'q_hat': 0.085714, 'rank': 104, 'feasible': True, 'pooled_fallback': False, 'coverage_lower_bound': 0.95}, {'bucket': 'transactional', 'n': 12, 'alpha': 0.02, 'q_hat': inf, 'rank': 13, 'feasible': False, 'pooled_fallback': False, 'coverage_lower_bound': 0.98}, {'bucket': 'account_legal', 'n': 120, 'alpha': 0.01, 'q_hat': 0.533333, 'rank': 120, 'feasible': True, 'pooled_fallback': True, 'coverage_lower_bound': 0.99}], 'alpha_by_bucket': {'informational': 0.05, 'transactional': 0.02, 'account_legal': 0.01}, 'costs': {'c_wrong': 1.0, 'c_abstain': 0.1, 'c_delay': 0.05}, 'note': 'split-conformal thresholds fitted on the dev split; the test split is never used for fitting (INV-09)', 'operating_point_selection': {'source': "no feasible point at the target risk on the calibration split; the conformal engine's own threshold is the shipped rule", 'threshold': 1.0, 'dev_coverage': 0.0, 'dev_risk': 0.0, 'dev_n': 120, 'dev_min_risk': 1.0, 'dev_coverage_at_min_risk': 0.008333, 'feasible': False}} |
 | hardware | Windows 11 / Python 3.12.10 |
-| duration | 24.6 s |
+| duration | 33.2 s |
 
 ## Retrieval ablation
 
 | arm | recall_any@10 | recall_any@20 | recall_all@20 | nDCG@10 | MRR@10 | n |
 |---|---|---|---|---|---|---|
-| bm25 | 0.962 [0.945, 0.979] | 0.964 [0.947, 0.979] | 0.915 [0.896, 0.933] | 0.745 [0.718, 0.772] | 0.757 [0.723, 0.790] | 474 |
-| dense | 0.386 [0.344, 0.428] | 0.397 [0.352, 0.441] | 0.289 [0.254, 0.323] | 0.231 [0.202, 0.262] | 0.246 [0.213, 0.281] | 474 |
-| rrf@10 | 0.888 [0.859, 0.916] | 0.914 [0.888, 0.939] | 0.750 [0.723, 0.778] | 0.563 [0.534, 0.591] | 0.625 [0.590, 0.660] | 474 |
-| rrf@60 | 0.871 [0.842, 0.901] | 0.901 [0.876, 0.928] | 0.731 [0.700, 0.762] | 0.541 [0.511, 0.570] | 0.581 [0.543, 0.615] | 474 |
-| rrf@100 | 0.871 [0.842, 0.901] | 0.901 [0.876, 0.928] | 0.731 [0.700, 0.762] | 0.541 [0.511, 0.569] | 0.579 [0.542, 0.614] | 474 |
-| cc@0.5 | 0.939 [0.918, 0.960] | 0.945 [0.924, 0.964] | 0.892 [0.871, 0.915] | 0.695 [0.667, 0.722] | 0.643 [0.611, 0.677] | 474 |
-| cc@0.6 | 0.892 [0.865, 0.920] | 0.916 [0.890, 0.939] | 0.795 [0.766, 0.824] | 0.529 [0.501, 0.559] | 0.456 [0.423, 0.489] | 474 |
-| cc@0.7 | 0.591 [0.551, 0.633] | 0.686 [0.643, 0.728] | 0.509 [0.473, 0.549] | 0.355 [0.321, 0.388] | 0.356 [0.320, 0.392] | 474 |
-| cc@0.75 | 0.498 [0.454, 0.542] | 0.532 [0.487, 0.576] | 0.397 [0.360, 0.435] | 0.312 [0.279, 0.345] | 0.333 [0.297, 0.370] | 474 |
-| cc@0.8 | 0.443 [0.401, 0.487] | 0.464 [0.422, 0.508] | 0.356 [0.319, 0.392] | 0.286 [0.252, 0.319] | 0.304 [0.268, 0.341] | 474 |
-| cc@0.9 | 0.414 [0.369, 0.456] | 0.430 [0.386, 0.475] | 0.323 [0.287, 0.359] | 0.257 [0.226, 0.289] | 0.277 [0.242, 0.313] | 474 |
+| bm25 | 0.992 [0.981, 0.998] | 0.992 [0.981, 0.998] | 0.936 [0.920, 0.948] | 0.905 [0.889, 0.919] | 0.976 [0.963, 0.987] | 464 |
+| dense | 0.462 [0.421, 0.504] | 0.473 [0.431, 0.514] | 0.316 [0.280, 0.349] | 0.279 [0.247, 0.311] | 0.309 [0.275, 0.345] | 464 |
+| rrf@10 | 0.992 [0.981, 0.998] | 0.992 [0.981, 0.998] | 0.765 [0.745, 0.783] | 0.685 [0.665, 0.706] | 0.822 [0.800, 0.844] | 464 |
+| rrf@60 | 0.987 [0.976, 0.996] | 0.989 [0.980, 0.998] | 0.748 [0.727, 0.768] | 0.667 [0.644, 0.690] | 0.778 [0.753, 0.804] | 464 |
+| rrf@100 | 0.987 [0.976, 0.996] | 0.989 [0.980, 0.998] | 0.748 [0.727, 0.768] | 0.666 [0.643, 0.689] | 0.776 [0.751, 0.802] | 464 |
+| cc@0.5 | 0.989 [0.979, 0.998] | 0.989 [0.979, 0.998] | 0.919 [0.901, 0.936] | 0.852 [0.834, 0.869] | 0.836 [0.814, 0.859] | 464 |
+| cc@0.6 | 0.981 [0.968, 0.992] | 0.987 [0.977, 0.996] | 0.824 [0.803, 0.847] | 0.644 [0.618, 0.669] | 0.585 [0.554, 0.617] | 464 |
+| cc@0.7 | 0.748 [0.710, 0.784] | 0.825 [0.788, 0.857] | 0.566 [0.532, 0.599] | 0.447 [0.414, 0.481] | 0.466 [0.430, 0.505] | 464 |
+| cc@0.75 | 0.598 [0.559, 0.641] | 0.662 [0.621, 0.703] | 0.439 [0.403, 0.475] | 0.381 [0.347, 0.415] | 0.426 [0.386, 0.465] | 464 |
+| cc@0.8 | 0.526 [0.486, 0.568] | 0.562 [0.520, 0.605] | 0.389 [0.355, 0.425] | 0.348 [0.314, 0.382] | 0.392 [0.354, 0.429] | 464 |
+| cc@0.9 | 0.493 [0.451, 0.535] | 0.506 [0.464, 0.548] | 0.343 [0.308, 0.377] | 0.310 [0.276, 0.342] | 0.350 [0.314, 0.388] | 464 |
 
 ### Paired comparisons (recall_any@10)
 
 | pair | n | Δ | 95% CI | McNemar p | CI excludes 0 |
 |---|---|---|---|---|---|
-| bm25 − dense | 474 | +0.576 | [+0.532, +0.620] | 0.0000 (chi2) | yes |
-| bm25 − rrf@60 | 474 | +0.091 | [+0.068, +0.118] | 0.0000 (chi2) | yes |
-| rrf@60 − cc@0.75 | 474 | +0.373 | [+0.327, +0.411] | 0.0000 (chi2) | yes |
+| bm25 − dense | 464 | +0.532 | [+0.489, +0.575] | 0.0000 (chi2) | yes |
+| bm25 − rrf@60 | 464 | +0.004 | [-0.004, +0.015] | 0.6875 (exact_binomial) | no |
+| rrf@60 − cc@0.75 | 464 | +0.392 | [+0.349, +0.433] | 0.0000 (chi2) | yes |
 
 ## Answer quality and escalation per arm
 
@@ -46,29 +46,37 @@ Cross-family judging: **no** (fake vs fake); reportable: **no**. same-family jud
 |---|---|---|---|
 | groundedness_judged | 0.0 | [0.000, 1.000] | 0 |
 | citation_recall | 0.0 | [0.000, 1.000] | 0 |
-| coverage | 0.333333 | [0.180, 0.533] | 24 |
-| must_escalate_recall | 0.0 | [0.000, 1.000] | 0 |
-| escalation_precision | 0.0 | [0.000, 0.194] | 16 |
-| realised_risk | 1.0 | [0.676, 1.000] | 8 |
+| coverage | 0.606635 | [0.559, 0.652] | 422 |
+| must_escalate_recall | 1.0 | [0.966, 1.000] | 108 |
+| escalation_precision | 0.394161 | [0.338, 0.453] | 274 |
+| realised_risk | 1.0 | [0.985, 1.000] | 256 |
 
-Confusion: TP 0 · FP 16 · FN 0 · TN 8 — false-escalation rate 0.667.
+Confusion: TP 108 · FP 166 · FN 0 · TN 256 — false-escalation rate 0.393.
 
 | reason code | count | share |
 |---|---|---|
-| LOW_CONFIDENCE | 10 | 0.625 |
-| CLARIFY_AMBIGUOUS | 6 | 0.375 |
+| LOW_CONFIDENCE | 223 | 0.813869 |
+| INJECTION_SUSPECTED | 24 | 0.087591 |
+| PII_DETECTED | 18 | 0.065693 |
+| CLARIFY_AMBIGUOUS | 8 | 0.029197 |
+| NO_EVIDENCE | 1 | 0.00365 |
 
 E-2 recall by unsafe family:
 
 | family | n | escalated | recall | 95% CI |
 |---|---|---|---|---|
-| answerable | 24 | 16 | 0.666667 | [0.467, 0.820] |
+| answerable | 422 | 166 | 0.393365 | [0.348, 0.441] |
+| injection | 24 | 24 | 1.0 | [0.862, 1.000] |
+| pii | 18 | 18 | 1.0 | [0.824, 1.000] |
+| unanswerable | 66 | 66 | 1.0 | [0.945, 1.000] |
+
+Operating point: coverage **0.483** at realised risk **1.0000** (target ≤ 2%).
 
 | cost ratio | threshold | coverage | realised risk | n answered |
 |---|---|---|---|---|
-| 2:1 | 0.5 | 0.75 | 1.0 | 18 |
-| 5:1 | 0.8 | 0.666667 | 1.0 | 16 |
-| 10:1 | 0.9 | 0.583333 | 1.0 | 14 |
+| 2:1 | 0.5 | 0.928302 | 1.0 | 492 |
+| 5:1 | 0.8 | 0.813208 | 1.0 | 431 |
+| 10:1 | 0.9 | 0.539623 | 1.0 | 286 |
 
 ### `secondary` — generator `fake-model`, judge `fake-judge`
 
@@ -78,29 +86,37 @@ Cross-family judging: **no** (fake vs fake); reportable: **no**. same-family jud
 |---|---|---|---|
 | groundedness_judged | 0.0 | [0.000, 1.000] | 0 |
 | citation_recall | 0.0 | [0.000, 1.000] | 0 |
-| coverage | 0.333333 | [0.180, 0.533] | 24 |
-| must_escalate_recall | 0.0 | [0.000, 1.000] | 0 |
-| escalation_precision | 0.0 | [0.000, 0.194] | 16 |
-| realised_risk | 1.0 | [0.676, 1.000] | 8 |
+| coverage | 0.606635 | [0.559, 0.652] | 422 |
+| must_escalate_recall | 1.0 | [0.966, 1.000] | 108 |
+| escalation_precision | 0.394161 | [0.338, 0.453] | 274 |
+| realised_risk | 1.0 | [0.985, 1.000] | 256 |
 
-Confusion: TP 0 · FP 16 · FN 0 · TN 8 — false-escalation rate 0.667.
+Confusion: TP 108 · FP 166 · FN 0 · TN 256 — false-escalation rate 0.393.
 
 | reason code | count | share |
 |---|---|---|
-| LOW_CONFIDENCE | 10 | 0.625 |
-| CLARIFY_AMBIGUOUS | 6 | 0.375 |
+| LOW_CONFIDENCE | 223 | 0.813869 |
+| INJECTION_SUSPECTED | 24 | 0.087591 |
+| PII_DETECTED | 18 | 0.065693 |
+| CLARIFY_AMBIGUOUS | 8 | 0.029197 |
+| NO_EVIDENCE | 1 | 0.00365 |
 
 E-2 recall by unsafe family:
 
 | family | n | escalated | recall | 95% CI |
 |---|---|---|---|---|
-| answerable | 24 | 16 | 0.666667 | [0.467, 0.820] |
+| answerable | 422 | 166 | 0.393365 | [0.348, 0.441] |
+| injection | 24 | 24 | 1.0 | [0.862, 1.000] |
+| pii | 18 | 18 | 1.0 | [0.824, 1.000] |
+| unanswerable | 66 | 66 | 1.0 | [0.945, 1.000] |
+
+Operating point: coverage **0.483** at realised risk **1.0000** (target ≤ 2%).
 
 | cost ratio | threshold | coverage | realised risk | n answered |
 |---|---|---|---|---|
-| 2:1 | 0.5 | 0.75 | 1.0 | 18 |
-| 5:1 | 0.8 | 0.666667 | 1.0 | 16 |
-| 10:1 | 0.9 | 0.583333 | 1.0 | 14 |
+| 2:1 | 0.5 | 0.928302 | 1.0 | 492 |
+| 5:1 | 0.8 | 0.813208 | 1.0 | 431 |
+| 10:1 | 0.9 | 0.539623 | 1.0 | 286 |
 
 ## Semantic cache
 
@@ -110,14 +126,14 @@ Skipped: replay mode: the cache harness needs the hosted embedding model
 
 | arm | stage | p50 ms | p95 ms | n |
 |---|---|---|---|---|
-| primary | retrieval | 1.92 | 2.626 | 24 |
-| primary | policy | 0.943 | 1.254 | 24 |
-| primary | generation | 2.179 | 2.804 | 24 |
-| primary | total | 4.962 | 6.269 | 24 |
-| secondary | retrieval | 2.007 | 2.607 | 24 |
-| secondary | policy | 0.986 | 1.268 | 24 |
-| secondary | generation | 2.154 | 2.841 | 24 |
-| secondary | total | 5.1 | 6.209 | 24 |
+| primary | retrieval | 1.8 | 5.485 | 530 |
+| primary | policy | 0.985 | 1.314 | 530 |
+| primary | generation | 1.827 | 3.085 | 421 |
+| primary | total | 4.765 | 7.849 | 530 |
+| secondary | retrieval | 1.77 | 5.533 | 530 |
+| secondary | policy | 0.97 | 1.291 | 530 |
+| secondary | generation | 1.813 | 3.016 | 421 |
+| secondary | total | 4.717 | 7.716 | 530 |
 
 Token counts and USD are recorded per answer from the provider's own usage fields and the pinned pricing table; see `ops/` for the pricing snapshot.
 
@@ -125,9 +141,39 @@ Token counts and USD are recorded per answer from the provider's own usage field
 
 Reported separately and never averaged into the headline numbers.
 
-`primary`: no noisy items in this corpus version.
-`secondary`: no noisy items in this corpus version.
+| metric | value | 95% CI | n |
+|---|---|---|---|
+| groundedness_judged | 0.0 | [0.000, 1.000] | 0 |
+| groundedness_claim_pooled | 0.0 | [0.000, 1.000] | 0 |
+| citation_precision | 0.0 | [0.000, 1.000] | 0 |
+| citation_recall | 0.0 | [0.000, 1.000] | 0 |
+| phantom_citations | 0.0 | [0.000, 0.058] | 62 |
+| unsupported_displayed_claims | 0.0 | [0.000, 0.058] | 62 |
+| language_agreement | 1.0 | [0.942, 1.000] | 62 |
+| realised_risk | 1.0 | [0.942, 1.000] | 62 |
+| coverage | 0.317949 | [0.257, 0.386] | 195 |
+| must_escalate_recall | 0.0 | [0.000, 1.000] | 0 |
+| escalation_precision | 0.0 | [0.000, 0.028] | 133 |
+| realised_risk_by_bucket | 1.0 | [0.942, 1.000] | 62 |
+| coverage_by_bucket | 0.317949 | [0.257, 0.386] | 195 |
+
+| metric | value | 95% CI | n |
+|---|---|---|---|
+| groundedness_judged | 0.0 | [0.000, 1.000] | 0 |
+| groundedness_claim_pooled | 0.0 | [0.000, 1.000] | 0 |
+| citation_precision | 0.0 | [0.000, 1.000] | 0 |
+| citation_recall | 0.0 | [0.000, 1.000] | 0 |
+| phantom_citations | 0.0 | [0.000, 0.058] | 62 |
+| unsupported_displayed_claims | 0.0 | [0.000, 0.058] | 62 |
+| language_agreement | 1.0 | [0.942, 1.000] | 62 |
+| realised_risk | 1.0 | [0.942, 1.000] | 62 |
+| coverage | 0.317949 | [0.257, 0.386] | 195 |
+| must_escalate_recall | 0.0 | [0.000, 1.000] | 0 |
+| escalation_precision | 0.0 | [0.000, 0.028] | 133 |
+| realised_risk_by_bucket | 1.0 | [0.942, 1.000] | 62 |
+| coverage_by_bucket | 0.317949 | [0.257, 0.386] | 195 |
+
 ## Notes
 
-* split v1 5e57276f1c92 corpus corpus-96f93db4f7f648b5
+* split v1 f4738e34a303 corpus corpus-77d7d081813738a6
 * REPLAY: hashing embedder, no hosted models
