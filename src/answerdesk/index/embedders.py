@@ -51,7 +51,7 @@ import os
 import random
 import time
 from collections.abc import Callable, Sequence
-from typing import Any
+from typing import Any, cast
 from urllib.parse import urlsplit
 
 import httpx
@@ -169,6 +169,88 @@ class LocalSentenceTransformerEmbedder:
             show_progress_bar=False,
         )
         return [[float(value) for value in row] for row in np.asarray(vectors)]
+
+    def embed_query(self, text: str) -> list[float]:  # pragma: no cover
+        return self.embed_documents([text])[0]
+
+
+class TransformersEmbedder:
+    """Direct ``transformers`` backend (no sentence-transformers dependency).
+
+    bge-m3 is an XLM-RoBERTa encoder; mean pooling over the attention mask followed by L2
+    normalisation reproduces the sentence-transformers embedding closely enough for
+    retrieval, and it keeps the GPU path working when the ``local`` extra cannot be
+    installed (the PyPI file host is unreachable on this machine).
+    """
+
+    def __init__(
+        self,
+        model_name: str,
+        *,
+        device: str = "auto",
+        batch_size: int = 32,
+        dimension: int | None = None,
+        max_length: int = 1024,
+    ) -> None:
+        self.model_name = model_name
+        self.device = device
+        self.batch_size = batch_size
+        self.max_length = max_length
+        self.name = f"hf:{model_name}"
+        self.dimension = dimension or LOCAL_MODELS.get(model_name, 1024)
+        self._model: object | None = None
+        self._tokenizer: object | None = None
+        self._torch: object | None = None
+        self._resolved_device = "cpu"
+
+    def _load(self) -> tuple[object, object, object, str]:
+        if self._model is not None and self._tokenizer is not None and self._torch is not None:
+            return self._model, self._tokenizer, self._torch, self._resolved_device
+        try:  # pragma: no cover - requires torch/transformers and model weights
+            import torch
+            from transformers import AutoModel, AutoTokenizer
+        except ImportError as exc:  # pragma: no cover
+            raise ConfigError(
+                "embedding backend bge_m3_hf needs torch and transformers: install them, or "
+                "use ANSWERDESK_EMBEDDING__BACKEND=api for the hosted bge-m3 endpoint."
+            ) from exc
+        device = self.device
+        if device == "auto":
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+        if device == "cuda" and not torch.cuda.is_available():  # pragma: no cover
+            raise ConfigError("embedding.device=cuda but torch reports no CUDA device")
+        tokenizer = AutoTokenizer.from_pretrained(self.model_name)
+        model = AutoModel.from_pretrained(self.model_name)
+        model.to(device)
+        model.eval()
+        self._model, self._tokenizer, self._torch = model, tokenizer, torch
+        self._resolved_device = device
+        return model, tokenizer, torch, device
+
+    def embed_documents(self, texts: Sequence[str]) -> list[list[float]]:  # pragma: no cover
+        model, tokenizer, torch, device = self._load()
+        model = cast(Any, model)
+        tokenizer = cast(Any, tokenizer)
+        torch = cast(Any, torch)
+        vectors: list[list[float]] = []
+        items = list(texts)
+        for start in range(0, len(items), self.batch_size):
+            batch = items[start : start + self.batch_size]
+            encoded = tokenizer(
+                batch,
+                padding=True,
+                truncation=True,
+                max_length=self.max_length,
+                return_tensors="pt",
+            )
+            encoded = {key: value.to(device) for key, value in encoded.items()}
+            with torch.no_grad():
+                hidden = model(**encoded).last_hidden_state
+                mask = encoded["attention_mask"].unsqueeze(-1).to(hidden.dtype)
+                pooled = (hidden * mask).sum(dim=1) / mask.sum(dim=1).clamp(min=1e-6)
+                pooled = torch.nn.functional.normalize(pooled, p=2, dim=1)
+            vectors.extend(row.tolist() for row in pooled.cpu())
+        return vectors
 
     def embed_query(self, text: str) -> list[float]:  # pragma: no cover
         return self.embed_documents([text])[0]
@@ -449,6 +531,14 @@ def default_embedder(settings: Settings) -> Embedder:
     backend = settings.embedding.backend
     if backend == "hashing":
         return HashingEmbedder(dimension=settings.embedding.dimension)
+    if backend == "bge_m3_hf":
+        model = settings.embedding.model
+        return TransformersEmbedder(
+            model,
+            device=settings.embedding.device,
+            batch_size=settings.embedding.batch_size,
+            dimension=LOCAL_MODELS.get(model),
+        )
     if backend in ("bge_m3", "qwen3"):
         model = settings.embedding.model
         # `embedding.dimension` is the *hashing* width; a real model dictates its own.
@@ -465,6 +555,7 @@ __all__ = [
     "LOCAL_MODELS",
     "ApiEmbedder",
     "LocalSentenceTransformerEmbedder",
+    "TransformersEmbedder",
     "api_embedder_from_settings",
     "default_embedder",
     "is_loopback",

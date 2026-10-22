@@ -161,7 +161,7 @@ class LLMSettings(Section):
 
 
 class EmbeddingSettings(Section):
-    backend: Literal["hashing", "bge_m3", "qwen3", "api"] = "hashing"
+    backend: Literal["hashing", "bge_m3", "bge_m3_hf", "qwen3", "api"] = "hashing"
     model: str = "BAAI/bge-m3"
     #: Width of the *hashing* embedder. A real model (local or hosted) declares its own.
     dimension: int = Field(default=64, gt=0)
@@ -504,7 +504,8 @@ def apply_profile(settings: Settings, profile: Profile | None = None) -> Setting
         if resolved.llm.preset == "fake":
             resolved.llm.preset = "openai"
         resolved.eval.provider = "api"
-        resolved.security.enabled = True
+        if os.environ.get("ANSWERDESK_SECURITY__ENABLED") is None:
+            resolved.security.enabled = True
     elif chosen == "local":
         if resolved.llm.preset == "fake":
             resolved.llm.preset = "ollama"
